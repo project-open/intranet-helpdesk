@@ -64,6 +64,12 @@ end;' language 'plpgsql';
 -- Default classification routine. May be customized in order
 -- to implement customers default ticket behaviour
 --
+
+
+-- Called by "Enable" action of "Classify" WF transition.
+-- Default classification routine. May be customized in order
+-- to implement customers default ticket behaviour
+--
 create or replace function im_ticket__classify (integer,text,text)
 returns integer as '
 declare
@@ -120,7 +126,7 @@ begin
 	-- Determine the queue for the ticket
 	--
 	-- Check if the ticket_queue has already been defined by the user or
-	-- otherwise. Don't overwrite this queue.
+	-- otherwise. Dont overwrite this queue.
 	IF v_ticket_queue_id is null THEN
 
 		-- Pull out the ticket queue name from ticket_type_id category
@@ -146,14 +152,12 @@ begin
 				v_ticket_queue || '' based on Category '' || 
 				im_category_from_id(v_ticket_type_id) || ''".''
 			);
+
 		END IF;
 	END IF;
 	
 	return 0;
 end;' language 'plpgsql';
-
-
-
 
 
 -- Unassigned callback that assigns the transition to the group in the custom_arg
