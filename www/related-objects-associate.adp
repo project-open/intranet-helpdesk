@@ -10,7 +10,7 @@
 </p>
 <br>
 
-<form action=associate-2 method=GET>
+<form action=related-objects-associate-2 method=GET>
 <%= [export_form_vars tid return_url] %>
 <table>
 	<tr>
@@ -22,8 +22,8 @@
 	<tr>
 	<td>	<input type=radio name=target_object_type value=user></td>
 	<td>	<%= [lang::message::lookup "" intranet-helpdesk.Object_Type_User "User"] %></td>
-	<td>	<%= [im_user_select user_id ""] %><br>
-		<%= [lang::message::lookup "" intranet-helpdesk.Associate_As "as"] %>&nbsp;
+	<td>	<%= [im_user_select user_id ""] %>
+		<%= [lang::message::lookup "" intranet-helpdesk.Associate_As "as"] %><br>
 		<%= [im_biz_object_roles_select role_id $first_ticket_id [im_biz_object_role_full_member]] %>
 	</td>
 	<td>	<%= [lang::message::lookup "" intranet-helpdesk.Associate_Msg_User "
@@ -35,7 +35,7 @@
 	<tr>
 	<td>	<input type=radio name=target_object_type value=release_project></td>
 	<td>	<%= [lang::message::lookup "" intranet-helpdesk.Object_Type_Release_Project "Release Project"] %></td>
-	<td>	<%= [im_project_select -project_type_id [im_project_type_software_release] release_project_id] %></td>
+	<td>	<%= [im_project_select -project_type_id [im_project_type_software_release] -exclude_status_id [im_project_status_closed] release_project_id] %></td>
 	<td>	<%= [lang::message::lookup "" intranet-helpdesk.Associate_Msg_Release_Project "
 	    	Make your tickets 'release items' of a software Release Project. <br>
 	    	Release items are those changes to software that are included in a specific release."] %>
