@@ -11,6 +11,7 @@ ad_page_contract {
     @author frank.bergmann@project-open.com
 } {
     { tid ""}
+    { object_id "" }
     { action_name "associate" }
     { return_url "/intranet-helpdesk/index" }
 }
@@ -24,6 +25,8 @@ set page_title [lang::message::lookup "" intranet-helpdesk.Associate_Ticket_With
 set context_bar [im_context_bar $page_title]
 set page_focus "im_header_form.keywords"
 set action_forbidden_msg [lang::message::lookup "" intranet-helpdesk.Action_Forbidden "<b>Unable to execute action</b>:<br>You don't have the permissions to execute the action '%action_name%' on this ticket."]
+
+if {"" == $tid} { set tid $object_id }
 
 # Check that the user has write permissions on all select tickets
 foreach ticket_id $tid {
