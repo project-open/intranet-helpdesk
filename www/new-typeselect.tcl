@@ -48,10 +48,14 @@ set sql "
 		c.category_id,
 		c.category,
 		c.category_description,
-		p.parent_id
+		c.aux_string1 as workflow_name_specified,
+		p.parent_id,
+		w.workflow_key,
+		w.workflow_key as workflow_name
 	from
 		im_categories c
 		LEFT OUTER JOIN (select * from im_category_hierarchy) p ON p.child_id = c.category_id
+		LEFT OUTER JOIN wf_workflows w ON (c.aux_string1 = w.workflow_key)
 	where
 		c.category_type = 'Intranet Ticket Type' and
 		(c.enabled_p is null or c.enabled_p = 't') and
@@ -82,6 +86,15 @@ db_foreach cats $sql {
     if {"" == $comment} { set comment " " }
     set comment [lang::message::lookup "" intranet-core.$category_comment_key $comment]
 
+    # Check if the WF actually exists
+    if {$workflow_name != $workflow_name_specified} { 
+	set workflow_name "<font color=red>Invalid WF: $workflow_name_specified</font>" 
+    } else {
+	if {[im_is_user_site_wide_or_intranet_admin $current_user_id]} {
+	    set workflow_name "<a href=[export_vars -base "/acs-workflow/admin/workflow" {workflow_key}]>$workflow_name</a>"
+	}
+    }
+
     append category_select_html "
 	<tr>
 		<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
@@ -92,6 +105,7 @@ db_foreach cats $sql {
 		</nobr>
 		</td>
 		<td>$comment</td>
+		<td>$workflow_name</td>
 	</tr>
     "
 
