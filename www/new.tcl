@@ -1042,7 +1042,16 @@ if {0 != $render_template_id} {
         ad_script_abort
     }
 
+    # -----------------------------------------------------
     # Extract a few more fields for the template
+
+    # SQL fails when there's no t.ticket_customer_contact_id
+    set ticket_customer_contact_id [db_string get_data "select ticket_customer_contact_id from im_tickets where ticket_id = :ticket_id" -default 0]
+    if { "" == $ticket_customer_contact_id } {
+	ad_return_complaint 1  [lang::message::lookup "" intranet-helpdesk.NoTicketCustomerContactIdFound "View not available, please set ticket attribute 'Customer Contact' first."]
+	ad_script_abort
+    }
+
     db_1row ticket_info "
 	select	p.*,
 		t.*,
