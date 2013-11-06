@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<message_catalog package_key="intranet-helpdesk" package_version="3.4.0.7.0" locale="de_DE" charset="ISO-8859-1">
+<message_catalog package_key="intranet-helpdesk" locale="de_DE" charset="ISO-8859-1">
 
   <msg key="Action">Aktion</msg>
   <msg key="Add_a_new_ticket">Neues Ticket</msg>
@@ -22,7 +22,9 @@
   <msg key="Customer_Contact">Kundenkontakt</msg>
   <msg key="Customer_Info">Kundeninfo</msg>
   <msg key="Delete">Löschen</msg>
+  <msg key="Delete_Association">Lösche Beziehung</msg>
   <msg key="Deleted">Gelöscht</msg>
+  <msg key="Direction">Richtung</msg>
   <msg key="Filter_Tickets">Tickets filtern</msg>
   <msg key="Home_Ticket_Component">Home-Ticket-Komponente</msg>
   <msg key="Invalid">Ungültig</msg>
@@ -31,8 +33,13 @@
   <msg key="New_SLA">Neues SLA</msg>
   <msg key="New_Ticket">Neues Ticket</msg>
   <msg key="Nuke">Löschen</msg>
+  <msg key="Object_Name">Objektname</msg>
+  <msg key="Object_Type">Objekttyp</msg>
   <msg key="Open">Offen</msg>
   <msg key="Prio">Prio.</msg>
+  <msg key="Rel_im_biz_object_member">Objektmitglied</msg>
+  <msg key="Rel_membership_rel">Mitgliedsbeziehung</msg>
+  <msg key="Relationship_Type">Beziehungstyp</msg>
   <msg key="Service_Mgmt">IT Service Mgmt</msg>
   <msg key="SLA">SLA</msg>
   <msg key="SLA_List">SLA-Liste</msg>
