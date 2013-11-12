@@ -336,12 +336,14 @@ if {$ticket_exists_p} {
     db_1row ticket_info "
 	select	t.*, p.*,
 		t.ticket_customer_deadline::date as ticket_customer_deadline,
-		p.company_id as ticket_customer_id
+		p.company_id as ticket_customer_id,
+		p.parent_id as ticket_sla_id_from_parent
 	from	im_projects p,
 		im_tickets t
 	where	p.project_id = t.ticket_id
 		and p.project_id = :ticket_id
     "
+    set ticket_sla_id $ticket_sla_id_from_parent
 }
 
 
@@ -944,7 +946,7 @@ if {$user_admin_p} {
 }
 
 if {[im_permission $current_user_id "add_tickets"]} {
-    append admin_html "<li><a href=\"/intranet-helpdesk/new\">[lang::message::lookup "" intranet-helpdesk.Add_a_new_ticket "New Ticket"]</a>\n"
+    append admin_html "<li><a href=\"[export_vars -base "/intranet-helpdesk/new" {ticket_sla_id}]\">[lang::message::lookup "" intranet-helpdesk.Add_a_new_ticket "New Ticket"]</a>\n"
 
     set wf_oid_col_exists_p [im_column_exists wf_workflows object_type]
     if {$wf_oid_col_exists_p} {
