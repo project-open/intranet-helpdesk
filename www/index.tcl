@@ -11,7 +11,7 @@ ad_page_contract {
     @author frank.bergmann@ticket-open.com
 } {
     { order_by "Prio" }
-    { mine_p "all" }
+    { mine_p "queue" }
     { start_date "" }
     { end_date "" }
     { ticket_name "" }
@@ -279,10 +279,14 @@ im_dynfield::set_local_form_vars_from_http -form_id $form_id
 set mine_p $org_mine_p
 
 # A customer should not get the "My queue" filter pre-selected - should he get the "My queue" selection at all? 
-if { [im_profile::member_p -profile_id [im_customer_group_id] -user_id $current_user_id] && [string first "mine" [string tolower $mine_p_options]] != -1 } {
-    template::element::set_value $form_id mine_p "mine"
-    set mine_p "mine"
-}
+# Fraber 131111_
+# If the customer should not see "My Queue" at all, then we
+# should remove it from list entirely. But thiw way the 
+# filter gets reset every time.
+#if { [im_profile::member_p -profile_id [im_customer_group_id] -user_id $current_user_id] && [string first "mine" [string tolower $mine_p_options]] != -1 } {
+#    template::element::set_value $form_id mine_p "mine"
+#    set mine_p "mine"
+#}
 
 array set extra_sql_array [im_dynfield::search_sql_criteria_from_form \
 			       -form_id $form_id \
@@ -389,7 +393,13 @@ switch $mine_p {
 			where	wft.holding_user = :current_user_id and
 				wft.state in ('enabled', 'started') and
 				wft.case_id = wfc.case_id
-		) 
+		) OR p.company_id in (
+		     	-- A customer should be able to see His tickets
+			select	object_id_one
+			from	acs_rels r
+			where	object_id_two = :current_user_id  
+		)
+		
 	)"
     }
     "mine" {
@@ -416,7 +426,13 @@ switch $mine_p {
                         from    acs_rels r
                         where   r.object_id_one = t.ticket_id and 
 			r.rel_type = 'im_biz_object_member'
-                )
+		) OR p.company_id in (
+		     	-- A customer should be able to see His tickets
+			-- The question is - Should he see them in Mine or in My Queues
+			select	object_id_one
+			from	acs_rels r
+			where	object_id_two = :current_user_id  
+		)
 	)"
     }
     "default" { 
