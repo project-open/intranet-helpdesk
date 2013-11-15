@@ -514,7 +514,6 @@ namespace eval im_ticket {
 	    db_dml ticket_update {}
 	    db_dml project_update {}
 
-
 	    # Deal with OpenACS 5.4 "title" static title columm which is wrong:
 	    if {[im_column_exists acs_objects title]} {
 		db_dml object_update "update acs_objects set title = null where object_id = :ticket_id"
@@ -526,7 +525,6 @@ namespace eval im_ticket {
 	    # Start a new workflow case
 	    im_workflow_start_wf -object_id $ticket_id -object_type_id $ticket_type_id -skip_first_transition_p 1
 
-	
 	    # Write Audit Trail
 	    im_project_audit -project_id $ticket_id -action after_create
 
@@ -535,21 +533,14 @@ namespace eval im_ticket {
 	    set topic_status_id [im_topic_status_id_open]
 	    set message ""
 
+	    set topic_owner_id $current_user_id
 
 	    # Frank: The owner of a topic can edit its content.
 	    #        But we don't want customers to edit their stuff here...
-
-	    set topic_owner_id $current_user_id
-
-	    # Klaus: If a customer creates a ticket, he would need to be the owner of the 
-            #        of the forum item created since other rules cause confusion and mess up 
-            #        notifications when thread will be extended.    
-	    #        There should be no problem if a customer changes the ticket that had been 
-            #        created automatically based on the input he did when creating the ticket. 
-
 	    # if {[im_user_is_customer_p $current_user_id]} { 
-	    #	set topic_owner_id [db_string admin "select min(user_id) from users where user_id > 0" -default 0]
+	    #	# set topic_owner_id [db_string admin "select min(user_id) from users where user_id > 0" -default 0]
 	    # }
+	    # Klaus: ...resolved differently to avoid confusion, see below 
 
 	    if {"" == $ticket_note} { set ticket_note [lang::message::lookup "" intranet-helpdesk.Empty_Forum_Message "No message specified"]}
 
@@ -565,6 +556,23 @@ namespace eval im_ticket {
                 )
 	    }
 
+	    # If ticket had been created by customer, he becomes automatically the ADMIN of the biz object
+	    # This allows him editing all forum threads related to the ticket. Therfore we remove the relationship
+	    set ticket_object_admins [im_biz_object_admin_ids $ticket_id]
+	    foreach biz_object_id $ticket_object_admins {
+		if { [im_profile::member_p -profile_id [im_customer_group_id] -user_id $biz_object_id] } {
+		    # revoke relationship
+		    if {[catch {
+			set sql "delete from im_biz_object_members where rel_id in (select rel_id from acs_rels where object_id_one = :ticket_id and object_id_two=:biz_object_id and rel_type = 'im_biz_object_member')"
+			db_dml delete_rel_id_from_im_biz_object_members $sql
+			db_dml delete_rel_id_from_acs_rels "delete from acs_rels where object_id_one = :ticket_id and object_id_two=:biz_object_id"
+		    } err_msg]} {
+			ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.ErrorRemovingCustomerFromTicket "Not able to remove Ticket-Customer relationship. Please contact your SysAdmin: $err_msg"]
+			ad_script_abort
+		    }
+		}
+	    }
+
 	    # Subscribe owner to Notifications	    
 	    im_ticket::notification_subscribe -ticket_id $ticket_id -user_id $current_user_id
 
@@ -575,7 +583,6 @@ namespace eval im_ticket {
 
 	return $ticket_id 
     }
-
 
 
     ad_proc -public internal_sla_id { } {
