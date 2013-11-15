@@ -197,8 +197,15 @@ set ticket_member_options [linsert $ticket_member_options 0 [list $all_l10n ""]]
 
 set ticket_queue_options [im_helpdesk_ticket_queue_options]
 set ticket_sla_options [im_helpdesk_ticket_sla_options -include_create_sla_p 1 -include_empty_p 1]
+
 set sla_exists_p 1
 if {[llength $ticket_sla_options] < 2 && !$view_tickets_all_p} { set sla_exists_p 0}
+
+# If there's only one SLA (usually when user is customer) set default SLA
+if {[llength $ticket_sla_options] == 2 && !$view_tickets_all_p} { 
+    set ticket_sla_options [im_helpdesk_ticket_sla_options -include_create_sla_p 1 -include_empty_p 0]
+    set ticket_sla_id [lindex [lindex $ticket_sla_options 0] 1]
+}
 
 set ticket_creator_options [list]
 set ticket_creator_options [db_list_of_lists ticket_creators "
@@ -210,10 +217,6 @@ set ticket_creator_options [db_list_of_lists ticket_creators "
 	order by creator_name
 "]
 set ticket_creator_options [linsert $ticket_creator_options 0 [list "" ""]]
-
-
-set ticket_creator_options [linsert $ticket_creator_options 0 [list "" ""]]
-
 
 # No SLA defined for this user?
 # Allow the user to request a new SLA
@@ -247,13 +250,13 @@ ad_form \
 	{end_date:text(text) {label "[_ intranet-timesheet2.End_Date]"} {value "$end_date"} {html {size 10}} {after_html {<input type="button" style="height:20px; width:20px; background: url('/resources/acs-templating/calendar.gif');" onclick ="return showCalendar('end_date', 'y-m-d');" >}}}
 	{ticket_name:text(text),optional {label "[_ intranet-helpdesk.Ticket_Name]"} {html {size 12}}}
 	{ticket_status_id:text(im_category_tree),optional {label "[lang::message::lookup {} intranet-helpdesk.Status Status]"} {custom {category_type "Intranet Ticket Status" translate_p 1 package_key "intranet-core"}} }
+	{ticket_sla_id:text(select),optional {label "[lang::message::lookup {} intranet-helpdesk.SLA SLA]"} {options $ticket_sla_options}}
     }
 
 if {$view_tickets_all_p} {  
     ad_form -extend -name $form_id -form {
 	{ticket_type_id:text(im_category_tree),optional {label "[lang::message::lookup {} intranet-helpdesk.Type Type]"} {custom {category_type "Intranet Ticket Type" translate_p 1 package_key "intranet-core"} } }
 	{ticket_queue_id:text(select),optional {label "[lang::message::lookup {} intranet-helpdesk.Queue Queue]"} {options $ticket_queue_options}}
-	{ticket_sla_id:text(select),optional {label "[lang::message::lookup {} intranet-helpdesk.SLA SLA]"} {options $ticket_sla_options}}
 	{ticket_creator_id:text(select),optional {label "[lang::message::lookup {} intranet-helpdesk.Creator Creator]"} {options $ticket_creator_options}}
     }
 
