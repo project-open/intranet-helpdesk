@@ -666,6 +666,38 @@ ad_form -extend -name helpdesk_ticket -on_request {
         -notif_subject $ticket_name \
         -notif_text $message
 
+    # For smaller organization this is probably all they need. 
+    # Employees that can 'handle' tickets will be simply added to the SLA project 
+    # Whenever a new ticket has been created, these employees get auto-assigned to the ticket. 
+    # They can view/edit the ticket and appear in the notification dropdown of the ticket forum portlet.
+    # For alternative handling simply set (invisible) parameter to 'false' 
+    if { [parameter::get -package_id [apm_package_id_from_key intranet-helpdisk] -parameter "AutoassignEmployeeMembersOfSLA" -default 1]  } {
+	# Get all employee_id's from SLA 
+	set sql "
+		select
+		     rels.object_id_two as party_id
+		from
+		     acs_rels rels
+		     LEFT OUTER JOIN im_biz_object_members bo_rels ON (rels.rel_id = bo_rels.rel_id)
+		     LEFT OUTER JOIN im_categories c ON (c.category_id = bo_rels.object_role_id)
+		where
+			 rels.object_id_one = :ticket_sla_id and
+			 rels.object_id_two in (select party_id from parties) and
+			 rels.object_id_two not in (
+			 -- Exclude banned or deleted users
+			 select     m.member_id
+			 from       group_member_map m, membership_rels mr
+			 where      m.rel_id = mr.rel_id and
+			            m.group_id = acs__magic_object_id('registered_users') and
+				    m.container_id = m.group_id and
+				    mr.member_state != 'approved'
+			) and
+			rels.object_id_two in (select member_id from group_distinct_member_map m where group_id = '468');
+	"
+    }
+    db_foreach r $sql {
+	im_biz_object_add_role $party_id $ticket_id 1300
+    }
 
     if {[info exists escalate_from_ticket_id] && 0 != $escalate_from_ticket_id} {
 
