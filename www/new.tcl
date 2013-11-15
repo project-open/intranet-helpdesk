@@ -666,12 +666,12 @@ ad_form -extend -name helpdesk_ticket -on_request {
         -notif_subject $ticket_name \
         -notif_text $message
 
-    # For smaller organization this is probably all they need. 
+    # For smaller organization this is probably all what's needed.
     # Employees that can 'handle' tickets will be simply added to the SLA project 
     # Whenever a new ticket has been created, these employees get auto-assigned to the ticket. 
     # They can view/edit the ticket and appear in the notification dropdown of the ticket forum portlet.
-    # For alternative handling simply set (invisible) parameter to 'false' 
-    if { [parameter::get -package_id [apm_package_id_from_key intranet-helpdisk] -parameter "AutoassignEmployeeMembersOfSLA" -default 1]  } {
+    # For alternative handling simply set invisible parameter to 'false' 
+    if { [parameter::get -package_id [apm_package_id_from_key intranet-helpdisk] -parameter "AutoAssignEmployeeMembersOfSLAToTicket" -default 1]  } {
 	# Get all employee_id's from SLA 
 	set sql "
 		select
@@ -699,8 +699,27 @@ ad_form -extend -name helpdesk_ticket -on_request {
 	im_biz_object_add_role $party_id $ticket_id 1300
     }
 
-    if {[info exists escalate_from_ticket_id] && 0 != $escalate_from_ticket_id} {
+    # Special case forum:
+    # If ticket had been created by customer, he becomes automatically the ADMIN of the biz object 
+    # This allows him editing all forum threads related to the ticket. Therfore we remove the relationship 
 
+    # Get all Biz Object Admins  
+    set ticket_object_admins [im_biz_object_admin_ids $ticket_id]
+    foreach biz_object_id $ticket_object_admins {
+	if { [im_profile::member_p -profile_id [im_customer_group_id] -user_id $biz_object_id] } {
+	    # revoke relationship 
+	    if {[catch {
+		set sql "delete from im_biz_object_members where rel_id in (select rel_id from acs_rels where object_id_one = :ticket_id and object_id_two=:biz_object_id and rel_type = 'im_biz_object_member')"
+		db_dml delete_rel_id_from_im_biz_object_members $sql
+		db_dml delete_rel_id_from_acs_rels "delete from acs_rels where object_id_one = :ticket_id and object_id_two=:biz_object_id"
+	    } err_msg]} {
+		ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.ErrorRemovingCustomerFromTicket "Not able to remove Ticket-Customer relationship. Please contact your SysAdmin: $err_msg"]
+		ad_script_abort
+	    }
+	}
+    }
+
+    if {[info exists escalate_from_ticket_id] && 0 != $escalate_from_ticket_id} {
 	# Add an escalation relationship between the two tickets
 	db_string add_ticket_ticket_rel "
                         select im_ticket_ticket_rel__new (
@@ -714,7 +733,6 @@ ad_form -extend -name helpdesk_ticket -on_request {
                                 0
                         )
        "
-
     }
 
     # Write Audit Trail
@@ -726,6 +744,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
 	doc_return 200 "application/json" "{\"success\": true}" 
 	ad_script_abort
     }
+
     ad_returnredirect [export_vars -base "/intranet-helpdesk/new" {ticket_id {form_mode display}}]
     ad_script_abort
 
