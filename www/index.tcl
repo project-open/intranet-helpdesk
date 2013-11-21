@@ -11,7 +11,7 @@ ad_page_contract {
     @author frank.bergmann@ticket-open.com
 } {
     { order_by "Prio" }
-    { mine_p "queue" }
+    { mine_p "" }
     { start_date "" }
     { end_date "" }
     { ticket_name "" }
@@ -59,6 +59,11 @@ if {"" == $end_date} { set end_date [parameter::get_from_package_key -package_ke
 set mine_all_l10n [lang::message::lookup "" intranet-core.Mine_All "Mine/All"]
 set all_l10n [lang::message::lookup "" intranet-core.All "All"]
 
+if { [im_profile::member_p -user_id $current_user_id -profile_id [im_customer_group_id]] && "" == $mine_p } {
+    set mine_p "mine"
+} else {
+    set mine_p "queue"
+}
 
 # ---------------------------------------------------------------
 # Defined Table Fields
