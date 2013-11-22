@@ -59,10 +59,12 @@ if {"" == $end_date} { set end_date [parameter::get_from_package_key -package_ke
 set mine_all_l10n [lang::message::lookup "" intranet-core.Mine_All "Mine/All"]
 set all_l10n [lang::message::lookup "" intranet-core.All "All"]
 
-if { [im_profile::member_p -user_id $current_user_id -profile_id [im_customer_group_id]] && "" == $mine_p } {
-    set mine_p "mine"
-} else {
-    set mine_p "queue"
+if { "" == $mine_p } {
+    if { [im_profile::member_p -user_id $current_user_id -profile_id [im_customer_group_id]] } {
+	set mine_p "mine"
+    } else {
+	set mine_p "queue"
+    }
 }
 
 # ---------------------------------------------------------------
@@ -78,7 +80,6 @@ if {!$view_id } {
     Maybe you need to upgrade the database. <br> Please notify your system administrator."
     return
 }
-
 
 # ---------------------------------------------------------------
 # Format the List Table Header
