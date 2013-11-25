@@ -309,17 +309,20 @@ set ttt {
 # ------------------------------------------------------------------
 
 if {"edit" == $form_mode} {
-
     set redirect_p 0
     # redirect if ticket_type_id is not defined
     if {("" == $ticket_type_id || 0 == $ticket_type_id) && ![exists_and_not_null ticket_id]} {
 	set all_same_p [im_dynfield::subtype_have_same_attributes_p -object_type "im_ticket"]
 	set all_same_p 0
-	if {!$all_same_p} { set redirect_p 1 }
+	if {!$all_same_p} { 
+	    set redirect_p 1 
+	}
     }
 
     # Redirect if the SLA hasn't been defined yet
-    if {("" == $ticket_sla_id || 0 == $ticket_sla_id) && ![exists_and_not_null ticket_id]} { set redirect_p 1 }
+    if {("" == $ticket_sla_id || 0 == $ticket_sla_id) && ![exists_and_not_null ticket_id]} { 
+	set redirect_p 1 
+    }
 
     if {$redirect_p} {
 	ad_returnredirect [export_vars -base "new-typeselect" {{return_url $current_url} ticket_id ticket_type_id ticket_name ticket_nr ticket_nr ticket_sla_id}]
@@ -673,6 +676,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
     # For alternative handling simply set invisible parameter to 'false' 
     if { [parameter::get -package_id [apm_package_id_from_key intranet-helpdisk] -parameter "AutoAssignEmployeeMembersOfSLAToTicket" -default 1]  } {
 	# Get all employee_id's from SLA 
+	set employee_group_id [im_employee_group_id] 
 	set sql "
 		select
 		     rels.object_id_two as party_id
@@ -692,7 +696,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
 				    m.container_id = m.group_id and
 				    mr.member_state != 'approved'
 			) and
-			rels.object_id_two in (select member_id from group_distinct_member_map m where group_id = '468');
+			rels.object_id_two in (select member_id from group_distinct_member_map m where group_id = :employee_group_id);
 	"
     }
     db_foreach r $sql {
