@@ -18,7 +18,7 @@ ad_page_contract {
     { ticket_status_id:integer "[im_ticket_status_open]" } 
     { ticket_type_id:integer 0 } 
     { ticket_queue_id:integer 0 } 
-    { ticket_sla_id:integer 0 } 
+    { ticket_sla_id:integer "" } 
     { ticket_creator_id:integer 0 } 
     { customer_id:integer 0 } 
     { customer_contact_id:integer 0 } 
