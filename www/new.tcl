@@ -925,7 +925,7 @@ if {[im_permission $current_user_id "view_tickets_all"]} {
 lappend mine_p_options [list [lang::message::lookup "" intranet-helpdesk.My_group "My Group"] "queue"]
 lappend mine_p_options [list [lang::message::lookup "" intranet-helpdesk.Mine "Mine"] "mine"]
 
-set ticket_member_options [util_memoize "db_list_of_lists ticket_members {
+set ticket_member_options [util_memoize [list db_list_of_lists ticket_members "
 	select  distinct
 		im_name_from_user_id(object_id_two) as user_name,
 		object_id_two as user_id
@@ -933,7 +933,7 @@ set ticket_member_options [util_memoize "db_list_of_lists ticket_members {
 		im_tickets p
 	where   r.object_id_one = p.ticket_id
 	order by user_name
-}" 300]
+"] 300]
 set ticket_member_options [linsert $ticket_member_options 0 [list [_ intranet-core.All] ""]]
 
 set ticket_queue_options [im_helpdesk_ticket_queue_options]
