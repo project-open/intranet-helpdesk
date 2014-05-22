@@ -65,7 +65,7 @@ ad_proc -public im_ticket_action_close_delete {} { return 30590 }
 ad_proc -public im_package_helpdesk_id {} {
     Returns the package id of the intranet-helpdesk module
 } {
-    return [util_memoize "im_package_helpdesk_id_helper"]
+    return [util_memoize im_package_helpdesk_id_helper]
 }
 
 ad_proc -private im_package_helpdesk_id_helper {} {
