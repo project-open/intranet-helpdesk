@@ -11,9 +11,26 @@
 
 # The following variables are expected in the environment
 # defined by the calling /tcl/*.tcl libary:
-if {![info exists diagram_width]} { set diagram_width 500 }
-if {![info exists diagram_height]} { set diagram_height 300 }
-if {![info exists diagram_title]} { set diagram_title [lang::message::lookup "" intranet-helpdesk.Ticket_Aging "Ticket Aging"] }
+if {![info exists diagram_limit] || "" == $diagram_limit} { set diagram_limit 40 }
+if {![info exists diagram_width] || "" == $diagram_width} { set diagram_width 300 }
+if {![info exists diagram_height] || "" == $diagram_height } { set diagram_height 300 }
+if {![info exists diagram_title] || "" == $diagram_title} { 
+    set diagram_title [lang::message::lookup "" intranet-helpdesk.Ticket_Aging "Ticket Aging"] 
+}
+
+
+set prio1_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio1 "Prio 1"]
+set prio2_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio23 "Prio 2-3"]
+set prio3_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio46 "Prio 4-6"]
+set prio4_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio46 "Prio 7-..."]
+
+set day_l10n [lang::message::lookup "" intranet-core.day "day"]
+set days_l10n [lang::message::lookup "" intranet-core.days "days"]
+
+set ticket_l10n [lang::message::lookup "" intranet-core.Ticket "Ticket"]
+set tickets_l10n [lang::message::lookup "" intranet-core.Tickets "Tickets"]
+
+set of_l10n [lang::message::lookup "" intranet-core.Ticket_Aging_of "of"]
 
 # ----------------------------------------------------
 # Diagram Setup

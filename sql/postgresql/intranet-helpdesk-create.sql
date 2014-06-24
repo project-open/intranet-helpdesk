@@ -1743,6 +1743,93 @@ SELECT im_dynfield_widget__new (
 
 
 
+-----------------------------------------------------------
+-- Ticket Aging Report
+--
+SELECT im_component_plugin__new (
+	null,				-- plugin_id
+	'im_component_plugin',		-- object_type
+	now(),				-- creation_date
+	null,				-- creation_user
+	null,				-- creation_ip
+	null,				-- context_id
+	'Ticket Aging',			-- plugin_name - shown in menu
+	'intranet-helpdesk',		-- package_name
+	'right',			-- location
+	'/intranet-helpdesk/index',	-- page_url
+	null,				-- view_name
+	30,				-- sort_order
+	'im_helpdesk_ticket_aging_diagram',	-- component_tcl
+	'lang::message::lookup "" "intranet-helpdesk.Ticket_Aging" "Ticket Aging"'
+);
+
+SELECT acs_permission__grant_permission(
+	(select plugin_id from im_component_plugins where plugin_name = 'Ticket Aging' and package_name = 'intranet-helpdesk'), 
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
+
+-- REST Data-Source for the report
+SELECT im_report_new (
+	'REST Ticket Aging Histogram',					-- report_name
+	'rest_ticket_aging_histogram',					-- report_code
+	'intranet-helpdesk',						-- package_key
+	210,								-- report_sort_order
+	(select menu_id from im_menus where label = 'reporting-rest'),	-- parent_menu_id
+	''
+);
+
+update im_reports 
+set report_description = 'Shows the number of tickets per ticket age.'
+where report_code = 'rest_ticket_aging_histogram';
+
+update im_reports 
+set report_sql = '
+select	age,
+	sum(prio1) as prio1,
+	sum(prio2) as prio2,
+	sum(prio3) as prio3,
+	sum(prio4) as prio4
+from	(
+	select	now()::date - o.creation_date::date as age,
+		CASE WHEN ticket_prio_id in (30201) THEN 1 ELSE 0 END as prio1,
+		CASE WHEN ticket_prio_id in (30202, 30203) THEN 1 ELSE 0 END as prio2,
+		CASE WHEN ticket_prio_id in (30204, 30205, 30206) THEN 1 ELSE 0 END as prio3,
+		CASE WHEN ticket_prio_id in (30207, 30208, 30209) OR ticket_prio_id is null THEN 1 ELSE 0 END as prio4
+	from	im_tickets t,
+		acs_objects o
+	where	t.ticket_id = o.object_id
+UNION
+	select	now()::date - im_day_enumerator::date as age,
+		0 as prio1,
+		0 as prio2,
+		0 as prio3,
+		0 as prio4
+	from im_day_enumerator(
+		coalesce((select min(creation_date::date) from acs_objects where object_id in (
+			select t.ticket_id from im_tickets t where ticket_status_id in (select * from im_sub_categories(30000))
+		)), now()::date),
+		now()::date+1
+	)
+) t
+group by age
+order by age
+LIMIT %limit%
+'
+where report_code = 'rest_ticket_aging_histogram';
+
+
+SELECT acs_permission__grant_permission(
+	(select menu_id from im_menus where label = 'rest_ticket_aging_histogram'),
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
+
+
+
+
+
+
 
 -----------------------------------------------------------
 -- Hard Coded DynFields

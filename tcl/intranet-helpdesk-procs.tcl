@@ -1573,27 +1573,17 @@ ad_proc -public im_menu_tickets_admin_links {
 # ---------------------------------------------------------------
 
 ad_proc -public im_helpdesk_ticket_aging_diagram {
-    {-diagram_width 400}
-    {-diagram_height 300}
+    {-diagram_width ""}
+    {-diagram_height ""}
     {-diagram_title ""}
 } {
     Returns a HTML component with a pie chart with top customer
 } {
-    # Skip if Sencha is not installed
+    # Sencha check and permissions
     if {![im_sencha_extjs_installed_p]} { return "" }
-
-    # Permissions: Requires the permission to see all customers
     set current_user_id [ad_get_user_id]
     if {![im_permission $current_user_id view_tickets_all]} { return "" }
-
-    # Load the appropriate Sencha libraries
-    if {"" == $diagram_title} {
-	set diagram_title [lang::message::lookup "" intranet-helpdesk.Ticket_Aging "Ticket Aging"]
-    }
-    set version [im_sencha_extjs_version]
-    set ext "ext-all-debug-w-comments.js"
-    template::head::add_css -href "/sencha-$version/resources/css/ext-all.css" -media "screen" -order 1
-    template::head::add_javascript -src "/sencha-$version/$ext" -order 2
+    im_sencha_extjs_load_libraries
 
     # Call the portlet page
     set params [list \

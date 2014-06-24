@@ -4,91 +4,73 @@
 Ext.require(['Ext.chart.*', 'Ext.Window', 'Ext.fx.target.Sprite', 'Ext.layout.container.Fit']);
 Ext.onReady(function () {
     
-    ticketAgingsStore = Ext.create('Ext.data.Store', {
-        fields: ['name', 'value'],
+    var ticketAgingStore = Ext.create('Ext.data.Store', {
+        fields: ['age', 'prio1', 'prio2', 'prio3', 'prio4'],
 	autoLoad: true,
 	proxy: {
             type: 'rest',
-            url: '/intranet-helpdesk/ticket-aging.json',
-            extraParams: {				// Parameters to the data-source
-		diagram_interval: 'all_time',		// Number of customers to show
-		diagram_max_customers: 8,		// Number of customers to show
-		diagram_max_length_customer_name: 15	// Limit the length of the customer name
+            url: '/intranet-reporting/view',			// This is the generic ]po[ REST interface
+            extraParams: {
+		format: 'json',					// Ask for data in JSON format
+		limit: @diagram_limit@,				// Limit the number of returned rows
+		report_code: 'rest_ticket_aging_histogram'	// The code of the data-source to retreive
             },
-            reader: { type: 'json', root: 'data' }
+            reader: { type: 'json', root: 'data' }		// Standard reader: Data are prefixed by "data".
 	}
     });
-
-    var ticketAgingsIntervalStore = Ext.create('Ext.data.Store', {
-	fields: ['display', 'value'],
-	data : [
-            {"display":"<%=[lang::message::lookup "" intranet-reporting-dashboard.All_Time "All time"]%>", "value":"all_time"},
-            {"display":"<%=[lang::message::lookup "" intranet-reporting-dashboard.Last_Year "Last Year"]%>", "value":"last_year"},
-            {"display":"<%=[lang::message::lookup "" intranet-reporting-dashboard.Last_Quarter "Last Quarter"]%>", "value":"last_quarter"}
-	]
-    });
-
-    ticketAgingsChart = new Ext.chart.Chart({
+    
+    var ticketAgingChart = new Ext.chart.Chart({
 	xtype: 'chart',
 	animate: true,
-	store: ticketAgingsStore,
-	legend: { position: 'right' },
+	shador: true,
+	store: ticketAgingStore,
 	insetPadding: 20,
-	theme: 'Base:gradients',
+	theme: 'Blue',
+        axes: [{
+            type: 'Numeric',
+            position: 'bottom',
+            fields: ['prio1', 'prio2', 'prio3', 'prio4'],
+            // title: 'Number of tickets',
+            grid: false,
+            minimum: 0
+        }, {
+            type: 'Numeric',
+            position: 'left',
+            fields: ['age'],
+            // title: 'Age of tickets (days)',
+            minimum: 0
+        }],
 	series: [{
-	    type: 'pie',
-	    field: 'value',
-	    showInLegend: true,
-	    donut: false,
-	    label: {
-		field: 'name',
-		display: 'rotate',
-                font: '11px Arial'
-	    },
+	    type: 'bar',
+	    axis: 'bottom',
+	    xField: 'age',
+	    yField: ['prio1', 'prio2', 'prio3', 'prio4'],
+	    title: ['@prio1_l10n@', '@prio2_l10n@', '@prio3_l10n@', '@prio4_l10n@'],
+	    stacked: true,
 	    tips: {
-                width: 140,
-                height: 50,
+                trackMouse: false,
+                width: 200,
+                height: 28,
                 renderer: function(storeItem, item) {
-                    var total = 0;                    //calculate percentage.
-                    ticketAgingsStore.each(function(rec) { total += rec.get('value'); });
-                    this.setTitle(storeItem.get('name') + ':<br>' + Math.round(storeItem.get('value') / total * 100) + '%');
+		    var fieldName = item.series.title[item.series.yField.indexOf(item.yField)];
+		    var ageDays = storeItem.get('age');
+		    var daysL10n = (ageDays == 1) ? ' @day_l10n@' : ' @days_l10n@';
+		    var ticketsL10n = (storeItem.get(item.yField) == 1) ? ' @ticket_l10n@' : ' @tickets_l10n@';
+                    this.setTitle(fieldName + ': ' + storeItem.get(item.yField) + ticketsL10n + ' @of_l10n@ ' + ageDays + daysL10n);
                 }
-	    },
-	    highlight: {
-		segment: { margin: 20 }
-	    }
-	}]
+            }
+	}],
+	legend: { position: 'bottom' }
     });
 
-    var ticketAgingsPanel = Ext.create('widget.panel', {
+    var ticketAgingPanel = Ext.create('widget.panel', {
         width: @diagram_width@,
         height: @diagram_height@,
         title: '@diagram_title@',
 	renderTo: '@diagram_id@',
         layout: 'fit',
 	header: false,
-        tbar: [
-	    {
-		xtype: 'combo',
-		editable: false,
-		// fieldLabel: '<%=[lang::message::lookup "" intranet-reporting-dashboard.Interval Interval]%>',
-		store: ticketAgingsIntervalStore,
-		mode: 'local',
-		displayField: 'display',
-		valueField: 'value',
-		triggerAction: 'all',
-		width: 150,
-		forceSelection: true,
-		value: 'all_time',
-		listeners:{select:{fn:function(combo, comboValues) {
-		    var value = comboValues[0].data.value;
-		    var extraParams = ticketAgingsStore.getProxy().extraParams;
-		    extraParams.diagram_interval = value;
-		    ticketAgingsStore.load();
-		}}}
-            }
-	],
-        items: ticketAgingsChart
+        items: ticketAgingChart
     });
 });
 </script>
