@@ -1576,6 +1576,13 @@ ad_proc -public im_helpdesk_ticket_aging_diagram {
     {-diagram_width ""}
     {-diagram_height ""}
     {-diagram_title ""}
+    {-diagram_font ""}
+    {-diagram_theme ""}
+    {-diagram_limit ""}
+    {-diagram_inset_padding ""}
+    {-diagram_tooltip_width ""}
+    {-diagram_tooltip_height ""}
+    {-diagram_legend_width ""}
 } {
     Returns a HTML component with a pie chart with top customer
 } {
@@ -1590,6 +1597,13 @@ ad_proc -public im_helpdesk_ticket_aging_diagram {
                     [list diagram_width $diagram_width] \
                     [list diagram_height $diagram_height] \
                     [list diagram_title $diagram_title] \
+                    [list diagram_title $diagram_font] \
+                    [list diagram_title $diagram_theme] \
+                    [list diagram_title $diagram_limit] \
+                    [list diagram_title $diagram_inset_padding] \
+                    [list diagram_title $diagram_tooltip_width] \
+                    [list diagram_title $diagram_tooltip_height] \
+                    [list diagram_title $diagram_legend_width] \
     ]
 
     set result [ad_parse_template -params $params "/packages/intranet-helpdesk/lib/ticket-aging"]
