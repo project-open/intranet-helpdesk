@@ -252,9 +252,9 @@ DECLARE
 	p_ticket_customer_id	alias for $8;
 	p_ticket_type_id	alias for $9;		
 	p_ticket_status_id	alias for $10;
-	v_ticket_nr		integer;
+	v_ticket_nr		varchar;
 BEGIN
-	select nextval(''im_ticket_seq'') into v_ticket_nr;
+	select nextval(''im_ticket_seq'')::varchar into v_ticket_nr;
 
 	return im_ticket__new (
 		p_ticket_id,
