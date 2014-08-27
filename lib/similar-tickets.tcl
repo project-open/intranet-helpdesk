@@ -69,13 +69,16 @@ set field_list {
     parent_id   		{1.0 house "SLA" }
     ticket_dept_id		{1.0 building "Department" }
     ticket_service_id		{1.0 cog "Service" }
-    ticket_hardware_id		{1.0 box "Hardware" }
-    ticket_application_id	{1.0 application "Application" }
     ticket_queue_id		{1.0 basket "Queue" }
     ticket_conf_item_id		{1.0 server "Configuration Item" }
     ticket_component_id		{1.0 server "Component" }
-    ticket_service_type_id	{1.0 cog "Service Type" }
+}
+
+set ttt {
+    ticket_application_id	{1.0 application "Application" }
+    ticket_hardware_id		{1.0 box "Hardware" }
     ticket_area_id		{1.0 group "Area" }
+    ticket_service_type_id	{1.0 cog "Service Type" }
 }
 array set field_hash $field_list
 set matching_fields {}
