@@ -1045,6 +1045,21 @@ ad_proc -public im_helpdesk_ticket_sla_options {
 # Portlets
 # ---------------------------------------------------------------------
 
+ad_proc -public im_helpdesk_similar_tickets_component {
+    -ticket_id:required
+} {
+    Returns a HTML table with a list of tickets that are somehow
+    "related" to the current ticket based on full-text similarity,
+    configuration items, users etc.
+} {
+    set params [list \
+                    [list ticket_id $ticket_id] \
+    ]
+
+    set result [ad_parse_template -params $params "/packages/intranet-helpdesk/lib/similar-tickets"]
+    return [string trim $result]
+}
+
 ad_proc -public im_helpdesk_home_component {
     {-show_empty_ticket_list_p 1}
     {-view_name "ticket_personal_list" }
