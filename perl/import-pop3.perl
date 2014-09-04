@@ -14,13 +14,14 @@ use FindBin;
 use lib $FindBin::Bin;
 use DBI;
 use Net::POP3;
-use MIME::Parser;
+use MIME::Parser;				# http://perl.mines-albi.fr/perl5.6.1/site_perl/5.6.1/MIME/Tools.html
 use MIME::Entity;
+use MIME::WordDecoder;  
 
 # --------------------------------------------------------
 # Debug? 0=no output, 10=very verbose
 $debug = 1;
-
+MIME::Tools->debugging(1);
 
 # --------------------------------------------------------
 # Database Connection Parameters
@@ -39,7 +40,7 @@ $server_file_storage = "/web/$server/filestorage/tickets"; # Default filename fo
 
 $pop3_server = "pop.1und1.de";			# POP3 server with the mailbox
 $pop3_user = "mailbox\@your-server.com";	# Username - you need to quote the ampersand!
-$pop3_pwd = "secret";				# POP3 password
+$pop3_pwd = "secret";			# POP3 password
 
 
 # --------------------------------------------------------
@@ -83,34 +84,124 @@ if (0 == $n) {
 
 # Get the list of messages
 $msgList = $pop3_conn->list(); 
-print "import-pop3: Reading pop3 message list: ", keys(%$msgList), "\n" if ($debug >= 1);
+print "import-pop3: Reading pop3 message list:\n" if ($debug >= 1);
+print "import-pop3: Reading pop3 message list: ", keys(%$msgList), "\n" if ($debug >= 2);
 
 
 # MIME Parser initialization
-my $parser = new MIME::Parser;
-$parser->ignore_errors(1);
-$parser->output_to_core(1);
-$parser->tmp_to_core(1);
-
+my $mime_parser = new MIME::Parser;
+$mime_parser->ignore_errors(1);
+$mime_parser->output_to_core(1);
+$mime_parser->tmp_to_core(1);
+# $wd = supported MIME::WordDecoder "ISO-8859-1";
+$wd = supported MIME::WordDecoder "UTF-8";
 
 # Initialize attachment arrays
 my @attachment = ();
 my @attname = ();
 
 
+
+
+# --------------------------------------------------------
+# Recursively deal with MIME parts
+# --------------------------------------------------------
+
+sub process_parts {
+    my ($part, $name) = @_;
+    defined($name) or $name = "'anonymous'";
+    my $IO;
+    my $i;
+    my $result = "";
+
+    my $mime_type = $part->mime_type;
+    my ($main_type, $sub_type) = split('/', $mime_type);
+    my $bodyh = $part->bodyhandle;
+    my @parts = $part->parts;
+
+    print "import-pop3: process_parts: name=", $name, "\n" if ($debug >= 1);
+    print "import-pop3: process_parts: mime_type=", $mime_type, "\n" if ($debug >= 1);
+    print "import-pop3: process_parts: main=", $main_type, ", sub=", $sub_type, "\n" if ($debug >= 1);
+
+    if ($mime_type eq "text/plain") {
+	
+	print "import-pop3: process_parts: text/plain: adding to result\n" if ($debug >= 1);
+	print "import-pop3: process_parts: text/plain: ", $bodyh, "\n" if ($debug >= 2);
+	$result .= $part->body_as_string();
+	if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }} 
+
+    } elsif ($mime_type eq "text/html") {
+
+	print "import-pop3: process_parts: text/html: adding to result\n" if ($debug >= 1);
+	print "import-pop3: process_parts: text/html: ", $bodyh, "\n" if ($debug >= 2);
+	$result .= $part->body_as_string();
+	if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }} 
+
+    } elsif ($mime_type eq "message/delivery-status") {
+
+	print "import-pop3: process_parts: message/delivery-status: ignoring\n" if ($debug >= 1);
+	print "import-pop3: process_parts: message/delivery-status: ", $bodyh, "\n" if ($debug >= 2);
+	if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }} 
+
+    } elsif ($mime_type eq "multipart/alternative") {
+
+	print "import-pop3: process_parts: multipart/alternative: \n" if ($debug >= 1);
+	if (0+$part->parts() == 2 and $part->parts(0)->effective_type eq "text/plain") {
+	    print "import-pop3: process_parts: multipart/alternative: adding to result: only first (text) part\n" if ($debug >= 1);
+	    @parts = $part->parts(0);
+	    if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }} 
+	    print "import-pop3: process_parts: ", $part->parts(0)->body_as_string(), "\n" if ($debug >= 2);
+	} else {
+	    print "import-pop3: process_parts: multipart/alternative: alternative with wrong argument count\n" if ($debug >= 1);
+	    for my $subpart ($part->parts()) {
+		print "import-pop3: process_parts: multipart/alternative: subpart: adding to result\n" if ($debug >= 1);
+		print "import-pop3: process_parts: multipart/alternative: subpart: ", $subpart->body_as_string(), "\n" if ($debug >= 2);
+		if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }} 
+	    }
+	}
+
+    } else {
+
+	print "import-pop3: process_parts: unknown MIME type: $mime_type\n" if ($debug >= 1);
+	my $mime_main_type = "";
+	if ($mime_type =~ /^(\w+)\/(\w+)/) {
+	    $mime_main_type = $1;
+	}
+	print "import-pop3: process_parts: trying to identify attachment for mime_main_type=$mime_main_type\n" if ($debug >= 2);
+	foreach $x (@attypes){
+	    if ($mime_main_type =~ m/$x/i){
+		print "import-pop3: process_parts: found attachment for $mime_main_type\n" if ($debug >= 2);
+		$bh = $part->bodyhandle;
+		$attachment = $bh->as_string;
+		push @attachment, $attachment;
+		push @attname, $part->head->mime_attr('content-disposition.filename');
+	    }
+	}
+	if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }} 
+    }
+
+    return $result
+}
+
+
+
+
 # --------------------------------------------------------
 # Loop for each of the mails
+
+print "import-pop3: Starting to import messages:\n" if ($debug >= 1);
 foreach $msg (keys(%$msgList)) {
-    # Get the mail as a file handle
+   # Get the mail as a file handle
     $message = $pop3_conn->get($msg);
-    
+   
     # Parse the MIME email
-    my $parsed = $parser->parse_data($message);
-    my $error = ($@ || $parser->last_error);
+    my $mime_entity = $mime_parser->parse_data($message);
+    my $error = ($@ || $mime_parser->last_error);
     print "import-pop3: error:$error\n" if ("" ne $error);
-    # $parsed->dump_skeleton();
-    my $header = $parsed->head();
-    my $subject = $header->get('Subject');
+    # $mime_entity->dump_skeleton();
+    my $header = $mime_entity->head();
+    my $subject = $wd->decode($header->get('Subject'));
+    my $subject_q = $dbh->quote($subject);
     my $to = $header->get('To');
     my $from = $header->get('From');
     chomp($from);
@@ -120,59 +211,13 @@ foreach $msg (keys(%$msgList)) {
     print "import-pop3: \n" if ($debug >= 1);
     print "import-pop3: from:\t$from\n" if ($debug >= 1);
     print "import-pop3: to:\t$to\n" if ($debug >= 1);
-    print "import-pop3: subject:\t$subject\n" if ($debug >= 1);
+    print "import-pop3: subject:\t$subject_q\n" if ($debug >= 1);
 
-    # Parse the message body
-    my @parts = $parsed->parts();
-    for my $part (@parts) {
-	my $mime_type = $part->mime_type;
-	print "import-pop3: mime_type=$mime_type\n" if ($debug >= 1);
-
-	if ($mime_type eq "text/plain") {
-	    print "import-pop3: text/plain: ", $part->body(), "\n" if ($debug >= 1);
-	    $body .= $part->body();
-	} elsif ($mime_type eq "text/html") {
-	    print "import-pop3: text/html: ", $part->body(), "\n" if ($debug >= 1);
-	    $body .= $part->body();
-	} elsif ($mime_type eq "multipart/alternative") {
-	    print "import-pop3: multipart/alternative: \n" if ($debug >= 1);
-	    if ($part->parts() == 2 and $part->parts(0)->effective_type eq "text/plain" and $part->parts(1)->effective_type eq "text/html") {
-		# Let's just use the plain text part of the mail
-		$body .= $part->parts(0)->body_as_string();
-		print "import-pop3: ", $part->parts(0)->body_as_string(), "\n" if ($debug >= 1);
-	    } else {
-		for my $subpart ($part->parts()) {
-		    print "import-pop3: multipart/alternative: subpart: ", $subpart->body_as_string(), "\n" if ($debug >= 1);
-		    $body .= $subpart->body_as_string();
-		}
-	    }
-	} elsif ($mime_type eq "message/delivery-status") {
-	    print "import-pop3: message/delivery-status: ", $part->body(), "\n" if ($debug >= 1);
-	} else {
-	    my $mime_main_type = "";
-	    if ($mime_type =~ /^(\w+)\/(\w+)/) {
-		$mime_main_type = $1;
-	    }
-	    print "import-pop3: trying to identify attachment for mime_main_type=$mime_main_type\n" if ($debug >= 1);
-	    foreach $x (@attypes){
-		if ($mime_main_type =~ m/$x/i){
-		    print "import-pop3: found attachment for $mime_main_type\n" if ($debug >= 1);
-		    $bh = $part->bodyhandle;
-		    $attachment = $bh->as_string;
-		    push @attachment, $attachment;
-		    push @attname, $part->head->mime_attr('content-disposition.filename');
-		}
-	    }
-	}
-    }
-
+    # Parse the email
+    my $body = process_parts($mime_entity, "main");
+    my $body_q = $dbh->quote($body);
     print "import-pop3\n" if ($debug >= 1);
     print "import-pop3: body=$body\n" if ($debug >= 1);
-    print "import-pop3: attachments: @attname\n" if ($debug >= 1);
-
-    # $pop3_conn->delete($msg);
-    # $pop3_conn->quit(); exit 0;
-
 
     # --------------------------------------------------------
     # Calculate ticket database fields
@@ -185,7 +230,8 @@ foreach $msg (keys(%$msgList)) {
     
     # Ticket Name: Ticket Nr + Mail Subject
     my $ticket_name = "$ticket_nr - $subject";
-    
+    my $ticket_name_q = $dbh->quote($ticket_name);
+
     # Customer ID: Who should pay to fix the ticket?
     # Let's take the "internal" company (=the company running this server).
     $sth = $dbh->prepare("SELECT company_id as company_id from im_companies where company_path = 'internal'");
@@ -257,6 +303,7 @@ foreach $msg (keys(%$msgList)) {
 
     # --------------------------------------------------------
     # Insert the basis ticket into the SQL database
+    print "import-pop3: before im_ticket__new\n" if ($debug >= 1);
     $sth = $dbh->prepare("
 		SELECT im_ticket__new (
 			nextval('t_acs_object_id_seq')::integer, -- p_ticket_id
@@ -266,7 +313,7 @@ foreach $msg (keys(%$msgList)) {
 			'0.0.0.0'::varchar,			-- creation_ip
 			null::integer,				-- (security) context_id
 	
-			'$ticket_name'::varchar,
+			$ticket_name_q,
 			'$ticket_nr'::varchar,
 			'$ticket_customer_id'::integer,
 			'$ticket_type_id'::integer,
@@ -278,6 +325,7 @@ foreach $msg (keys(%$msgList)) {
     my $ticket_id = $row->{ticket_id};
     
     # Update ticket field stored in the im_tickets table
+    print "import-pop3: before im_tickets update\n" if ($debug >= 1);
     $sql = "
 		update im_tickets set
 			ticket_type_id			= '$ticket_type_id',
@@ -291,9 +339,10 @@ foreach $msg (keys(%$msgList)) {
     $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
     
     # Update ticket field stored in the im_projects table
+    print "import-pop3: before im_projects update\n" if ($debug >= 1);
     $sth = $dbh->prepare("
 		update im_projects set
-			project_name		= '$ticket_name',
+			project_name		= $ticket_name_q,
 			project_nr		= '$ticket_nr',
 			parent_id		= $ticket_sla_id
 		where
@@ -306,6 +355,7 @@ foreach $msg (keys(%$msgList)) {
     # Add a Forum Topic Item into the ticket
     
     # Get the next topic ID
+    print "import-pop3: before nextval\n" if ($debug >= 1);
     $sth = $dbh->prepare("SELECT nextval('im_forum_topics_seq') as topic_id");
     $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
     $row = $sth->fetchrow_hashref;
@@ -315,6 +365,7 @@ foreach $msg (keys(%$msgList)) {
     my $topic_status_id = 1200; # open
     
     # Insert a Forum Topic into the ticket container
+    print "import-pop3: before im_forum_topics insert\n" if ($debug >= 1);
     $sql = "
 		insert into im_forum_topics (
 			topic_id, object_id, parent_id,
@@ -323,7 +374,7 @@ foreach $msg (keys(%$msgList)) {
 		) values (
 			'$topic_id', '$ticket_id', null,
 			'$topic_type_id', '$topic_status_id', '$ticket_customer_contact_id',
-			'$subject', '$body'
+			$subject_q, $body_q
 		)
     ";
     $sth = $dbh->prepare($sql);
@@ -334,11 +385,12 @@ foreach $msg (keys(%$msgList)) {
     # Start a new dynamic workflow around the ticket
     
     # Get the next topic ID
+    print "import-pop3: before aux_string1\n" if ($debug >= 1);
     $sth = $dbh->prepare("SELECT aux_string1 from im_categories where category_id = '$ticket_type_id'");
     $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
     $row = $sth->fetchrow_hashref;
     my $workflow_key = $row->{aux_string1};
-    
+    defined($workflow_key) or $workflow_key = "";
     if ("" ne $workflow_key) {
 	print "import-pop3: Starting workflow '$workflow_key'\n" if ($debug);
 	$sql = "
@@ -357,6 +409,7 @@ foreach $msg (keys(%$msgList)) {
 	$row = $sth->fetchrow_hashref;
 	my $case_id = $row->{case_id};
 
+	print "import-pop3: before workflow_case__start_case\n" if ($debug >= 1);
 	$sql = "
 		select workflow_case__start_case (
 			'$case_id',
@@ -392,7 +445,6 @@ foreach $msg (keys(%$msgList)) {
 
     # Remove the message from the inbox
     $pop3_conn->delete($msg);
-
 }
 
 # --------------------------------------------------------
