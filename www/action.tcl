@@ -77,6 +77,16 @@ switch $action_id {
 		# Reopen & Notify - Notify all stakeholders
 		ad_returnredirect [export_vars -base "/intranet-helpdesk/notify-stakeholders" {tid action_id return_url}]
 	    }
+	    
+	    # Reopen project: User need to be able to log time again  
+	    if {[catch {
+		db_dml project_status_to_open "update im_projects set project_status_id = [im_project_status_open]"
+	    } err_msg]} {
+		global errorInfo
+		ns_log Error $errorInfo
+		ad_return_complaint 1  "[lang::message::lookup "" intranet-helpdesk.ErrorSettingProjectStatusToOpen "Error setting project status to 'open'"] <br> $errorInfo"
+		return
+	    }
 	}
 	30540 {
 	    # Associated
