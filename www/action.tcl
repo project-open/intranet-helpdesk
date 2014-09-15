@@ -154,6 +154,8 @@ switch $action_id {
 	    foreach ticket_id $tid {
 	        im_ticket::check_permissions	-ticket_id $ticket_id -operation "admin"
 		im_project_nuke $ticket_id
+		# Ticket does not exist anymore, return to ticket list 
+		ad_returnredirect "/intranet-helpdesk/"
 	    }
 	}
 	default {
