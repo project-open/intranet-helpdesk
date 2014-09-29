@@ -1,4 +1,4 @@
-# /packages/intranet-helpdesk/lib/related-tickets.tcl
+# /packages/intranet-helpdesk/lib/similar-tickets.tcl
 #
 # Copyright (C) 2014 ]project-open[
 #
@@ -58,13 +58,14 @@ set ttt {
  ticket_file                      | text
  ticket_request                   | text
  ticket_resolution                | text
+
+    ticket_sla_id		{1.0 house "SLA" }
 }
 
 
 set field_list { 
     ticket_customer_contact_id	{1.0 user_go "Customer Contact" }
     ticket_assignee_id		{1.0 user "Ticket Assignee" }
-    ticket_sla_id		{1.0 house "SLA" }
     company_id  		{1.0 house "Customer" }
     parent_id   		{1.0 house "SLA" }
     ticket_dept_id		{1.0 building "Department" }
