@@ -1204,7 +1204,7 @@ SELECT	im_component_plugin__new (
 	'/intranet-helpdesk/new',	-- page_url
 	null,				-- view_name
 	10,				-- sort_order
-	'im_user_base_info_component -user_id $ticket_customer_contact_id',
+	'im_user_base_info_component -user_id $ticket_customer_contact_id -show_user_conf_items_p 1',
 	'lang::message::lookup "" intranet-helpdesk.Customer_Info "Customer Info"'
 );
 

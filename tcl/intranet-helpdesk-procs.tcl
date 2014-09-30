@@ -1060,6 +1060,21 @@ ad_proc -public im_helpdesk_similar_tickets_component {
     return [string trim $result]
 }
 
+
+ad_proc -public im_ticket_timeline_component {
+    -ticket_id:required
+} {
+    A set of dates during a ticket lifecycle
+} {
+    set params [list \
+                    [list ticket_id $ticket_id] \
+    ]
+
+    set result [ad_parse_template -params $params "/packages/intranet-helpdesk/lib/ticket-timeline"]
+    return [string trim $result]
+}
+
+
 ad_proc -public im_helpdesk_home_component {
     {-show_empty_ticket_list_p 1}
     {-view_name "ticket_personal_list" }
