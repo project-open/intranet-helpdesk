@@ -47,22 +47,6 @@ foreach ticket_id $tid {
     # For now send notification to PM of SLA
     set recipient_id [db_string get_recipient_id "select project_lead_id from im_projects where project_id in (select parent_id from im_projects where project_id = :ticket_id)" -default 0]
 
-#   set recipient_id [db_string get_ticket_asignee_id "select ticket_assignee_id from im_tickets where ticket_id=:ticket_id" -default 0]
-#    if { 0"" == $recipient_id } {
-#	set recipient_id [parameter::get -package_id [apm_package_id_from_key intranet-helpdesk] -parameter "HelpdeskOwneUserIdr" -default ""]
-#	if { "" == $recipient_id } {
-#	    set ticket_assignee_mail [parameter::get -package_id [apm_package_id_from_key acs-kernel] -parameter "SystemOwner" -default ""]
-#	    set recipient_id [db_string get_ticket_asignee_id "select party_id from parties where email = :ticket_assignee_email" -default 0]
-#	} 
-#	
-#	# tmp patch due to issues with parameter
-#	set ticket_assignee "klaus.hofeditz@project-open.com"
-#	
-#	if { "" == $recipient_id } {
-#	    ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.Err_Mess_No_Email_Found "Ticket prio changed, but could not find any recipient to notify. Please contact the owner of the helpdesk"]
-#	}
-#    }	
-    
     set subject [lang::message::lookup "" intranet-helpdesk.Subject_Prio_Change "Ticket Prio Change"]
     set body [lang::message::lookup "" intranet-helpdesk.Body_Prio_Change "A priority of a ticket has been changed:\n\n"]
     set base_url  [parameter::get -package_id [apm_package_id_from_key acs-kernel] -parameter "SystemURL" -default 60]

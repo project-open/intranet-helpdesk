@@ -833,6 +833,7 @@ where category_id = 30520;
 
 SELECT im_category_new(30530, 'Re-Open', 'Intranet Ticket Action');
 SELECT im_category_new(30532, 'Re-Open &amp; notify', 'Intranet Ticket Action');
+SELECT im_category_new(30534, 'Re-Assign', 'Intranet Ticket Action');
 
 SELECT im_category_new(30540, 'Associate', 'Intranet Ticket Action');
 SELECT im_category_new(30550, 'Escalate', 'Intranet Ticket Action');

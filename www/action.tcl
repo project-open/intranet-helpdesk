@@ -88,6 +88,14 @@ switch $action_id {
 		return
 	    }
 	}
+    	30534 {
+            # Re-Assign
+	    foreach ticket_id $tid {
+                set redirect_url [export_vars -base "/intranet-helpdesk/action-reassign" {action_id return_url}]
+                foreach ticket_id $tid { append redirect_url "&tid=$ticket_id"}
+                ad_returnredirect $redirect_url
+	    }
+        }
 	30540 {
 	    # Associated
 	    if {"" == $tid} { ad_returnredirect $return_url }

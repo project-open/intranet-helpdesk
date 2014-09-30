@@ -141,7 +141,7 @@ db_foreach tickets $sql {
 	set field_name_pretty [lindex $field_entry 2]
 	if {$val > 0} {
 	    set gif_text "[lang::message::lookup "" intranet-helpdesk.Shared_with_this_ticket "Shared with this ticket:"] $field_name_pretty]"
-	    append score_html [im_gif $field_gif $gif_text $gif_text]
+	    append score_html [im_gif -translate_p 0 $field_gif $gif_text $gif_text]
 	}
     }
 

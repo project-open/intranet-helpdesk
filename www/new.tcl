@@ -104,6 +104,7 @@ set user_can_create_new_customer_p 1
 set user_can_create_new_customer_sla_p 1
 set user_can_create_new_customer_contact_p 1
 
+set user_admin_p [im_is_user_site_wide_or_intranet_admin $current_user_id]
 set view_tickets_all_p [im_permission $current_user_id "view_tickets_all"]
 set copy_from_ticket_name ""
 
@@ -262,6 +263,8 @@ ad_form \
 # ------------------------------------------------------------------
 
 set tid [value_if_exists ticket_id]
+set ticket_action_customize_html "<a href=[export_vars -base "/intranet/admin/categories/index" {{select_category_type "Intranet Ticket Action"}}]>[im_gif -translate_p 1 wrench "Custom Actions"]</a>"
+if {!$user_admin_p} { set ticket_action_customize_html "" }
 set ticket_action_html "
 <form action=/intranet-helpdesk/action name=helpdesk_action>
 [export_form_vars return_url tid]
@@ -275,6 +278,7 @@ set ticket_action_html "
      "Intranet Ticket Action" \
      action_id \
 ]
+$ticket_action_customize_html
 </form>
 "
 
@@ -662,6 +666,12 @@ ad_form -extend -name helpdesk_ticket -on_request {
 	-object_id $ticket_id \
 	-form_id helpdesk_ticket
 
+    # Add a new assignee to the members of a ticket
+    if {[info exists ticket_assignee_id] && "" != $ticket_assignee_id} {
+	im_biz_object_add_role $ticket_assignee_id $ticket_id 1300
+    }
+    
+    
     # NOTIFICATION
     if {[catch {
         set sla_name [db_string get_data "select project_name from im_projects where project_id = :ticket_sla_id" -default 0]
@@ -792,6 +802,11 @@ ad_form -extend -name helpdesk_ticket -on_request {
 	-object_id $ticket_id \
 	-form_id helpdesk_ticket
 
+    # Add a new assignee to the members of a ticket
+    if {[info exists ticket_assignee_id] && "" != $ticket_assignee_id} {
+	im_biz_object_add_role $ticket_assignee_id $ticket_id 1300
+    }
+    
     # Write Audit Trail
     im_project_audit -project_id $ticket_id -action after_update
 
@@ -1016,8 +1031,6 @@ array set extra_sql_array [im_dynfield::search_sql_criteria_from_form \
 
 ns_log Notice "new: Before admin links"
 set admin_html "<ul>"
-
-set user_admin_p [im_is_user_site_wide_or_intranet_admin $current_user_id]
 if {$user_admin_p} {
     append admin_html "<li><a href=\"/intranet-helpdesk/admin/\">[lang::message::lookup "" intranet-helpdesk.Admin_Helpdesk "Admin Helpdesk"]</a>\n"
     append admin_html "<li><a href=\"/admin/group-types/one?group_type=im_ticket_queue\">[lang::message::lookup "" intranet-helpdesk.Admin_Helpdesk_Queues "Admin Helpdesk Queues"]</a>\n"
