@@ -24,6 +24,8 @@ set page_title [lang::message::lookup "" intranet-helpdesk.Associate_Ticket_With
 set context_bar [im_context_bar $page_title]
 set page_focus "im_header_form.keywords"
 set action_forbidden_msg [lang::message::lookup "" intranet-helpdesk.Action_Forbidden "<b>Unable to execute action</b>:<br>You don't have the permissions to execute the action '%action_name%' on this ticket."]
+if {1 == [llength $tid]} { set tid [lindex $tid 0] }
+
 
 # Check that the user has write permissions on all select tickets
 foreach ticket_id $tid {
@@ -36,6 +38,5 @@ foreach ticket_id $tid {
 }
 
 set first_ticket_id [lindex $tid 0]
-
 
 

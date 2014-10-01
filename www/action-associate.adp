@@ -9,7 +9,7 @@
 <%= [lang::message::lookup "" intranet-helpdesk.Associate_Tickets_Msg "This page allows you to associated your tickets with other objects."] %>
 </p>
 <br>
-<form action=related-objects-associate-2 method=GET>
+<form action=action-associate-2 method=GET>
 <%= [export_form_vars tid return_url] %>
 <table class="list">
 
