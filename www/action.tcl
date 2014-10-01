@@ -139,13 +139,13 @@ switch $action_id {
 		ad_script_abort
 	    }
 	    foreach ticket_id $tid {
-test		im_ticket::audit		-ticket_id $ticket_id -action "before_nuke"
+		im_ticket::audit		-ticket_id $ticket_id -action "before_nuke"
 	        im_ticket::check_permissions	-ticket_id $ticket_id -operation "admin"
 		im_project_nuke $ticket_id
 	    }
 
 	    # Ticket may not exist anymore, return to ticket list
-test	    if {[regexp {^\/intranet-helpdesk\/new} $return_url match]} {
+	    if {[regexp {^\/intranet-helpdesk\/new} $return_url match]} {
 		set return_url "/intranet-helpdesk/"
 	    }
 	}
