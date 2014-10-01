@@ -9,7 +9,7 @@ ad_page_contract {
 
     @author klaus.hofeditz@project-open.com
 } {
-    { tid:integer,multiple {}}
+    { tid ""}
     { ticket_ids {} }
     action_id:integer
     { ticket_id_from_search:integer "" }
@@ -23,6 +23,7 @@ ad_page_contract {
 set current_user_id [ad_maybe_redirect_for_registration]
 set ticket_ids [list]
 set page_title [lang::message::lookup "" intranet-helpdesk.Title_Reassign "Reassign Tickets"]
+if {1 == [llength $tid]} { set tid [lindex $tid 0] }
 
 set hidden_tid_html ""
 foreach ticket_id $tid {

@@ -827,22 +827,34 @@ SELECT im_category_new(30510, 'Close &amp; notify', 'Intranet Ticket Action');
 
 
 -- Custom screen for duplicate action to select base
-SELECT im_category_new(30520, 'Duplicated', 'Intranet Ticket Action');
-update im_categories set aux_string1 = '/intranet-helpdesk/action-duplicated' 
-where category_id = 30520;
-
+SELECT im_category_new(30520, 'Group to duplicate', 'Intranet Ticket Action');
 SELECT im_category_new(30530, 'Re-Open', 'Intranet Ticket Action');
 SELECT im_category_new(30532, 'Re-Open &amp; notify', 'Intranet Ticket Action');
 SELECT im_category_new(30534, 'Re-Assign', 'Intranet Ticket Action');
-
 SELECT im_category_new(30540, 'Associate', 'Intranet Ticket Action');
-SELECT im_category_new(30550, 'Escalate', 'Intranet Ticket Action');
+SELECT im_category_new(30550, 'Group to problem ticket', 'Intranet Ticket Action');
 SELECT im_category_new(30552, 'Close Escalated Tickets', 'Intranet Ticket Action');
-
 SELECT im_category_new(30560, 'Resolved', 'Intranet Ticket Action');
-
 SELECT im_category_new(30590, 'Delete', 'Intranet Ticket Action');
 SELECT im_category_new(30599, 'Nuke', 'Intranet Ticket Action');
+update im_categories set aux_string1 = '/intranet-helpdesk/action-duplicated' 
+where category_id = 30520;
+
+
+update im_categories set category = 'Set status: Closed'			where category_id = 30500;	-- Close
+update im_categories set category = 'Set status: Closed & notify'		where category_id = 30510;	-- Close & notify
+update im_categories set category = 'Mark tickets as duplicates'		where category_id = 30520;	-- Duplicate
+update im_categories set category = 'Set status: Open' 				where category_id = 30530;	-- Re-open
+update im_categories set category = 'Set status: Open & notify'			where category_id = 30532;	-- Re-open & notify
+update im_categories set category = 'Reassign'	       				where category_id = 30534;	-- Re-assign
+update im_categories set category = 'Associate ticket with other objects'	where category_id = 30540;	-- Associate
+update im_categories set category = 'Change Priority' 	   	 		where category_id = 30545;	-- Change Prio
+update im_categories set category = 'Problem Ticket: Create from incident'	where category_id = 30550;	-- "Escalate"
+update im_categories set category = 'Problem Ticket: Close associated incidents' where category_id = 30552;	-- Close escalated
+update im_categories set category = 'Set status: Resolved'	      		where category_id = 30560;	-- Resolved
+update im_categories set category = 'Set status: Deleted'			where category_id = 30590;	-- Delete
+update im_categories set category = 'Nuke'					where category_id = 30499;	-- Nuke
+
 
 
 

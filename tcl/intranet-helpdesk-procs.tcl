@@ -31,6 +31,7 @@ ad_proc -public im_ticket_status_cantreproduce {} { return 30095 }
 ad_proc -public im_ticket_status_resolved {} { return 30096 }
 ad_proc -public im_ticket_status_deleted {} { return 30097 }
 ad_proc -public im_ticket_status_canceled {} { return 30098 }
+
 ad_proc -public im_ticket_type_purchase_request {} { return 30102 }
 ad_proc -public im_ticket_type_workplace_move_request {} { return 30104 }
 ad_proc -public im_ticket_type_telephony_request {} { return 30106 }
@@ -884,8 +885,8 @@ ad_proc -public im_helpdesk_new_ticket_ticket_rel {
     set rel_id [db_string rel_exists "
 	select	rel_id
 	from	acs_rels
-	where	object_id_one = :ticket_id_from_search
-		and object_id_two = :ticket_id
+	where	object_id_one = :ticket_id and
+		object_id_two = :ticket_id_from_search
     " -default 0]
     if {0 != $rel_id} { return $rel_id }
 
@@ -1638,5 +1639,76 @@ ad_proc -public im_helpdesk_ticket_aging_diagram {
 
     set result [ad_parse_template -params $params "/packages/intranet-helpdesk/lib/ticket-aging"]
     return [string trim $result]
+}
+
+
+
+
+# ---------------------------------------------------------------
+# Allow the user to add queues to tickets
+# ---------------------------------------------------------------
+
+ad_proc im_helpdesk_member_add_queue_component {
+    -object_id:required
+} {
+    Component that returns a formatted HTML form allowing
+    users to add queues to a ticket.
+} {
+    # ------------------------------------------------
+    # Applicability, Defauls & Security
+    set object_type [util_memoize [list db_string acs_object_type "select object_type from acs_objects where object_id = $object_id" -default ""]]
+    if {"im_ticket" != $object_type} { return "" }
+
+    set current_user_id [ad_get_user_id]
+    set perm_cmd "${object_type}_permissions \$current_user_id \$object_id view_p read_p write_p admin_p"
+    eval $perm_cmd
+    if {!$write_p} { return "" }
+
+    set object_name [acs_object_name $object_id]
+    set page_title [lang::message::lookup "" intranet-helpdesk.Add_queue "Add queue"]
+
+    set notify_checked ""
+    if {[parameter::get_from_package_key -package_key "intranet-core" -parameter "NotifyNewMembersDefault" -default "1"]} {
+        set notify_checked "checked"
+    }
+    
+    set bind_vars [ns_set create]
+    set queues_sql "
+	select	g.group_id,
+		g.group_name
+	from	groups g,
+		im_ticket_queue_ext tqe
+	where	g.group_id = tqe.group_id
+	order by lower(g.group_name)
+    "
+    set default ""
+    set list_box [im_selection_to_list_box -translate_p "0" $bind_vars queue_select $queues_sql user_id_from_search $default 10 0]
+
+    set passthrough {object_id return_url also_add_to_object_id limit_to_users_in_group_id}
+    foreach var $passthrough {
+	if {![info exists $var]} { set $var [im_opt_val $var] }
+    }
+
+    set role_id [im_biz_object_role_full_member]
+    set result "
+	<form method=GET action=/intranet/member-add-2>
+	[export_form_vars passthrough]
+	[export_form_vars {notify_asignee 0}]
+	[eval "export_form_vars $passthrough"]
+	<table cellpadding=0 cellspacing=2 border=0>
+	<tr><td>
+	$list_box
+	</td></tr>
+	<tr><td>
+	[_ intranet-core.add_as] [im_biz_object_roles_select role_id $object_id $role_id]
+	</td></tr>
+	<tr><td>
+	<input type=submit value=\"[_ intranet-core.Add]\">
+	</td></tr>
+	</table>
+	</form>
+    "
+    
+    return $result
 }
 

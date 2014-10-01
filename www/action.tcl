@@ -17,7 +17,7 @@ ad_page_contract {
     @param return_url the url to return to
     @author frank.bergmann@project-open.com
 } {
-    tid:integer,multiple,optional
+    { tid:multiple ""}
     action_id:integer
     return_url
 }
@@ -40,8 +40,8 @@ if { [im_profile::member_p -profile_id [im_customer_group_id] -user_id $user_id]
 
 # Deal with funky input parameter combinations
 if {"" == $action_id} { ad_returnredirect $return_url }
-if {![info exists tid]} { set tid {} }
 if {0 == [llength $tid]} { ad_returnredirect $return_url }
+if {1 == [llength $tid]} { set tid [lindex $tid 0] }
 
 set action_name [im_category_from_id $action_id]
 set action_forbidden_msg [lang::message::lookup "" intranet-helpdesk.Action_Forbidden "<b>Unable to execute action</b>:<br>You don't have the permissions to execute the action '%action_name%' on this ticket."]
@@ -70,6 +70,7 @@ switch $action_id {
 		im_ticket::audit		-ticket_id $ticket_id -action "before_update"
 		im_ticket::check_permissions	-ticket_id $ticket_id -operation "write"
 		im_ticket::set_status_id	-ticket_id $ticket_id -ticket_status_id [im_ticket_status_open]
+		db_dml project_status_to_open "update im_projects set project_status_id = [im_project_status_open] where project_id = :ticket_id"
 		im_ticket::audit		-ticket_id $ticket_id -action "after_update"
 	    }
 
@@ -77,48 +78,26 @@ switch $action_id {
 		# Reopen & Notify - Notify all stakeholders
 		ad_returnredirect [export_vars -base "/intranet-helpdesk/notify-stakeholders" {tid action_id return_url}]
 	    }
-	    
-	    # Reopen project: User need to be able to log time again  
-	    if {[catch {
-		db_dml project_status_to_open "update im_projects set project_status_id = [im_project_status_open]"
-	    } err_msg]} {
-		global errorInfo
-		ns_log Error $errorInfo
-		ad_return_complaint 1  "[lang::message::lookup "" intranet-helpdesk.ErrorSettingProjectStatusToOpen "Error setting project status to 'open'"] <br> $errorInfo"
-		return
-	    }
 	}
     	30534 {
             # Re-Assign
-	    foreach ticket_id $tid {
-                set redirect_url [export_vars -base "/intranet-helpdesk/action-reassign" {action_id return_url}]
-                foreach ticket_id $tid { append redirect_url "&tid=$ticket_id"}
-                ad_returnredirect $redirect_url
-	    }
+	    ad_returnredirect [export_vars -base "/intranet-helpdesk/action-reassign" {tid action_id return_url}]
         }
 	30540 {
-	    # Associated
-	    if {"" == $tid} { ad_returnredirect $return_url }
-	    ad_returnredirect [export_vars -base "/intranet-helpdesk/associate" {tid}]
+	    # Associate
+	    ad_returnredirect [export_vars -base "/intranet-helpdesk/action-associate" {tid action_id return_url}]
 	}
     	30545 {
             # Change Prio
-	    foreach ticket_id $tid {
-                set redirect_url [export_vars -base "/intranet-helpdesk/action-change-priority" {action_id return_url}]
-                foreach ticket_id $tid { append redirect_url "&tid=$ticket_id"}
-                ad_returnredirect $redirect_url
-	    }
+	    ad_returnredirect [export_vars -base "/intranet-helpdesk/action-change-priority" {tid action_id return_url}]
         }
 	30550 {
 	    # Escalate
-	    if {"" == $tid} { ad_returnredirect $return_url }
-	    if {[llength $tid] > 1} { ad_return_complaint 1 "[lang::message::lookup "" intranet-helpdesk.Can_excalate_only_one_ticket "
-		We can escalate only one ticket at a time" ]" }
+	    if {[llength $tid] > 1} { ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.Can_excalate_only_one_ticket "We can escalate only one ticket at a time" ] }
 	    ad_returnredirect [export_vars -base "/intranet-helpdesk/new" {{escalate_from_ticket_id $tid}}]
 	}
 	30552 {
 	    # Close Escalated Tickets
-	    if {"" == $tid} { ad_returnredirect $return_url }
 	    set escalated_tickets [db_list escalated_tickets "
 		select	t.ticket_id
 		from	im_tickets t,
@@ -160,10 +139,14 @@ switch $action_id {
 		ad_script_abort
 	    }
 	    foreach ticket_id $tid {
+test		im_ticket::audit		-ticket_id $ticket_id -action "before_nuke"
 	        im_ticket::check_permissions	-ticket_id $ticket_id -operation "admin"
 		im_project_nuke $ticket_id
-		# Ticket does not exist anymore, return to ticket list 
-		ad_returnredirect "/intranet-helpdesk/"
+	    }
+
+	    # Ticket may not exist anymore, return to ticket list
+test	    if {[regexp {^\/intranet-helpdesk\/new} $return_url match]} {
+		set return_url "/intranet-helpdesk/"
 	    }
 	}
 	default {

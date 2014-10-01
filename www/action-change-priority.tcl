@@ -9,7 +9,7 @@ ad_page_contract {
 
     @author klaus.hofeditz@project-open.com
 } {
-    { tid:integer,multiple {}}
+    { tid ""}
     { ticket_ids {} }
     action_id:integer
     { ticket_id_from_search:integer "" }
@@ -35,20 +35,17 @@ foreach ticket_id $tid {
 set ticket_ids_csv [join $ticket_ids ","] 
 
 set sql "
-	select 
-		p.project_name,
+	select 	p.project_name,
 		t.ticket_prio_id
-	from 
-		im_projects p,
+	from 	im_projects p,
 		im_tickets t
-	where 
-		project_id in ($ticket_ids_csv) and 
+	where 	project_id in ($ticket_ids_csv) and 
 		t.ticket_id = p.project_id
 "
 
 set ticket_list_html "<ul>"
 db_foreach ticket $sql {
-	append ticket_list_html "<li>${project_name} - Prio: [im_category_from_id $ticket_prio_id] </li>"
+    append ticket_list_html "<li>${project_name} - Prio: [im_category_from_id $ticket_prio_id] </li>"
 }
 append ticket_list_html "</ul>"
 

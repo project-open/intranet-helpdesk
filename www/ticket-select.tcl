@@ -373,15 +373,14 @@ set sql "
 		im_companies c
 		$extra_from
 	WHERE
-		p.company_id = c.company_id
-		and t.ticket_id = p.project_id
-		and p.project_type_id = [im_project_type_ticket]
-		and p.project_status_id not in ([join [im_sub_categories [im_project_status_deleted]] ","])
+		p.company_id = c.company_id and
+		t.ticket_id = p.project_id and
+		p.project_type_id = [im_project_type_ticket] and
+		p.project_status_id not in ([join [im_sub_categories [im_project_status_deleted]] ","])
 		$where_clause
 		$extra_where
 	$order_by_clause
 "
-
 
 # ---------------------------------------------------------------
 # 5a. Limit the SQL query to MAX rows and provide << and >>

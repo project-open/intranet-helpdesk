@@ -25,7 +25,7 @@ if {![info exists task]} {
 	{ ticket_customer_contact_id "" }
 	{ task_id "" }
 	message:optional
-	{ ticket_status_id "[im_ticket_status_open]" }
+	{ ticket_status_id "" }
 	{ ticket_type_id "" }
 	{ return_url "/intranet-helpdesk/" }
 	{ vars_from_url ""}
@@ -110,6 +110,11 @@ set copy_from_ticket_name ""
 
 # message_html allows us to add a warning popup etc.
 set message_html ""
+
+if {![info exists ticket_status_id] || "" == $ticket_status_id} {
+    set ticket_status_id [ad_parameter -package_id [im_package_helpdesk_id] DefaultNewTicketStatus "" [im_ticket_status_open]]
+}
+
 
 # ------------------------------------------------------------------
 # Create ticket as a copy of another ticket.

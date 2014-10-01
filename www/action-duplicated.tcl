@@ -12,7 +12,6 @@ ad_page_contract {
     of the selected problem ticket.
 
     @param tid The list of ticket_id's that should be marked as duplicated
-    @action_id The initial action selected by the user as a reference.
     @ticket_status_id Parameter for "ticket-select.tcl": 
     		By default show only open tickets.
     @ticket_type_id Parameter for "ticket-select.tcl":
@@ -20,9 +19,8 @@ ad_page_contract {
 
     @author frank.bergmann@project-open.com
 } {
-    { tid:integer,multiple {}}
+    { tid:multiple ""}
     { ticket_ids {} }
-    action_id:integer
     { ticket_id_from_search:integer "" }
     { return_url "/intranet-helpdesk/index" }
 }
@@ -36,20 +34,18 @@ if { {} == $ticket_ids} {
     set ticket_ids $tid
 }
 
-# ad_return_complaint 1 "<pre>\ntid=$tid\nticket_ids=$ticket_ids\naction_id=$action_id\nticket_id_from_search=$ticket_id_from_search\nreturn_url=$return_url\n</pre>"
-
 
 # Deal with funky input parameter combinations
 if {![info exists tid]} { set tid {} }
-if {"" == $action_id} { ad_returnredirect $return_url }
-if {{} == $tid} { ad_returnredirect $return_url }
+if {0 == [llength $tid]} { ad_returnredirect $return_url }
+
 
 # ---------------------------------------------------------------
 # Redirect to select the ticket_id if necessary
 # ---------------------------------------------------------------
 
 if {"" == $ticket_id_from_search} {
-    set current_url [export_vars -base "/intranet-helpdesk/action-duplicated" {action_id}]
+    set current_url [export_vars -base "/intranet-helpdesk/action-duplicated" {return_url}]
     set select_url [export_vars -base "/intranet-helpdesk/ticket-select" {ticket_ids {return_url $current_url}}] 
     ad_returnredirect $select_url
 }
@@ -58,17 +54,6 @@ if {"" == $ticket_id_from_search} {
 # ---------------------------------------------------------------
 # Perform the action
 # ---------------------------------------------------------------
-
-# 30500, 'Close'
-# 30510, 'Close &amp; notify'
-# 30520, 'Duplicated'
-# 30590, 'Delete'
-
-# Deal with funky input parameter combinations
-if {"" == $action_id} { ad_returnredirect $return_url }
-if {![info exists tid]} { set tid {} }
-if {0 == [llength $tid]} { ad_returnredirect $return_url }
-
 
 foreach ticket_id $tid {
     
