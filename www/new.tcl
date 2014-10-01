@@ -666,9 +666,12 @@ ad_form -extend -name helpdesk_ticket -on_request {
 	-object_id $ticket_id \
 	-form_id helpdesk_ticket
 
-    # Add a new assignee to the members of a ticket
+    # Add a new assignees & Queues to the members of a ticket
     if {[info exists ticket_assignee_id] && "" != $ticket_assignee_id} {
 	im_biz_object_add_role $ticket_assignee_id $ticket_id 1300
+    }
+    if {[info exists ticket_queue_id] && "" != $ticket_queue_id} {
+	im_biz_object_add_role $ticket_queue_id $ticket_id 1300
     }
     
     
@@ -806,6 +809,10 @@ ad_form -extend -name helpdesk_ticket -on_request {
     if {[info exists ticket_assignee_id] && "" != $ticket_assignee_id} {
 	im_biz_object_add_role $ticket_assignee_id $ticket_id 1300
     }
+    if {[info exists ticket_queue_id] && "" != $ticket_queue_id} {
+	im_biz_object_add_role $ticket_queue_id $ticket_id 1300
+    }
+    
     
     # Write Audit Trail
     im_project_audit -project_id $ticket_id -action after_update

@@ -21,17 +21,16 @@ ad_page_contract {
 # ---------------------------------------------------------------
 
 set current_user_id [ad_maybe_redirect_for_registration]
-
-# if { {} == $ticket_ids} {
-#    set ticket_ids $tid
-# }
-
 set ticket_ids [list]
 set page_title [lang::message::lookup "" intranet-helpdesk.Title_Change_Prio "Change Ticket Prio"]
 
+set hidden_tid_html ""
 foreach ticket_id $tid {
     lappend ticket_ids $ticket_id
+    append hidden_tid_html "<input type='hidden' name='tid' value='$ticket_id'>\n"
 }
+
+
 
 set ticket_ids_csv [join $ticket_ids ","] 
 

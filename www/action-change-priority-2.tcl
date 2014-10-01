@@ -67,8 +67,10 @@ foreach ticket_id $tid {
 
 if { "" != $err } {
     ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.Change_Prio_Problems "We found problems while updating the ticket_status:<br> $err"]
-} else {
-    set fb_msg [lang::message::lookup "" intranet-helpdesk.PrioChanged "Priority has been changed, a notification had been sent to the owner of the Service Level Agreement project this ticket is assigned to."]
-    # KH: -message does currently not work, OpenACS bug?  
-    ad_returnredirect -message $fb_msg "/intranet-helpdesk/new?ticket_id=$ticket_id&form_mode=display"
+    ad_script_abort
 }
+
+
+set fb_msg [lang::message::lookup "" intranet-helpdesk.PrioChanged "Priority has been changed, a notification had been sent to the owner of the Service Level Agreement project this ticket is assigned to."]
+# KH: -message does currently not work, OpenACS bug?  
+ad_returnredirect -message $fb_msg $return_url
