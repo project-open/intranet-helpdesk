@@ -492,7 +492,7 @@ create table im_ticket_queue_ext (
 
 select define_function_args('im_ticket_queue__new','GROUP_ID,GROUP_NAME,EMAIL,URL,LAST_MODIFIED;now(),MODIFYING_IP,OBJECT_TYPE;im_ticket_queue,CONTEXT_ID,CREATION_USER,CREATION_DATE;now(),CREATION_IP,JOIN_POLICY');
 
-create function im_ticket_queue__new(INT4,VARCHAR,VARCHAR,VARCHAR,TIMESTAMPTZ,VARCHAR,VARCHAR,INT4,INT4,TIMESTAMPTZ,VARCHAR,VARCHAR)
+create or replace function im_ticket_queue__new(INT4,VARCHAR,VARCHAR,VARCHAR,TIMESTAMPTZ,VARCHAR,VARCHAR,INT4,INT4,TIMESTAMPTZ,VARCHAR,VARCHAR)
 returns INT4 as '
 declare
 	p_GROUP_ID		alias for $1;
@@ -519,6 +519,10 @@ begin
 		p_JOIN_POLICY,p_CONTEXT_ID
 	);
 	insert into IM_TICKET_QUEUE_EXT (GROUP_ID) values (v_GROUP_ID);
+
+	-- define the queue as a component of Registered Users
+	PERFORM composition_rel__new(-2, v_GROUP_ID);
+
 	return v_GROUP_ID;
 end;' language 'plpgsql';
 
