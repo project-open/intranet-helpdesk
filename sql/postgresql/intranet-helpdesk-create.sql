@@ -1498,8 +1498,24 @@ delete from im_views where view_id = 270;
 insert into im_views (view_id, view_name, visible_for, view_type_id)
 values (270, 'ticket_list', 'view_tickets', 1400);
 
+
+insert into im_view_columns (
+        column_id, view_id, sort_order,
+	column_name,
+	column_render_tcl,
+        visible_for
+) values (
+        27099,270,-1,
+        '<input type=checkbox name=_dummy onclick="acs_ListCheckAll(''ticket'',this.checked)">',
+        '$action_checkbox',
+        ''
+);
+
+insert into im_view_columns (column_id, view_id, sort_order, column_name, column_render_tcl)
+values (27001,270,1,'OK','<center>[im_project_on_track_bb $on_track_status_id]</center>');
+
 insert into im_view_columns (column_id, view_id, sort_order, column_name, column_render_tcl) values
-(27000,270,00, 'Prio','"$ticket_prio"');
+(27005,270,5, 'Prio','"$ticket_prio"');
 
 delete from im_view_columns where column_id = 27010;
 insert into im_view_columns (column_id, view_id, sort_order, column_name, column_render_tcl) values
@@ -1536,17 +1552,6 @@ where column_id = 27080;
 
 -- Add a "select all" checkbox to select all tickets in the list
 delete from im_view_columns where column_id = 27099;
-insert into im_view_columns (
-        column_id, view_id, sort_order,
-	column_name,
-	column_render_tcl,
-        visible_for
-) values (
-        27099,270,-1,
-        '<input type=checkbox name=_dummy onclick="acs_ListCheckAll(''ticket'',this.checked)">',
-        '$action_checkbox',
-        ''
-);
 
 -- insert into im_view_columns (column_id, view_id, sort_order, column_name, column_render_tcl) values
 -- (27030,270,70,'Start Date','$start_date_formatted');
