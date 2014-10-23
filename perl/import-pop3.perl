@@ -27,20 +27,25 @@ MIME::Tools->debugging(1);
 # Database Connection Parameters
 #
 
-# The name of the ]po[ server
-$server = "projop";				# The name of the database instance.
-$db_username = "$server";			# By default the same as the server.
+# Information about the ]po[ database
+$instance = getlogin();				# The name of the database instance.
+$db_username = "$instance";			# By default the same as the instance.
 $db_pwd = "";					# The DB password. Empty by default.
-$db_datasource = "dbi:Pg:dbname=$server";	# How to identify the database
-$server_file_storage = "/web/$server/filestorage/tickets"; # Default filename for ticket file storage
+$db_datasource = "dbi:Pg:dbname=$instance";	# How to identify the database
+$ticket_file_storage = "/web/$instance/filestorage/tickets"; # Default filename for ticket file storage
+
+
+if ("" eq $instance) { $instance = getlogin(); }
+
 
 
 # --------------------------------------------------------
-# The POP3 Mail Account
-
-$pop3_server = "pop.1und1.de";			# POP3 server with the mailbox
-$pop3_user = "mailbox\@your-server.com";	# Username - you need to quote the ampersand!
-$pop3_pwd = "secret";			# POP3 password
+# Default POP3 Mail Account
+# Enter specific values in order to overwrite parameter values set in ]po[.
+#
+$pop3_host = "";			# "mail.your-server.com" - POP3 server of the mailbox
+$pop3_user = "";			# "mailbox\@your-server.com" - you need to quote the at-sign
+$pop3_pwd = "";				# "secret" - POP3 password
 
 
 # --------------------------------------------------------
@@ -67,15 +72,44 @@ $dbh = DBI->connect($db_datasource, $db_username, $db_pwd) ||
     die "import-pop3: Unable to connect to database.\n";
 
 
+# --------------------------------------------------------
+# Get parameters from database
+#
+if ("" eq $pop3_host) {
+    $sth = $dbh->prepare("SELECT attr_value FROM apm_parameters ap, apm_parameter_values apv WHERE ap.parameter_id = apv.parameter_id and ap.package_key = 'intranet-helpdesk' and ap.parameter_name = 'InboxPOP3Host'");
+    $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
+    my $row = $sth->fetchrow_hashref;
+    my $pop3_host = $row->{attr_value};
+}
+
+if ("" eq $pop3_user) {
+    $sth = $dbh->prepare("SELECT attr_value FROM apm_parameters ap, apm_parameter_values apv WHERE ap.parameter_id = apv.parameter_id and ap.package_key = 'intranet-helpdesk' and ap.parameter_name = 'InboxPOP3User'");
+    $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
+    my $row = $sth->fetchrow_hashref;
+    my $pop3_user = $row->{attr_value};
+}
+
+if ("" eq $pop3_pwd) {
+    $sth = $dbh->prepare("SELECT attr_value FROM apm_parameters ap, apm_parameter_values apv WHERE ap.parameter_id = apv.parameter_id and ap.package_key = 'intranet-helpdesk' and ap.parameter_name = 'InboxPOP3User'");
+    $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
+    my $row = $sth->fetchrow_hashref;
+    my $pop3_pwd = $row->{attr_value};
+}
+
+
+die "import-pop3.perl: You need to define a pop3_host" if ("" eq $pop3_host);
+die "import-pop3.perl: You need to define a pop3_user" if ("" eq $pop3_user);
+die "import-pop3.perl: You need to define a pop3_password" if ("" eq $pop3_pwd);
+
 
 # --------------------------------------------------------
 # Establish a connection to the POP3 server
 #
-$pop3_conn = Net::POP3->new($pop3_server, Timeout => 60) 
-    || die "import-pop3: Unable to connect to POP3 server $pop3_server: Timeout\n";
+$pop3_conn = Net::POP3->new($pop3_host, Timeout => 60) 
+    || die "import-pop3: Unable to connect to POP3 server $pop3_host: Timeout\n";
 
 $n = $pop3_conn->login($pop3_user,$pop3_pwd) 
-    || die "import-pop3: Unable to connect to POP3 server $pop3_server: Bad Password\n"; 
+    || die "import-pop3: Unable to connect to POP3 server $pop3_host: Bad Password\n"; 
 
 if (0 == $n) { 
     print "import-pop3: No messages on server.\n";
@@ -99,8 +133,6 @@ $wd = supported MIME::WordDecoder "UTF-8";
 # Initialize attachment arrays
 my @attachment = ();
 my @attname = ();
-
-
 
 
 # --------------------------------------------------------
@@ -435,7 +467,7 @@ foreach $msg (keys(%$msgList)) {
     for($i=0; $i <= $#attname; $i++){
 	my $att_name = $attname[$i];
 	my $att_content = $attachment[$i];
-	my $path = "$server_file_storage/$customer_path/$ticket_nr";
+	my $path = "$ticket_file_storage/$customer_path/$ticket_nr";
 	print "import-pop3: Writing attachment to file=$path/$att_name\n" if ($debug >= 1);
 	system("mkdir -p $path");
 	open(OUT, ">$path/$att_name");
