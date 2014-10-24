@@ -28,14 +28,11 @@ MIME::Tools->debugging(1);
 #
 
 # Information about the ]po[ database
-$instance = getlogin();				# The name of the database instance.
-$db_username = "$instance";			# By default the same as the instance.
-$db_pwd = "";					# The DB password. Empty by default.
-$db_datasource = "dbi:Pg:dbname=$instance";	# How to identify the database
+$instance = getpwuid( $< );;				# The name of the database instance.
+$db_username = "$instance";				# By default the same as the instance.
+$db_pwd = "";						# The DB password. Empty by default.
+$db_datasource = "dbi:Pg:dbname=$instance";		# How to identify the database
 $ticket_file_storage = "/web/$instance/filestorage/tickets"; # Default filename for ticket file storage
-
-
-if ("" eq $instance) { $instance = getlogin(); }
 
 
 
@@ -43,9 +40,9 @@ if ("" eq $instance) { $instance = getlogin(); }
 # Default POP3 Mail Account
 # Enter specific values in order to overwrite parameter values set in ]po[.
 #
-$pop3_host = "";			# "mail.your-server.com" - POP3 server of the mailbox
-$pop3_user = "";			# "mailbox\@your-server.com" - you need to quote the at-sign
-$pop3_pwd = "";				# "secret" - POP3 password
+$pop3_host = "";					# "mail.your-server.com" - POP3 server of the mailbox
+$pop3_user = "";					# "mailbox\@your-server.com" - you need to quote the at-sign
+$pop3_pwd = "";						# "secret" - POP3 password
 
 
 # --------------------------------------------------------
@@ -78,28 +75,29 @@ $dbh = DBI->connect($db_datasource, $db_username, $db_pwd) ||
 if ("" eq $pop3_host) {
     $sth = $dbh->prepare("SELECT attr_value FROM apm_parameters ap, apm_parameter_values apv WHERE ap.parameter_id = apv.parameter_id and ap.package_key = 'intranet-helpdesk' and ap.parameter_name = 'InboxPOP3Host'");
     $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
-    my $row = $sth->fetchrow_hashref;
-    my $pop3_host = $row->{attr_value};
+    $row = $sth->fetchrow_hashref;
+    $pop3_host = $row->{attr_value};
 }
 
 if ("" eq $pop3_user) {
     $sth = $dbh->prepare("SELECT attr_value FROM apm_parameters ap, apm_parameter_values apv WHERE ap.parameter_id = apv.parameter_id and ap.package_key = 'intranet-helpdesk' and ap.parameter_name = 'InboxPOP3User'");
     $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
-    my $row = $sth->fetchrow_hashref;
-    my $pop3_user = $row->{attr_value};
+    $row = $sth->fetchrow_hashref;
+    $pop3_user = $row->{attr_value};
 }
 
 if ("" eq $pop3_pwd) {
-    $sth = $dbh->prepare("SELECT attr_value FROM apm_parameters ap, apm_parameter_values apv WHERE ap.parameter_id = apv.parameter_id and ap.package_key = 'intranet-helpdesk' and ap.parameter_name = 'InboxPOP3User'");
+    $sth = $dbh->prepare("SELECT attr_value FROM apm_parameters ap, apm_parameter_values apv WHERE ap.parameter_id = apv.parameter_id and ap.package_key = 'intranet-helpdesk' and ap.parameter_name = 'InboxPOP3Pwd'");
     $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
-    my $row = $sth->fetchrow_hashref;
-    my $pop3_pwd = $row->{attr_value};
+    $row = $sth->fetchrow_hashref;
+    $pop3_pwd = $row->{attr_value};
 }
 
 
+print "import-pop3: host=$pop3_host, user=$pop3_user, pwd=$pop3_pwd\n" if ($debug > 9);
 die "import-pop3.perl: You need to define a pop3_host" if ("" eq $pop3_host);
 die "import-pop3.perl: You need to define a pop3_user" if ("" eq $pop3_user);
-die "import-pop3.perl: You need to define a pop3_password" if ("" eq $pop3_pwd);
+die "import-pop3.perl: You need to define a pop3_pwd" if ("" eq $pop3_pwd);
 
 
 # --------------------------------------------------------
@@ -159,6 +157,8 @@ sub process_parts {
 	
 	print "import-pop3: process_parts: text/plain: adding to result\n" if ($debug >= 1);
 	print "import-pop3: process_parts: text/plain: ", $bodyh, "\n" if ($debug >= 2);
+
+	$bodyh->is_encoded(1);
 	$result .= $part->body_as_string();
 	if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }} 
 
@@ -166,6 +166,7 @@ sub process_parts {
 
 	print "import-pop3: process_parts: text/html: adding to result\n" if ($debug >= 1);
 	print "import-pop3: process_parts: text/html: ", $bodyh, "\n" if ($debug >= 2);
+	$bodyh->is_encoded(1);
 	$result .= $part->body_as_string();
 	if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }} 
 
@@ -476,7 +477,8 @@ foreach $msg (keys(%$msgList)) {
     }
 
     # Remove the message from the inbox
-    $pop3_conn->delete($msg);
+#!!!
+#    $pop3_conn->delete($msg);
 }
 
 # --------------------------------------------------------
