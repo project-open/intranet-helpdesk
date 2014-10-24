@@ -478,7 +478,7 @@ foreach $msg (keys(%$msgList)) {
 
     # Remove the message from the inbox
 #!!!
-#    $pop3_conn->delete($msg);
+    $pop3_conn->delete($msg);
 }
 
 # --------------------------------------------------------
