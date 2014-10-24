@@ -1738,9 +1738,12 @@ ad_proc -public im_helpdesk_inbox_pop3_import_sweeper { } {
         ns_log Notice "intranet_helpdesk_pop3_import_sync: Aborting. There is another process running"
         return
     }
-	exec bash -c $cmd
-
+    set result ""
     if {[catch {
+
+	set result [exec bash -c $cmd]
+	ns_log Notice "im_helpdesk_inbox_pop3_import_sweeper: Result: $result"
+	
     } err_msg]} {
 	ns_log Error "im_helpdesk_inbox_pop3_import_sweeper: Error: $err_msg"
     }
