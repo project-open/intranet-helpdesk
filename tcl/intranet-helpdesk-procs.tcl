@@ -1712,3 +1712,38 @@ ad_proc im_helpdesk_member_add_queue_component {
     return $result
 }
 
+
+
+
+# ----------------------------------------------------------------------
+# Check for new mail to be converted into tickets
+# ----------------------------------------------------------------------
+
+ad_proc -public im_helpdesk_inbox_pop3_import_sweeper { } {
+    Check for new mail to be converted into tickets
+} {
+    ns_log Notice "im_helpdesk_inbox_pop3_import_sweeper: Starting"
+
+    set pop3_host [parameter::get_from_package_key -package_key intranet-helpdesk -parameter InboxPOP3Host -default ""]
+    if {"" == [string trim $pop3_host]} { return }
+
+    set pageroot [ns_info pageroot]
+    set serverroot [join [lrange [split $pageroot "/"] 0 end-1] "/"]
+    set cmd "$serverroot/packages/intranet-helpdesk/perl/import-pop3.perl"
+    ns_log Notice "im_helpdesk_inbox_pop3_import_sweeper: cmd=$cmd"
+
+    # Make sure that only one thread is working at a time
+    if {[nsv_incr intranet_helpdesk_pop3_import sweeper_p] > 1} {
+        nsv_incr intranet_helpdesk_pop3_import sweeper_p -1
+        ns_log Notice "intranet_helpdesk_pop3_import_sync: Aborting. There is another process running"
+        return
+    }
+	exec bash -c $cmd
+
+    if {[catch {
+    } err_msg]} {
+	ns_log Error "im_helpdesk_inbox_pop3_import_sweeper: Error: $err_msg"
+    }
+
+    nsv_incr intranet_helpdesk_pop3_import sweeper_p -1
+}
