@@ -1368,9 +1368,9 @@ ad_proc -public im_navbar_tree_helpdesk {
     set wiki [im_navbar_doc_wiki]
 
     set html "
-	<li><a href=/intranet-helpdesk/index>[lang::message::lookup "" intranet-helpdesk.Service_Mgmt "IT Service Management"]</a>
+	<li><a href=\"/intranet-helpdesk/index\">[lang::message::lookup "" intranet-helpdesk.Service_Mgmt "IT Service Management"]</a>
 	<ul>
-	<li><a href=$wiki/module_itsm>[lang::message::lookup "" intranet-core.ITSM_Help "ITSM Help"]</a>
+	<li><a href=\"$wiki/module_itsm\">[lang::message::lookup "" intranet-core.ITSM_Help "ITSM Help"]</a>
     "
 
     # --------------------------------------------------------------
@@ -1385,7 +1385,7 @@ ad_proc -public im_navbar_tree_helpdesk {
     if {[im_permission $current_user_id "view_tickets_all"]} {
 	# Add sub-menu with types of tickets
 	append html "
-		<li><a href=/intranet-helpdesk/index>[lang::message::lookup "" intranet-helpdesk.Ticket_Types "Ticket Types"]</a>
+		<li><a href=\"/intranet-helpdesk/index\">[lang::message::lookup "" intranet-helpdesk.Ticket_Types "Ticket Types"]</a>
 		<ul>
         "
 	set ticket_type_sql "select * from im_ticket_types order by ticket_type"
@@ -1418,7 +1418,7 @@ ad_proc -public im_navbar_tree_helpdesk {
 
     set sla_url [export_vars -base "/intranet/projects/index" {{project_type_id [im_project_type_sla]}}]
     append html "
-	<li><a href=$sla_url>[lang::message::lookup "" intranet-helpdesk.SLA_Management "SLA Management"]</a>
+	<li><a href=\"$sla_url\">[lang::message::lookup "" intranet-helpdesk.SLA_Management "SLA Management"]</a>
 	<ul>
     "
 
@@ -1462,7 +1462,7 @@ ad_proc -public im_navbar_tree_helpdesk_ticket_type {
     set wiki [im_navbar_doc_wiki]
 
     set html "
-	<li><a href=/intranet-helpdesk/index>[lang::message::lookup "" intranet-helpdesk.${base_ticket_type}_Management "$base_ticket_type Management"]</a>
+	<li><a href=\"/intranet-helpdesk/index\">[lang::message::lookup "" intranet-helpdesk.${base_ticket_type}_Management "$base_ticket_type Management"]</a>
 	<ul>
     "
 
@@ -1475,7 +1475,7 @@ ad_proc -public im_navbar_tree_helpdesk_ticket_type {
 
     # Add sub-menu with types of tickets
     append html "
-	<li><a href=[export_vars -base "/intranet-helpdesk/index" {base_ticket_type_id}]>$base_ticket_type Ticket Types</a>
+	<li><a href=\"[export_vars -base "/intranet-helpdesk/index" {base_ticket_type_id}]\">$base_ticket_type Ticket Types</a>
 	<ul>
     "
     set ticket_type_sql "
