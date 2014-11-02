@@ -20,4 +20,7 @@ ad_schedule_proc -thread t [parameter::get_from_package_key -package_key intrane
 nsv_set intranet_helpdesk_pop3_import sweeper_p 0
 
 # Check for incoming email to be converted into tickets
-ad_schedule_proc -thread t [parameter::get_from_package_key -package_key intranet-helpdesk -parameter InboxPOP3SweeperInterval -default 60] im_helpdesk_inbox_pop3_import_sweeper
+set sweeper_interval [parameter::get_from_package_key -package_key intranet-helpdesk -parameter InboxPOP3SweeperInterval -default 60] 
+if {"" != $sweeper_interval && [string is integer $sweeper_interval] && $sweeper_interval > 0} {
+    ad_schedule_proc -thread t $sweeper_interval im_helpdesk_inbox_pop3_import_sweeper
+}
