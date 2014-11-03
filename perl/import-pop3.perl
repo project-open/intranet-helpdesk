@@ -241,6 +241,7 @@ foreach $msg (keys(%$msgList)) {
     chomp($to);
     chomp($subject);
 
+
     print "import-pop3: \n" if ($debug >= 1);
     print "import-pop3: from:\t$from\n" if ($debug >= 1);
     print "import-pop3: to:\t$to\n" if ($debug >= 1);
@@ -283,15 +284,23 @@ foreach $msg (keys(%$msgList)) {
 	my $ticket_sla_id = $row->{sla_id};
     }
     
-    # Customer's contact: Check database for "From" email
-    my $sql = "select party_id from parties where lower(trim(email)) = lower(trim('$from'))";
-    $rv = $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
+    # --------------------------------------------------------
+    # Deal with the Customer's contact: 
+    # Check database for "From" email
+    # Example: "Frank Bergmann" <frank.bergmann@project-open.com>
+    #
+    if ($from =~ /\<(.+)\>/) { $from = $1; }
+    print "import-pop3: from fixed:\t'$from'\n" if ($debug >= 1);
+
     my $ticket_customer_contact_id = 0;
+    my $sql = "select party_id from parties where lower(trim(email)) = lower(trim('$from'))";
+    $sth = $dbh->prepare($sql);
+    $rv = $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
     if ($rv >= 0) {
 	$row = $sth->fetchrow_hashref;
-	my $ticket_customer_contact_id = $row->{party_id};
+	$ticket_customer_contact_id = $row->{party_id};
     }
-    
+
     # Ticket Type:
     #  30102 | Purchasing request
     #  30104 | Workplace move request
@@ -477,7 +486,6 @@ foreach $msg (keys(%$msgList)) {
     }
 
     # Remove the message from the inbox
-#!!!
     $pop3_conn->delete($msg);
 }
 
