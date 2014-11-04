@@ -1670,6 +1670,24 @@ SELECT im_dynfield_widget__new (
 );
 
 
+
+SELECT im_dynfield_widget__new (
+	null, 'im_dynfield_widget', now(), 0, '0.0.0.0', null,
+	'ticket_type', 'Ticket Type', 'Ticket Type',
+	10007, 'integer', 'im_category_tree', 'integer',
+	'{custom {category_type "Intranet Ticket Type"}}'
+);
+
+
+SELECT im_dynfield_widget__new (
+	null, 'im_dynfield_widget', now(), 0, '0.0.0.0', null,
+	'ticket_status', 'Ticket Status', 'Ticket Status',
+	10007, 'integer', 'im_category_tree', 'integer',
+	'{custom {category_type "Intranet Ticket Status"}}'
+);
+
+
+
 SELECT im_dynfield_widget__new (
 	null, 'im_dynfield_widget', now(), 0, '0.0.0.0', null,
 	'telephony_request_type', 'Telephony Request Type', 'Telephony Request Type',
