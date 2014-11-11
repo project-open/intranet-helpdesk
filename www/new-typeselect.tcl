@@ -26,22 +26,36 @@ set page_title [lang::message::lookup "" intranet-helpdesk.Please_Select_Ticket_
 set context_bar [im_context_bar $page_title]
 
 set ticket_sla_options [im_select_flatten_list [im_helpdesk_ticket_sla_options -customer_id $ticket_customer_id -include_create_sla_p 1 -include_empty_p 0]]
+set len_ticket_sla_options [expr [llength $ticket_sla_options] / 2]
 
-if {0 == [llength $ticket_sla_options]} {
-    set user_name [db_string uname "select acs_object__name(:current_user_id)"]
-    ad_return_complaint 1 "
-	<br><b>[lang::message::lookup "" intranet-helpdesk.No_SLAs_for_customer "No SLA available"]</b>:<br>&nbsp;<br>
-	[lang::message::lookup "" intranet-helpdesk.No_SLAs_for_customer_msg "
-		There is no SLA (Service Level Agreement / Support Contract) <br>
-		available in this system for user '%user_name%'<br>
-		Please contact the support team to create or reactivate a SLA.
-		<br>&nbsp;<br>
-	"]
-    "
-    ad_script_abort
+if {"" == $ticket_sla_id} {
+    switch $len_ticket_sla_options {
+	0 {
+	    # No SLA Options - there is no SLA for the current user
+	    # => Write out an error message
+	    set user_name [db_string uname "select acs_object__name(:current_user_id) from dual"]
+	    ad_return_complaint 1 "
+		<br><b>[lang::message::lookup "" intranet-helpdesk.No_SLAs_for_customer "No SLA available"]</b>:<br>&nbsp;<br>
+		[lang::message::lookup "" intranet-helpdesk.No_SLAs_for_customer_msg "
+			There is no SLA (Service Level Agreement / Support Contract) <br>
+			available in this system for user '%user_name%'<br>
+			Please contact the support team to create or reactivate a SLA.
+			<br>&nbsp;<br>
+	        "]
+	    "
+	    ad_script_abort
+	}
+	1 {
+	    # Exactly one SLA option for this user
+	    # => Use this SLA and don't even shown a select box
+	    set ticket_sla_id [lindex $ticket_sla_options 0]
+	}
+	default {
+	    # => Do nothing and leave the selection to the .ADP page.
+	}	
+    }
 }
 
-# ad_return_complaint 1 "sla=$ticket_sla_id, type=$ticket_type_id"
 
 set sql "
 	select
