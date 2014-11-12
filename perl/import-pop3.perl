@@ -57,7 +57,7 @@ my $result = GetOptions (
     "file=s"     => \$message_file,
     "debug=i"    => \$debug,
     "host=s"     => \$pop3_host,
-    "user=s"     => \$pop3_email,
+    "user=s"     => \$pop3_user,
     "password=s" => \$pop3_pwd
     ) or die "Usage:\n\nimport-pop3.perl --debug 3 --host pop.1und1.de --user bbigboss\@tigerpond.com --password secret\n\n";
 
@@ -243,6 +243,8 @@ foreach $msg_num (keys(%$msgList)) {
    # Get the mail as a file handle
     $message = $pop3_conn->get($msg_num);
     print "import-pop3: message=$message\n" if ($debug >= 3);
+
+    exit 0;
 
     # Parse the MIME email
     my $mime_entity = $mime_parser->parse_data($message);
