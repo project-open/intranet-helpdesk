@@ -332,8 +332,12 @@ if {"edit" == $form_mode} {
 	set redirect_p 1 
     }
 
+    # Redirect in order to define the SLA and the ticket type
     if {$redirect_p} {
-	ad_returnredirect [export_vars -base "new-typeselect" {{return_url $current_url} ticket_id ticket_type_id ticket_name ticket_nr ticket_nr ticket_sla_id}]
+	set new_typeselect_url_default "/intranet-helpdesk/new-typeselect"
+	set new_typeselect_url [parameter::get_from_package_key -package_key "intranet-helpdesk" -parameter "NewTypeSelectUrl" -default $new_typeselect_url_default]
+	if {"" == $new_typeselect_url} { set new_typeselect_url $new_typeselect_url_default }
+	ad_returnredirect [export_vars -base $new_typeselect_url {{return_url $current_url} ticket_id ticket_type_id ticket_name ticket_nr ticket_nr ticket_sla_id}]
     }
 
 }
