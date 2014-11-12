@@ -17,10 +17,13 @@ use Net::POP3;
 use MIME::Parser;				# http://perl.mines-albi.fr/perl5.6.1/site_perl/5.6.1/MIME/Tools.html
 use MIME::Entity;
 use MIME::WordDecoder;  
+use Path::Class;
+use Getopt::Long;
+
 
 # --------------------------------------------------------
 # Debug? 0=no output, 10=very verbose
-$debug = 1;
+$debug = 5;
 MIME::Tools->debugging(1);
 
 # --------------------------------------------------------
@@ -43,6 +46,21 @@ $ticket_file_storage = "/web/$instance/filestorage/tickets"; # Default filename 
 $pop3_host = "";					# "mail.your-server.com" - POP3 server of the mailbox
 $pop3_user = "";					# "mailbox\@your-server.com" - you need to quote the at-sign
 $pop3_pwd = "";						# "secret" - POP3 password
+
+
+
+# --------------------------------------------------------
+# Check for command line options
+#
+my $message_file = "";
+my $result = GetOptions (
+    "file=s"     => \$message_file,
+    "debug=i"    => \$debug,
+    "host=s"     => \$pop3_host,
+    "user=s"     => \$pop3_email,
+    "password=s" => \$pop3_pwd
+    ) or die "Usage:\n\nimport-pop3.perl --debug 3 --host pop.1und1.de --user bbigboss\@tigerpond.com --password secret\n\n";
+
 
 
 # --------------------------------------------------------
@@ -217,16 +235,15 @@ sub process_parts {
 }
 
 
-
-
 # --------------------------------------------------------
 # Loop for each of the mails
 
 print "import-pop3: Starting to import messages:\n" if ($debug >= 1);
-foreach $msg (keys(%$msgList)) {
+foreach $msg_num (keys(%$msgList)) {
    # Get the mail as a file handle
-    $message = $pop3_conn->get($msg);
-   
+    $message = $pop3_conn->get($msg_num);
+    print "import-pop3: message=$message\n" if ($debug >= 3);
+
     # Parse the MIME email
     my $mime_entity = $mime_parser->parse_data($message);
     my $error = ($@ || $mime_parser->last_error);
@@ -237,15 +254,26 @@ foreach $msg (keys(%$msgList)) {
     my $subject_q = $dbh->quote($subject);
     my $to = $header->get('To');
     my $from = $header->get('From');
+    my $id = $header->get('Message-ID');
+    my $content_type = $header->get('Content-Type');
     chomp($from);
     chomp($to);
     chomp($subject);
-
+    chomp($id);
+    chomp($content_type);
 
     print "import-pop3: \n" if ($debug >= 1);
     print "import-pop3: from:\t$from\n" if ($debug >= 1);
     print "import-pop3: to:\t$to\n" if ($debug >= 1);
     print "import-pop3: subject:\t$subject_q\n" if ($debug >= 1);
+    print "import-pop3: content-type:\t$content_type\n" if ($debug >= 1);
+
+    if ($debug >= 3) {
+	my $dir = dir("/tmp");
+	my $file = $dir->file("email-".$id);
+	my $file_handle = $file->openw();        # Get a file_handle (IO::File object) you can write to
+	$file_handle->print(@$message);
+    }
 
     # Parse the email
     my $body = process_parts($mime_entity, "main");
@@ -288,18 +316,32 @@ foreach $msg (keys(%$msgList)) {
     # Deal with the Customer's contact: 
     # Check database for "From" email
     # Example: "Frank Bergmann" <frank.bergmann@project-open.com>
-    #
-    if ($from =~ /\<(.+)\>/) { $from = $1; }
-    print "import-pop3: from fixed:\t'$from'\n" if ($debug >= 1);
+
+    # Decompose the "From;" field
+    my $from_name = "";
+    my $from_email = "";
+    if ("" eq $from_email && $from =~ /^([^\<]+)\<(.+)\>/) { $from_name = $1; $from_email = $2; }
+    if ("" eq $from_email && $from =~ /^\"([^\<]+)\"\<(.+)\>/) { $from_name = $1; $from_email = $2; }
+    if ("" eq $from_email && $from =~ /(\S+\@\S+\.\S+)/) { $from_name = ""; $from_email = $1; }
+
+    $from_name =~ s/^\s+|\s+$//g;				# remove both leading and trailing whitespace
+    $from_email =~ s/^\s+|\s+$//g;				# remove both leading and trailing whitespace
+
+    print "import-pop3: from: '$from_name' <$from_email>\n" if ($debug >= 1);
 
     my $ticket_customer_contact_id = 0;
-    my $sql = "select party_id from parties where lower(trim(email)) = lower(trim('$from'))";
+    my $sql = "select party_id from parties where lower(trim(email)) = lower(trim('$from_email'))";
     $sth = $dbh->prepare($sql);
     $rv = $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
     if ($rv >= 0) {
 	$row = $sth->fetchrow_hashref;
 	$ticket_customer_contact_id = $row->{party_id};
     }
+
+    # Empty strings for the contact will lead to an SQL error further below.
+    if (!defined $ticket_customer_contact_id) { $ticket_customer_contact_id = 0; }
+    if ("" eq $ticket_customer_contact_id) { $ticket_customer_contact_id = 0; }
+    print "import-pop3: from: #$ticket_customer_contact_id\n" if ($debug >= 1);
 
     # Ticket Type:
     #  30102 | Purchasing request
@@ -486,7 +528,7 @@ foreach $msg (keys(%$msgList)) {
     }
 
     # Remove the message from the inbox
-    $pop3_conn->delete($msg);
+#    $pop3_conn->delete($msg_num);
 }
 
 # --------------------------------------------------------
