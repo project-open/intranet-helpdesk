@@ -20,7 +20,6 @@ use MIME::WordDecoder;
 use Path::Class;
 use Getopt::Long;
 
-
 # --------------------------------------------------------
 # Debug? 0=no output, 10=very verbose
 $debug = 5;
@@ -121,21 +120,6 @@ die "import-pop3.perl: You need to define a pop3_pwd" if ("" eq $pop3_pwd);
 # --------------------------------------------------------
 # Establish a connection to the POP3 server
 #
-$pop3_conn = Net::POP3->new($pop3_host, Timeout => 60) 
-    || die "import-pop3: Unable to connect to POP3 server $pop3_host: Timeout\n";
-
-$n = $pop3_conn->login($pop3_user,$pop3_pwd) 
-    || die "import-pop3: Unable to connect to POP3 server $pop3_host: Bad Password\n"; 
-
-if (0 == $n) { 
-    print "import-pop3: No messages on server.\n";
-    exit 0; 
-}
-
-# Get the list of messages
-$msgList = $pop3_conn->list(); 
-print "import-pop3: Reading pop3 message list:\n" if ($debug >= 1);
-print "import-pop3: Reading pop3 message list: ", keys(%$msgList), "\n" if ($debug >= 2);
 
 
 # MIME Parser initialization
@@ -236,15 +220,13 @@ sub process_parts {
 
 
 # --------------------------------------------------------
-# Loop for each of the mails
+# Process a single message
+# --------------------------------------------------------
 
-print "import-pop3: Starting to import messages:\n" if ($debug >= 1);
-foreach $msg_num (keys(%$msgList)) {
-   # Get the mail as a file handle
-    $message = $pop3_conn->get($msg_num);
-    print "import-pop3: message=$message\n" if ($debug >= 3);
+sub process_message {
+    my ($message) = @_;
 
-    exit 0;
+    print "import-pop3: process_message: message=", $message, "\n" if ($debug >= 3);
 
     # Parse the MIME email
     my $mime_entity = $mime_parser->parse_data($message);
@@ -270,7 +252,8 @@ foreach $msg_num (keys(%$msgList)) {
     print "import-pop3: subject:\t$subject_q\n" if ($debug >= 1);
     print "import-pop3: content-type:\t$content_type\n" if ($debug >= 1);
 
-    if ($debug >= 3) {
+    # Save the email in the /tmp directory with Message-ID
+    if ("" eq $message_file && $debug >= 3) {
 	my $dir = dir("/tmp");
 	my $file = $dir->file("email-".$id);
 	my $file_handle = $file->openw();        # Get a file_handle (IO::File object) you can write to
@@ -533,23 +516,57 @@ foreach $msg_num (keys(%$msgList)) {
 #    $pop3_conn->delete($msg_num);
 }
 
-# --------------------------------------------------------
-# Close the connection to the POP3 server
-$pop3_conn->quit();
+
+
 
 # --------------------------------------------------------
-# check for problems which may have terminated the fetch early
+# Loop for each of the mails
+#
+if ("" ne $message_file) {
+    # The user specified a file at the command line
+    open my $fh, '<', $message_file or die "import-pop3: Error opening $message_file: $!";
+    my $message = do { local $/; <$fh> };
+    print "import-pop3: message=$message\n" if ($debug >= 3);
+    process_message($message);
+
+} else {
+
+    # Establish a connection to the POP3 server
+    $pop3_conn = Net::POP3->new($pop3_host, Timeout => 60) 
+	|| die "import-pop3: Unable to connect to POP3 server $pop3_host: Timeout\n";
+
+    $n = $pop3_conn->login($pop3_user,$pop3_pwd) 
+	|| die "import-pop3: Unable to connect to POP3 server $pop3_host: Bad Password\n"; 
+    
+    if (0 == $n) {
+	print "import-pop3: No messages on server.\n";
+	exit 0;
+    }
+
+    # Get the list of messages
+    $msgList = $pop3_conn->list(); 
+    print "import-pop3: Reading pop3 message list:\n" if ($debug >= 1);
+    print "import-pop3: Reading pop3 message list: ", keys(%$msgList), "\n" if ($debug >= 2);
+    foreach $msg_num (keys(%$msgList)) {
+	# Get the mail as a file handle
+	$message = $pop3_conn->get($msg_num);
+	print "import-pop3: message=$message\n" if ($debug >= 3);
+	
+	process_message($message);
+	
+	# Remove the message from the inbox
+	$pop3_conn->delete($msg_num);
+    }
+
+    # Close the connection to the POP3 server
+    $pop3_conn->quit();
+
+}
+
+# --------------------------------------------------------
+# Close connections to the DB and exit
+#
 $sth->finish;
 warn $DBI::errstr if $DBI::err;
-
-# --------------------------------------------------------
-# Close the database connection
-$dbh->disconnect ||
-	warn "Disconnection failed: $DBI::errstr\n";
-
-
-# --------------------------------------------------------
-# Return a successful execution ("0"). Any other value
-# indicates an error. Return code meaning still needs
-# to be determined, so returning "1" is fine.
+$dbh->disconnect || warn "Disconnection failed: $DBI::errstr\n";
 exit(0);
