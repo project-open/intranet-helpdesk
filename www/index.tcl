@@ -544,6 +544,9 @@ set sql "
 			to_char(p.end_date, 'YYYY-MM-DD') as end_date_formatted,
 			to_char(t.ticket_alarm_date, 'YYYY-MM-DD') as ticket_alarm_date_formatted,
 			ci.*,
+			(select substring(replace(sft.message, E'\\\\n', ' ') from 1 for 40) from im_forum_topics sft where sft.topic_id in (
+				select min(sft2.topic_id) from im_forum_topics sft2 where sft2.object_id = p.project_id
+			)) as message40,
 			c.company_name,
 			sla.project_id as sla_id,
 			sla.project_name as sla_name
@@ -565,8 +568,6 @@ set sql "
 			$where_clause
 			$extra_where
 		$order_by_clause
-
-
 "
 
 # ---------------------------------------------------------------
