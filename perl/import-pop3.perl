@@ -362,11 +362,7 @@ sub process_message {
     $body = $body . "\n" . unpack("H*", $body);
     $body = encode("iso-8859-1", $body);
 
-
-#    my $body_q = $dbh->quote($body);
-    my $body_q = "'" . $body . "'";
-
-#    die $body_q;
+    my $body_q = $dbh->quote($body);
     
     # --------------------------------------------------------
     # Calculate ticket database fields
