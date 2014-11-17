@@ -18,7 +18,10 @@ use MIME::Parser;				# http://perl.mines-albi.fr/perl5.6.1/site_perl/5.6.1/MIME/
 use MIME::Entity;
 use MIME::WordDecoder;  
 use Path::Class;
+use Encode qw(decode encode);
+use Encode::Guess;
 use Getopt::Long;
+use Data::Dumper;
 
 # --------------------------------------------------------
 # Debug? 0=no output, 10=very verbose
@@ -82,7 +85,7 @@ chomp($date);
 # --------------------------------------------------------
 # Establish the database connection
 # The parameters are defined in common_constants.pm
-$dbh = DBI->connect($db_datasource, $db_username, $db_pwd) ||
+$dbh = DBI->connect($db_datasource, $db_username, $db_pwd, {pg_enable_utf8 => 1}) ||
     die "import-pop3: Unable to connect to database.\n";
 
 
@@ -127,8 +130,6 @@ my $mime_parser = new MIME::Parser;
 $mime_parser->ignore_errors(1);
 $mime_parser->output_to_core(1);
 $mime_parser->tmp_to_core(1);
-# $wd = supported MIME::WordDecoder "ISO-8859-1";
-$wd = supported MIME::WordDecoder "UTF-8";
 
 # Initialize attachment arrays
 my @attachment = ();
@@ -159,17 +160,14 @@ sub process_parts {
 	
 	print "import-pop3: process_parts: text/plain: adding to result\n" if ($debug >= 1);
 	print "import-pop3: process_parts: text/plain: ", $bodyh, "\n" if ($debug >= 2);
-
-	$bodyh->is_encoded(1);
-	$result .= $part->body_as_string();
+	$result .= decode_body($part);
 	if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }} 
 
     } elsif ($mime_type eq "text/html") {
 
 	print "import-pop3: process_parts: text/html: adding to result\n" if ($debug >= 1);
 	print "import-pop3: process_parts: text/html: ", $bodyh, "\n" if ($debug >= 2);
-	$bodyh->is_encoded(1);
-	$result .= $part->body_as_string();
+	$result .= decode_body($part);
 	if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }} 
 
     } elsif ($mime_type eq "message/delivery-status") {
@@ -184,14 +182,14 @@ sub process_parts {
 	if (0+$part->parts() == 2 and $part->parts(0)->effective_type eq "text/plain") {
 	    print "import-pop3: process_parts: multipart/alternative: adding to result: only first (text) part\n" if ($debug >= 1);
 	    @parts = $part->parts(0);
-	    if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }} 
-	    print "import-pop3: process_parts: ", $part->parts(0)->body_as_string(), "\n" if ($debug >= 2);
+	    if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }}
+	    print "import-pop3: process_parts: multipart/alternative: added to result\n" if ($debug >= 2);
 	} else {
 	    print "import-pop3: process_parts: multipart/alternative: alternative with wrong argument count\n" if ($debug >= 1);
 	    for my $subpart ($part->parts()) {
 		print "import-pop3: process_parts: multipart/alternative: subpart: adding to result\n" if ($debug >= 1);
-		print "import-pop3: process_parts: multipart/alternative: subpart: ", $subpart->body_as_string(), "\n" if ($debug >= 2);
 		if (@parts) { foreach $i (0 .. $#parts) { $result .= process_parts($parts[$i], ("$name, part ".(1+$i))); }} 
+		print "import-pop3: process_parts: multipart/alternative: subpart: added to result\n" if ($debug >= 1);
 	    }
 	}
 
@@ -220,31 +218,119 @@ sub process_parts {
 
 
 # --------------------------------------------------------
+# Decode a MIME body in order to deal with Outlook and Gmail
+# --------------------------------------------------------
+
+sub decode_body {
+    my ($part) = @_;
+    print "import-pop3: decode_body: part='", Dumper($part), "'\n" if ($debug >= 1);
+    my $utf8 = "";
+    my $latin1 = "";
+
+    my $bh = $part->bodyhandle;
+    $bh->is_encoded(1);
+
+#    $utf8 = $part->body_as_string();
+#    $utf8 = $part->stringify_body();
+
+#    print "import-pop3: decode_body: body_handle='", Dumper($bh), "'\n" if ($debug >= 1);
+#    return $utf8;
+
+    my $output = '';
+    my $fh = IO::File->new( \$output, '>:' ) or croak("Cannot open in-memory file: $!");
+    $part->print_bodyhandle($fh);
+    $fh->close;
+    print "import-pop3: decode_body: output='", $output, "'\n" if ($debug >= 1);
+
+    $output = "\xc3\xa4" . $output;
+
+    # Decode and deal with Latin-1 from Outlook vs. UTF-8 from Google
+    my $enc = guess_encoding($output, qw/utf8 latin1/);
+    if (!ref($enc)) {
+	print "import-pop3: decode_body: guess_encoding didn't find encoding\n" if ($debug >= 1);
+	print "import-pop3: decode_body: output='", unpack("H*", $output), "'\n" if ($debug >= 1);
+
+	$latin1 = decode("iso-8859-1", $output);
+	return $latin1;
+    }
+
+    print "import-pop3: decode_body: encoding=", $enc->name, "'\n" if ($debug >= 1);
+    $utf8 = $enc->decode($output);
+
+#    $utf8 = decode("iso-8859-1", $output);
+    print "import-pop3: decode_body: utf8='", $utf8, "'\n" if ($debug >= 1);
+    print "import-pop3: decode_body: utf8='", unpack("H*", $utf8), "'\n" if ($debug >= 1);
+
+    $latin1 = decode("iso-8859-1", $utf8);
+
+    return $latin1;
+}
+
+
+# --------------------------------------------------------
+# Decode a MIME subject line in order to deal with Outlook
+# --------------------------------------------------------
+
+sub decode_subject_line {
+    my ($subject, $x_mailer) = @_;
+    my $decoded_subject = "undefined";
+    print "import-pop3: decode_subject_line: Subject='", $subject, "', X-Mailer=", $x_mailer, "\n" if ($debug >= 1);
+
+    # Check if the subject is "B" or "Q" encoded
+    # if ($subject =~ /\=\?([a-zA-Z0-9_\-]+)\?([^\?]+)\?\=/) {
+    if ($subject =~ /\=\?([a-zA-Z0-9_\-]+)\?([BQ])\?([^\?]+)\?\=$/) {
+	print "import-pop3: decode_subject_line: Using mime_to_perl_string to decode =?...?.?.......?= format.\n" if ($debug >= 1);
+	$decoded_subject = mime_to_perl_string($subject);
+	print "import-pop3: decode_subject_line: hex=", unpack("H*", $decoded_subject), "\n" if ($debug >= 1);
+	return $decoded_subject;
+    }
+
+    # Outlook and other mailers may just send Latin-1 encoded subjects
+    # We need to convert these strings to UTF-8 for the database
+    print "import-pop3: decode_subject_line: Did not find any specific encoding in subject - converting to UTF-8.\n" if ($debug >= 1);
+    $decoded_subject = decode("iso-8859-1", $subject);
+    print "import-pop3: decode_subject_line: hex=", unpack("H*", $decoded_subject), "\n" if ($debug >= 1);
+
+    # Old style WordDecode - deprecated
+    # $wd = supported MIME::WordDecoder "ISO-8859-1";
+    # $wd = supported MIME::WordDecoder "UTF-8";
+    # $subject = $wd->decode($subject);
+
+    return $decoded_subject;
+}
+
+# --------------------------------------------------------
 # Process a single message
 # --------------------------------------------------------
 
 sub process_message {
     my ($message) = @_;
 
-    print "import-pop3: process_message: message=", $message, "\n" if ($debug >= 3);
+    print "import-pop3: process_message: message=", $message, "\n" if ($debug >= 7);
 
     # Parse the MIME email
     my $mime_entity = $mime_parser->parse_data($message);
     my $error = ($@ || $mime_parser->last_error);
     print "import-pop3: error:$error\n" if ("" ne $error);
-    # $mime_entity->dump_skeleton();
     my $header = $mime_entity->head();
-    my $subject = $wd->decode($header->get('Subject'));
-    my $subject_q = $dbh->quote($subject);
+
     my $to = $header->get('To');
     my $from = $header->get('From');
     my $id = $header->get('Message-ID');
     my $content_type = $header->get('Content-Type');
+    defined($content_type) or $content_type = "";
+    my $x_mailer = $header->get('X-Mailer');
+    defined($x_mailer) or $x_mailer = "";
+    my $subject_raw = $header->get('Subject');
     chomp($from);
     chomp($to);
-    chomp($subject);
     chomp($id);
     chomp($content_type);
+    chomp($x_mailer);
+    chomp($subject_raw);
+
+    my $subject = decode_subject_line($subject_raw, $x_mailer);
+    my $subject_q = $dbh->quote($subject);
 
     print "import-pop3: \n" if ($debug >= 1);
     print "import-pop3: from:\t$from\n" if ($debug >= 1);
@@ -262,10 +348,26 @@ sub process_message {
 
     # Parse the email
     my $body = process_parts($mime_entity, "main");
-    my $body_q = $dbh->quote($body);
-    print "import-pop3\n" if ($debug >= 1);
     print "import-pop3: body=$body\n" if ($debug >= 1);
+    print "import-pop3: hex(body)=", unpack("H*", $body), "\n" if ($debug >= 1);
 
+
+#    $body = "\xe4 ";                              # Latin1 Encoding E4
+    $body = "Manual test - äöü - \xc3\xa4 \xc3\xb6";                   # UTF-8 Encoding C3A4 C3B6
+
+    my $unistr = decode('utf8', $body);
+    my $latin1str = encode( 'iso-8859-1', $unistr );
+    $body = $latin1str;
+
+    $body = $body . "\n" . unpack("H*", $body);
+    $body = encode("iso-8859-1", $body);
+
+
+#    my $body_q = $dbh->quote($body);
+    my $body_q = "'" . $body . "'";
+
+#    die $body_q;
+    
     # --------------------------------------------------------
     # Calculate ticket database fields
     
@@ -274,6 +376,13 @@ sub process_message {
     $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
     my $row = $sth->fetchrow_hashref;
     my $ticket_nr = $row->{ticket_nr};
+
+
+#    $sth = $dbh->prepare("SHOW client_encoding;");
+#    $sth->execute;
+#    $row = $sth->fetchrow_hashref();
+#    die "\n Default Client Encoding: " . Dumper($row);
+
     
     # Ticket Name: Ticket Nr + Mail Subject
     my $ticket_name = "$ticket_nr - $subject";
@@ -526,7 +635,6 @@ if ("" ne $message_file) {
     # The user specified a file at the command line
     open my $fh, '<', $message_file or die "import-pop3: Error opening $message_file: $!";
     my $message = do { local $/; <$fh> };
-    print "import-pop3: message=$message\n" if ($debug >= 3);
     process_message($message);
 
 } else {
@@ -550,10 +658,8 @@ if ("" ne $message_file) {
     foreach $msg_num (keys(%$msgList)) {
 	# Get the mail as a file handle
 	$message = $pop3_conn->get($msg_num);
-	print "import-pop3: message=$message\n" if ($debug >= 3);
-	
 	process_message($message);
-	
+
 	# Remove the message from the inbox
 	$pop3_conn->delete($msg_num);
     }
