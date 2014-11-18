@@ -783,6 +783,11 @@ set table_continuation_html "
 	</tr>
 "
 
+
+set ticket_action_customize_html "<a href=[export_vars -base "/intranet/admin/categories/index" {{select_category_type "Intranet Ticket Action"}}]>[im_gif -translate_p 1 wrench "Custom Actions"]</a>"
+if {!$user_is_admin_p} { set ticket_action_customize_html "" }
+
+
 set table_submit_html "
   <tfoot>
 	<tr valign=top>
@@ -807,7 +812,8 @@ set table_submit_html "
 			]
 		</td>
 		<td>
-			<input type=submit value='[lang::message::lookup "" intranet-helpdesk.Update_Tickets "Update"]'>
+			<input type=submit value='[lang::message::lookup "" intranet-helpdesk.Action "Action"]'>
+			$ticket_action_customize_html
 		</td>
 		</tr>
 		</table>
