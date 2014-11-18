@@ -273,7 +273,6 @@ if {!$user_admin_p} { set ticket_action_customize_html "" }
 set ticket_action_html "
 <form action=/intranet-helpdesk/action name=helpdesk_action>
 [export_form_vars return_url tid]
-<input type=submit value='[lang::message::lookup "" intranet-helpdesk.Action "Action"]'>
 [im_category_select \
      -translate_p 1 \
      -package_key "intranet-helpdesk" \
@@ -283,6 +282,7 @@ set ticket_action_html "
      "Intranet Ticket Action" \
      action_id \
 ]
+<input type=submit value='[lang::message::lookup "" intranet-helpdesk.Action "Action"]'>
 $ticket_action_customize_html
 </form>
 "
