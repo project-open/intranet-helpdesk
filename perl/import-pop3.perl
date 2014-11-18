@@ -226,44 +226,39 @@ sub decode_body {
     print "import-pop3: decode_body: part='", Dumper($part), "'\n" if ($debug >= 1);
     my $utf8 = "";
     my $latin1 = "";
+    my $body = "";
 
+    # Convert body to Perl String
     my $bh = $part->bodyhandle;
     $bh->is_encoded(1);
-
-#    $utf8 = $part->body_as_string();
-#    $utf8 = $part->stringify_body();
-
-#    print "import-pop3: decode_body: body_handle='", Dumper($bh), "'\n" if ($debug >= 1);
-#    return $utf8;
-
     my $output = '';
     my $fh = IO::File->new( \$output, '>:' ) or croak("Cannot open in-memory file: $!");
     $part->print_bodyhandle($fh);
     $fh->close;
     print "import-pop3: decode_body: output='", $output, "'\n" if ($debug >= 1);
 
-    $output = "\xc3\xa4" . $output;
-
     # Decode and deal with Latin-1 from Outlook vs. UTF-8 from Google
     my $enc = guess_encoding($output, qw/utf8 latin1/);
     if (!ref($enc)) {
 	print "import-pop3: decode_body: guess_encoding didn't find encoding\n" if ($debug >= 1);
 	print "import-pop3: decode_body: output='", unpack("H*", $output), "'\n" if ($debug >= 1);
-
-	$latin1 = decode("iso-8859-1", $output);
-	return $latin1;
+	$body = decode("iso-8859-1", $output);
+    } else {
+	print "import-pop3: decode_body: encoding=", $enc->name, "'\n" if ($debug >= 1);
+	$utf8 = $enc->decode($output);
+	$body = decode("iso-8859-1", $utf8);
+	print "import-pop3: decode_body: utf8='", $utf8, "'\n" if ($debug >= 1);
+	print "import-pop3: decode_body: utf8='", unpack("H*", $utf8), "'\n" if ($debug >= 1);
     }
 
-    print "import-pop3: decode_body: encoding=", $enc->name, "'\n" if ($debug >= 1);
-    $utf8 = $enc->decode($output);
+    my $unistr = decode("utf8", $body);
+    my $latin1str = encode('iso-8859-1', $unistr );
+    $body = $latin1str;
 
-#    $utf8 = decode("iso-8859-1", $output);
-    print "import-pop3: decode_body: utf8='", $utf8, "'\n" if ($debug >= 1);
-    print "import-pop3: decode_body: utf8='", unpack("H*", $utf8), "'\n" if ($debug >= 1);
+#    $body = $body . "\n" . unpack("H*", $body);
+#    $body = encode("iso-8859-1", $body);
 
-    $latin1 = decode("iso-8859-1", $utf8);
-
-    return $latin1;
+    return $body;
 }
 
 
@@ -351,17 +346,6 @@ sub process_message {
     print "import-pop3: body=$body\n" if ($debug >= 1);
     print "import-pop3: hex(body)=", unpack("H*", $body), "\n" if ($debug >= 1);
 
-
-#    $body = "\xe4 ";                              # Latin1 Encoding E4
-    $body = "Manual test - äöü - \xc3\xa4 \xc3\xb6";                   # UTF-8 Encoding C3A4 C3B6
-
-    my $unistr = decode('utf8', $body);
-    my $latin1str = encode( 'iso-8859-1', $unistr );
-    $body = $latin1str;
-
-    $body = $body . "\n" . unpack("H*", $body);
-    $body = encode("iso-8859-1", $body);
-
     my $body_q = $dbh->quote($body);
     
     # --------------------------------------------------------
@@ -372,13 +356,6 @@ sub process_message {
     $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
     my $row = $sth->fetchrow_hashref;
     my $ticket_nr = $row->{ticket_nr};
-
-
-#    $sth = $dbh->prepare("SHOW client_encoding;");
-#    $sth->execute;
-#    $row = $sth->fetchrow_hashref();
-#    die "\n Default Client Encoding: " . Dumper($row);
-
     
     # Ticket Name: Ticket Nr + Mail Subject
     my $ticket_name = "$ticket_nr - $subject";
