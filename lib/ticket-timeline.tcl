@@ -33,7 +33,7 @@ db_1row ticket_info "
 		o.object_id = t.ticket_id
 "
 
-db_1row forum_topic "
+db_0or1row forum_topic_info "
 	select	f.*
 	from	im_forum_topics f
 	where 	f.topic_id in (
