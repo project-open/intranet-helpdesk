@@ -39,16 +39,6 @@ db_1row ticket_info "
 		o.object_id = t.ticket_id
 "
 
-db_1row forum_topic "
-	select	f.*
-	from	im_forum_topics f
-	where 	f.topic_id in (
-			select	min(topic_id)
-			from	im_forum_topics
-			where	object_id = :org_ticket_id
-		)
-"
-
 # ----------------------------------------------------------------------
 # Select out several types of related tickets
 # ---------------------------------------------------------------------
@@ -59,40 +49,39 @@ set ttt {
  ticket_request                   | text
  ticket_resolution                | text
 
-    ticket_sla_id		{1.0 house "SLA" }
+    ticket_sla_id		{t 1.0 house "SLA" }
 }
 
 
 set field_list { 
-    ticket_customer_contact_id	{1.0 user_go "Customer Contact" }
-    ticket_assignee_id		{1.0 user "Ticket Assignee" }
-    company_id  		{1.0 house "Customer" }
-    parent_id   		{1.0 house "SLA" }
-    ticket_dept_id		{1.0 building "Department" }
-    ticket_service_id		{1.0 cog "Service" }
-    ticket_queue_id		{1.0 basket "Queue" }
-    ticket_conf_item_id		{1.0 server "Configuration Item" }
-    ticket_component_id		{1.0 server "Component" }
+    ticket_customer_contact_id	{t 1.0 user_go "Customer Contact" }
+    ticket_assignee_id		{t 1.0 user "Ticket Assignee" }
+    company_id  		{p 1.0 house "Customer" }
+    parent_id   		{p 1.0 house "SLA" }
+    ticket_dept_id		{t 1.0 building "Department" }
+    ticket_service_id		{t 1.0 cog "Service" }
+    ticket_queue_id		{t 1.0 basket "Queue" }
+    ticket_conf_item_id		{t 1.0 server "Configuration Item" }
+    ticket_component_id		{t 1.0 server "Component" }
 }
 
 set ttt {
-    ticket_application_id	{1.0 application "Application" }
-    ticket_hardware_id		{1.0 box "Hardware" }
-    ticket_area_id		{1.0 group "Area" }
-    ticket_service_type_id	{1.0 cog "Service Type" }
+    ticket_application_id	{t 1.0 application "Application" }
+    ticket_hardware_id		{t 1.0 box "Hardware" }
+    ticket_area_id		{t 1.0 group "Area" }
+    ticket_service_type_id	{t 1.0 cog "Service Type" }
 }
 array set field_hash $field_list
 set matching_fields {}
 set score_fields {}
 foreach field [array names field_hash] {
     set field_attrs $field_hash($field)
-    set field_score [lindex $field_attrs 0]
-    set field_gif [lindex $field_attrs 1]
-    lappend matching_fields "CASE WHEN $field = :$field THEN $field_score ELSE 0 END as ${field}_score"
+    set field_table [lindex $field_attrs 0]
+    set field_score [lindex $field_attrs 1]
+    set field_gif [lindex $field_attrs 2]
+    lappend matching_fields "CASE WHEN $field_table.$field = :$field THEN $field_score ELSE 0 END as ${field}_score"
     lappend score_fields "${field}_score"
 }
-
-# ad_return_complaint 1 [join $score_fields "<br>"]
 
 set sql "
 select	ttt.*
@@ -103,9 +92,11 @@ select	ttt.*
 		select	t.ticket_id,
 			p.project_nr,
 			p.project_name,
+			f.message,
 			[join $matching_fields ",\n\t\t\t"]
 		from	im_tickets t,
 			im_projects p
+			LEFT OUTER JOIN im_forum_topics f ON (p.project_id = f.object_id)
 		where	t.ticket_id = p.project_id and
 			t.ticket_id != :org_ticket_id
 		) tt
@@ -137,10 +128,10 @@ db_foreach tickets $sql {
 	set var "${field}_score"
 	set val [expr $$var]
 	set field_entry $field_hash($field)
-	set field_gif [lindex $field_entry 1]
-	set field_name_pretty [lindex $field_entry 2]
+	set field_gif [lindex $field_entry 2]
+	set field_name_pretty [lindex $field_entry 3]
 	if {$val > 0} {
-	    set gif_text "[lang::message::lookup "" intranet-helpdesk.Shared_with_this_ticket "Shared with this ticket:"] $field_name_pretty]"
+	    set gif_text "[lang::message::lookup "" intranet-helpdesk.Shared_with_this_ticket "Shared with this ticket:"] $field_name_pretty"
 	    append score_html [im_gif -translate_p 0 $field_gif $gif_text $gif_text]
 	}
     }
