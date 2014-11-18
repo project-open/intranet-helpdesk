@@ -146,7 +146,7 @@ if {[exists_and_not_null ticket_id]} {
     set page_title [db_string title "select project_name from im_projects where project_id = :ticket_id" -default ""]
 }
 if {0 != $escalate_from_ticket_id} {
-    set page_title [lang::message::lookup "" intranet-helpdesk.New_Ticket_escalated_from "New Ticket escalated from '%copy_from_ticket_name%'"]
+    set page_title [lang::message::lookup "" intranet-helpdesk.New_Problem_Ticket_from "New Problem Ticket from '%copy_from_ticket_name%'"]
 }
 if {"" == $page_title && 0 != $ticket_type_id} { 
     set ticket_type [im_category_from_id $ticket_type_id]
@@ -597,7 +597,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
 		where	p.project_id = t.ticket_id and
 			p.project_id = :escalate_from_ticket_id
 	"
-	append ticket_name " (escalated from $copy_from_ticket_name)"
+	set ticket_name [lang::message::lookup "" intranet-helpdesk.Problem_escalated_from "Problem escalated from %copy_from_ticket_name%"]
 
 	# Get the fields in the form
 	set form_elements [template::form::get_elements helpdesk_ticket]
