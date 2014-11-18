@@ -87,16 +87,16 @@ set sql "
 select	ttt.*
  from	(
 	select	tt.*,
+		(select ff.message from im_forum_topics ff where ff.topic_id = main_topic_id) as message,
 		[join $score_fields " + "] as score
 	from	(
 		select	t.ticket_id,
 			p.project_nr,
 			p.project_name,
-			f.message,
+			(select min(topic_id) from im_forum_topics f where p.project_id = f.object_id) as main_topic_id,
 			[join $matching_fields ",\n\t\t\t"]
 		from	im_tickets t,
 			im_projects p
-			LEFT OUTER JOIN im_forum_topics f ON (p.project_id = f.object_id)
 		where	t.ticket_id = p.project_id and
 			t.ticket_id != :org_ticket_id
 		) tt
