@@ -371,13 +371,23 @@ sub process_message {
     # SLA: Just get the first open SLA for the customer as an example.
     # Customers may want to use more complex logic and assign the
     # ticket to different SLAs depending on the sender domain etc.
-    $sth = $dbh->prepare("SELECT min(project_id) as sla_id from im_projects where company_id = '$ticket_customer_id' and project_type_id = 2502 and project_status_id = 76");
+    $sth = $dbh->prepare("SELECT min(project_id) as sla_id from im_projects where company_id = '$ticket_customer_id' and project_type_id = 2502 and project_status_id in (select im_sub_categories(76))");
     my $rv = $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
     my $ticket_sla_id = "NULL";
     if ($rv >= 0) {
 	$row = $sth->fetchrow_hashref;
 	my $ticket_sla_id = $row->{sla_id};
     }
+    if ("NULL" eq $ticket_sla_id) {
+	# Didn't find an open SLA, so let's just take the first one in any state
+	$sth = $dbh->prepare("SELECT min(project_id) as sla_id from im_projects where project_type_id = 2502");
+	my $rv = $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
+	if ($rv >= 0) {
+	    $row = $sth->fetchrow_hashref;
+	    my $ticket_sla_id = $row->{sla_id};
+	}
+    }
+
     
     # --------------------------------------------------------
     # Deal with the Customer's contact: 
