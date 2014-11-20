@@ -152,13 +152,7 @@ ad_proc -public im_ticket_permissions {
 				wft.state in ('enabled', 'started') and
 				wft.case_id = wfc.case_id and
 				wfta.task_id = wft.task_id and
-				wfta.party_id in (
-					select	group_id
-					from	group_distinct_member_map
-					where	member_id = :user_id
-				    UNION
-					select	:user_id
-				)
+				wfta.party_id in ([join $user_parties ","])
 		) t) as case_assignee_p,
 		(select count(*) from (
 			-- cases with user as task holding_user
@@ -263,13 +257,7 @@ ad_proc -public im_ticket_permission_read_sql {
 				wft.state in ('enabled', 'started') and
 				wft.case_id = wfc.case_id and
 				wfta.task_id = wft.task_id and
-				wfta.party_id in (
-					select	group_id
-					from	group_distinct_member_map
-					where	member_id = :user_id
-				    UNION
-					select	:user_id
-				)
+				wfta.party_id in ([join $user_parties ","])
 		) OR exists (
 			-- cases with user as task holding_user
 			select	wfc.object_id
@@ -877,7 +865,7 @@ ad_proc -public im_helpdesk_new_ticket_ticket_rel {
     -ticket_id:required
     {-sort_order 0}
 } {
-    Marks ticket_id as a duplicate of ticket_id_from_search
+    Mark the ticket (ticket_id) as a duplicate of ticket_id_from_search
 } {
     if {"" == $ticket_id_from_search} { ad_return_complaint 1 "Internal Error - ticket_id_from_search is NULL" }
     if {"" == $ticket_id} { ad_return_complaint 1 "Internal Error - ticket_id is NULL" }
@@ -992,6 +980,10 @@ ad_proc -public im_helpdesk_ticket_sla_options {
 #    set sla_name_sql [parameter::get_from_package_key -package_key "intranet-helpdesk" -parameter "RenderSlaNameSql" -default "company_name || ' (' || project_name || ')'"]
     set sla_name_sql [parameter::get_from_package_key -package_key "intranet-helpdesk" -parameter "RenderSlaNameSql" -default "project_name"]
 
+    # Determine the list of all groups in which the current user is a member
+    set user_parties [im_profile::profiles_for_user -user_id $user_id]
+    lappend user_parties $user_id
+    # ([join $user_parties ","])
 
     # Can the user see all projects?
     set permission_sql ""
@@ -1003,7 +995,7 @@ ad_proc -public im_helpdesk_ticket_sla_options {
 		select project_id from im_projects where company_id in (
 			select	object_id_one
 			from	acs_rels
-			where	object_id_two = :user_id
+			where	object_id_two in ([join $user_parties ","])
 		)
 	)"
     }
@@ -1142,6 +1134,11 @@ ad_proc -public im_helpdesk_ticket_component {
     }
     set org_order_by_clause $order_by_clause
 
+    # Determine the list of all groups in which the current user is a member
+    set ticket_user_parties [im_profile::profiles_for_user -user_id $ticket_user_id]
+    lappend user_parties $ticket_user_id
+    # ([join $user_parties ","])
+
 
     # ---------------------------------------------------------------
     # Columns to show:
@@ -1209,7 +1206,7 @@ ad_proc -public im_helpdesk_ticket_component {
 					g.group_id
 				from	acs_rels r, groups g 
 				where	r.object_id_one = g.group_id and
-					r.object_id_two = :ticket_user_id
+					r.object_id_two in ([join $ticket_user_parties ","])
 			)
 			OR p.project_id in (	
 				-- cases with user as task holding_user
@@ -1228,13 +1225,7 @@ ad_proc -public im_helpdesk_ticket_component {
 				where	wft.state in ('enabled', 'started') and
 					wft.case_id = wfc.case_id and
 					wfta.task_id = wft.task_id and
-					wfta.party_id in (
-						select	group_id
-						from	group_distinct_member_map
-						where	member_id = :ticket_user_id
-					    UNION
-						select	:ticket_user_id
-					)
+					wfta.party_id in ([join $ticket_user_parties ","])
 			)
 		)
 		and t.ticket_status_id not in ([im_ticket_status_deleted], [im_ticket_status_closed])
