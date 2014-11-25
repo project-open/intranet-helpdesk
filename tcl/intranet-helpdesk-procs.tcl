@@ -772,8 +772,7 @@ namespace eval im_ticket {
 	    ad_script_abort
 	}
 
-	im_audit -object_id $ticket_id
-
+	im_audit -object_id $ticket_id -action after_update
     }
 
 
@@ -841,6 +840,7 @@ namespace eval im_ticket {
 	        "
 	    }
 	}
+	im_audit -object_id $ticket_id -action after_update
     }
 
 }

@@ -188,7 +188,7 @@ ad_proc -public im_helpdesk_sourceforge_tracker_import_sweeper { } {
 		       where ticket_id = :ticket_id
 		"
 
-		im_audit -object_id $ticket_id
+		im_audit -object_id $ticket_id -action after_update
 
                 # if {[catch {set item_link [[$item_node selectNodes {link}] text]} err_msg]} { set item_link "" }
                 # if {[catch {set item_guid [[$item_node selectNodes {guid}] text]} err_msg]} { set item_guid "" }
