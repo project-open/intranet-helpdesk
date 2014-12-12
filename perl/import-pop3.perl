@@ -49,6 +49,7 @@ $pop3_host = "";					# "mail.your-server.com" - POP3 server of the mailbox
 $pop3_user = "";					# "mailbox\@your-server.com" - you need to quote the at-sign
 $pop3_pwd = "";						# "secret" - POP3 password
 $pop3_limit = 0;					# 0=no limit, otherwise limit to N messages
+$pop3_no_create = 0;					# 0=normal operations, 1=don't create tickets
 
 
 # --------------------------------------------------------
@@ -58,6 +59,7 @@ my $message_file = "";
 my $result = GetOptions (
     "file=s"     => \$message_file,
     "debug=i"    => \$debug,
+    "no-create"  => \$pop3_no_create,
     "limit=i"    => \$pop3_limit,
     "host=s"     => \$pop3_host,
     "user=s"     => \$pop3_user,
@@ -643,8 +645,13 @@ if ("" ne $message_file) {
     foreach $msg_num (keys(%$msgList)) {
 	# Get the mail as a file handle
 	$message = $pop3_conn->get($msg_num);
-	process_message($message);
 
+	if (0 eq $pop3_no_create) {
+	    process_message($message);
+	} else {
+	    print "import-pop3: Skipping message:\n" if ($debug >= 1);
+	}
+       
 	# Remove the message from the inbox
 	$pop3_conn->delete($msg_num);
 
