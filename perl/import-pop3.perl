@@ -641,7 +641,7 @@ if ("" ne $message_file) {
     $msgList = $pop3_conn->list(); 
     print "import-pop3: Reading pop3 message list:\n" if ($debug >= 1);
     print "import-pop3: Reading pop3 message list: ", keys(%$msgList), "\n" if ($debug >= 2);
-    my $cnt = 0;
+    my $cnt = 1;
     foreach $msg_num (keys(%$msgList)) {
 	# Get the mail as a file handle
 	$message = $pop3_conn->get($msg_num);
