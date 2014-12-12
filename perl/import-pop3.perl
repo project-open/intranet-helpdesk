@@ -48,7 +48,7 @@ $ticket_file_storage = "/web/$instance/filestorage/tickets"; # Default filename 
 $pop3_host = "";					# "mail.your-server.com" - POP3 server of the mailbox
 $pop3_user = "";					# "mailbox\@your-server.com" - you need to quote the at-sign
 $pop3_pwd = "";						# "secret" - POP3 password
-
+$pop3_limit = 0;					# 0=no limit, otherwise limit to N messages
 
 
 # --------------------------------------------------------
@@ -58,6 +58,7 @@ my $message_file = "";
 my $result = GetOptions (
     "file=s"     => \$message_file,
     "debug=i"    => \$debug,
+    "limit=i"    => \$pop3_limit,
     "host=s"     => \$pop3_host,
     "user=s"     => \$pop3_user,
     "password=s" => \$pop3_pwd
@@ -633,11 +634,12 @@ if ("" ne $message_file) {
 	print "import-pop3: No messages on server.\n";
 	exit 0;
     }
-
+    
     # Get the list of messages
     $msgList = $pop3_conn->list(); 
     print "import-pop3: Reading pop3 message list:\n" if ($debug >= 1);
     print "import-pop3: Reading pop3 message list: ", keys(%$msgList), "\n" if ($debug >= 2);
+    my $cnt = 0;
     foreach $msg_num (keys(%$msgList)) {
 	# Get the mail as a file handle
 	$message = $pop3_conn->get($msg_num);
@@ -645,6 +647,9 @@ if ("" ne $message_file) {
 
 	# Remove the message from the inbox
 	$pop3_conn->delete($msg_num);
+
+	$cnt++;
+	if (0 ne $pop3_limit && $cnt > $pop3_limit) { last; }
     }
 
     # Close the connection to the POP3 server
