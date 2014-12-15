@@ -516,6 +516,27 @@ sub process_message {
 
 
     # --------------------------------------------------------
+    # Add the customer contact to the list of "members" of the ticket
+    if (0 ne $ticket_customer_contact_id) {
+
+
+	# Create a business relationship between the ticket and the user
+	print "import-pop3: before im_biz_object_member__new\n" if ($debug >= 1);
+	$sth = $dbh->prepare("
+		select im_biz_object_member__new(
+			null,
+			'im_biz_object_member',
+			$ticket_id,
+			'$ticket_customer_contact_id',
+			1300,
+			0,
+			'0.0.0.0'
+		);
+        ");
+	$sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
+    }
+
+    # --------------------------------------------------------
     # Add a Forum Topic Item into the ticket
     
     # Get the next topic ID
