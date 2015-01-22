@@ -33,6 +33,10 @@ foreach ticket_id $tid {
     im_ticket::audit -ticket_id $ticket_id -action "before_update"
     if {[catch {
 	db_dml update_ticket_assignee "update im_tickets set ticket_assignee_id = :ticket_assignee_id where ticket_id = :ticket_id"
+
+	# Also add the new guy as a member of the ticket
+	im_biz_object_add_role $ticket_assignee_id $ticket_id 1300
+
     } err_msg]} {
 	set msg [lang::message::lookup "" intranet-helpdesk.Change_Assignee_Problems "We found problems while updating the ticket_assignee_id"]
 	ad_return_complaint 1 "$msg:<br>$err_msg"
