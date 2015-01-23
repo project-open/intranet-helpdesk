@@ -720,8 +720,8 @@ namespace eval im_ticket {
 	# Just return the result check_only_p is set
 	if {$check_only_p} { return $perm }
 
-	if {!$perm} { 
-	    set action_forbidden_msg [lang::message::lookup "" intranet-helpdesk.Forbidden_operation on ticket "
+ 	if {!$perm} { 
+	    set action_forbidden_msg [lang::message::lookup "" intranet-helpdesk.Forbidden_operation_on_ticket "
 	    <b>Unable to perform operation '%operation%'</b>:<br>You don't have the necessary permissions for ticket #%ticket_id%."]
 	    ad_return_complaint 1 $action_forbidden_msg 
 	    ad_script_abort
