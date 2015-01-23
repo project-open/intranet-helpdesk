@@ -287,7 +287,7 @@ $ticket_action_customize_html
 </form>
 "
 
-if {!$edit_ticket_status_p} { set ticket_action_html "" }
+if {!$view_tickets_all_p} { set ticket_action_html "" }
 
 
 # ------------------------------------------------------------------
