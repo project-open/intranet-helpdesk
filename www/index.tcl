@@ -366,6 +366,12 @@ switch $mine_p {
 	lappend criteria "(
 		t.ticket_assignee_id = :current_user_id 
 		OR t.ticket_customer_contact_id = :current_user_id
+    		OR :current_user_id in (
+                        select  object_id_two
+                        from    acs_rels r
+                        where   r.object_id_one = t.ticket_id and 
+			r.rel_type = 'im_biz_object_member'
+		) 
 		OR t.ticket_assignee_id in (
 			select	group_id 
 			from	acs_rels r, groups g
@@ -435,7 +441,8 @@ switch $mine_p {
                         from    acs_rels r
                         where   r.object_id_one = t.ticket_id and 
 			r.rel_type = 'im_biz_object_member'
-		) OR p.company_id in (
+		) 
+		OR p.company_id in (
 		     	-- A customer should be able to see His tickets
 			-- The question is - Should he see them in Mine or in My Queues
 			select	object_id_one
