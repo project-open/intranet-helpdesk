@@ -40,15 +40,15 @@ set page_focus "im_header_form.keywords"
 set letter [string toupper $letter]
 set user_is_admin_p [im_is_user_site_wide_or_intranet_admin $current_user_id]
 
+set view_tickets_all_p [im_permission $current_user_id "view_tickets_all"]
 
-if { {} != $ticket_ids} {
-    set tid $ticket_ids
-}
-# ad_return_complaint 1 "l=[llength $ticket_ids], tid=$tid, ticket_ids=$ticket_ids"
+
+if { {} != $ticket_ids} { set tid $ticket_ids }
+if {"" == $tid} { set tid {0} }
 
 
 # Unprivileged users can only see their own tickets
-if {"all" == $mine_p && ![im_permission $current_user_id "view_tickets_all"]} {
+if {"all" == $mine_p && !$view_tickets_all_p} {
     set mine_p "queue"
 }
 
@@ -135,7 +135,7 @@ set action_url "/intranet-helpdesk/ticket-select"
 set form_mode "edit"
 
 set mine_p_options {}
-if {[im_permission $current_user_id "view_tickets_all"]} { 
+if {$view_tickets_all_p} { 
     lappend mine_p_options [list [lang::message::lookup "" intranet-helpdesk.All "All"] "all" ] 
 }
 lappend mine_p_options [list [lang::message::lookup "" intranet-helpdesk.My_queues "My Queues"] "queue"]
@@ -165,7 +165,7 @@ ad_form \
     	{mine_p:text(select),optional {label "Mine/All"} {options $mine_p_options }}
     }
 
-if {[im_permission $current_user_id "view_tickets_all"]} {  
+if {$view_tickets_all_p} {  
     ad_form -extend -name $form_id -form {
 	{ticket_status_id:text(im_category_tree),optional {label "[lang::message::lookup {} intranet-helpdesk.Status Status]"} {custom {category_type "Intranet Ticket Status" translate_p 1}} }
 	{ticket_type_id:text(im_category_tree),optional {label "[lang::message::lookup {} intranet-helpdesk.Type Type]"} {custom {category_type "Intranet Ticket Type" translate_p 1} } }

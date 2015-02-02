@@ -33,7 +33,7 @@ if {![info exists task]} {
 	{ view_name "ticket_list"}
 	{ mine_p "all" }
 	{ form_mode "edit" }
-        { render_template_id:integer 0 }
+	{ render_template_id:integer 0 }
 	{ escalate_from_ticket_id 0 }
 	{ format "html" }
     }
@@ -67,19 +67,71 @@ if {![info exists task]} {
     set escalate_from_ticket_id 0
     set format "html"
 
-    # Don't show this page in WF panel.
-    # Instead, redirect to this same page, but in TaskViewPage mode.
-    # ad_returnredirect "/intranet-helpdesk/new?ticket_id=$task(object_id)"
-
-    # fraber 20100602: redirecting to return_url leads to an infinite
-    # loop with workflow. Re-activating redirection to the TicketNewPage
-    # ad_returnredirect $return_url
-
     ad_returnredirect [export_vars -base "/intranet-helpdesk/new" { {ticket_id $task(object_id)} {form_mode display}} ]
 }
 
 # ------------------------------------------------------------------
-# Default & Security
+# Security
+# ------------------------------------------------------------------
+
+set current_user_id [ad_maybe_redirect_for_registration]
+set user_id $current_user_id
+set current_url [im_url_with_query]
+set action_url "/intranet-helpdesk/new"
+set focus "ticket.var_name"
+
+if {[info exists ticket_id] && "" == $ticket_id} { unset ticket_id }
+
+
+set user_admin_p [im_is_user_site_wide_or_intranet_admin $current_user_id]
+set add_projects_p [im_permission $current_user_id "add_projects"]
+set add_tickets_p [im_permission $current_user_id "add_tickets"]
+set add_companies_p [im_permission $current_user_id "add_companies"]
+set add_users_p [im_permission $current_user_id "add_users"]
+set add_tickets_for_customers_p [im_permission $current_user_id add_tickets_for_customers]
+set view_tickets_all_p [im_permission $current_user_id "view_tickets_all"]
+set edit_tickets_all_p [im_permission $current_user_id "edit_tickets_all"]
+set edit_ticket_status_p [im_permission $current_user_id edit_ticket_status]
+
+# Can the currrent user create new helpdesk customers?
+# The list of user groups that can be managed by the current user
+set user_can_create_new_customer_contact_p 0
+set managable_profiles [im_profile::profile_options_managable_for_user $current_user_id]
+foreach tuple $managable_profiles {
+    set gid [lindex $tuple 1]
+    if {$gid == [im_profile_customers]} { set user_can_create_new_customer_contact_p 1 }
+}
+if {!$add_users_p} { set user_can_create_new_customer_contact_p 0 }
+
+
+if {[info exists ticket_id]} {
+    im_ticket_permissions $user_id $ticket_id view_p read_p write_p admin_p
+} else {
+    set view_p 0
+    set read_p 0
+    set write_p 0
+    set admin_p 0
+}
+
+
+# Decisions taken:
+#
+# - Read the current ticket? - read_p
+# - Create a new ticket? - add_tickets_p - add_tickets_p
+# - Modify an existing ticket? - write_p
+# - Show "Edit" button in DISPLAY mode - write_p - ???
+# - Allow the current user to create a ticket in the name of a customer? - add_tickets_for_customers_p
+# - Allow to nuke - Admin
+# - Show the various ticket actions
+# - Can the user create a new SLA? - add_projects_p
+# - Can the user create a new customer contact? - user_can_create_new_customer_contact_p
+# - Can the user create a new customer company? - add_companies_p
+# - Can the user edit the status of an existing ticket? - edit_ticket_status_p
+# - 
+
+
+# ------------------------------------------------------------------
+# Default
 # ------------------------------------------------------------------
 
 # By default return to the existing ticket
@@ -88,24 +140,6 @@ if {[info exists ticket_id] && "" != $ticket_id} {
     set return_url [export_vars -base "/intranet-helpdesk/new" {ticket_id {form_mode display}} ]
 }
 
-ns_log Notice "new: after ad_page_contract"
-
-set current_user_id [ad_maybe_redirect_for_registration]
-set user_id $current_user_id
-set current_url [im_url_with_query]
-set action_url "/intranet-helpdesk/new"
-# set focus "helpdesk_ticket.var_name"
-set focus "ticket.var_name"
-
-if {[info exists ticket_id] && "" == $ticket_id} { unset ticket_id }
-
-# Can the currrent user create new helpdesk customers?
-set user_can_create_new_customer_p 1
-set user_can_create_new_customer_sla_p 1
-set user_can_create_new_customer_contact_p 1
-
-set user_admin_p [im_is_user_site_wide_or_intranet_admin $current_user_id]
-set view_tickets_all_p [im_permission $current_user_id "view_tickets_all"]
 set copy_from_ticket_name ""
 
 # message_html allows us to add a warning popup etc.
@@ -118,7 +152,6 @@ if {![info exists ticket_status_id] || "" == $ticket_status_id} {
 
 # ------------------------------------------------------------------
 # Create ticket as a copy of another ticket.
-#
 # Get SLA and type if we are copying data from an existing ticket
 # ------------------------------------------------------------------
 
@@ -174,7 +207,21 @@ if {"edit" == [template::form::get_action helpdesk_action]} { set form_mode "edi
 if {![info exists ticket_id]} { set form_mode "edit" }
 if {![info exists form_mode]} { set form_mode "display" }
 
-set edit_ticket_status_p [im_permission $current_user_id edit_ticket_status]
+if {[info exists ticket_id]} {
+    if {!$read_p} {
+	ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.No_right_to_read_ticket "You don't have the permission to see this ticket."]
+	ad_script_abort
+    }
+}
+
+# Check if the user is allowed to create a new ticket
+if {"edit" == $form_mode && ![info exists ticket_id]} {
+    if {!$add_tickets_p} {
+	ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.No_right_to_create_new_ticket "You don't have the permission to create a new ticket."]
+	ad_script_abort
+    }
+}
+
 
 # Show the ADP component plugins?
 if {"edit" == $form_mode} { set show_components_p 0 }
@@ -220,7 +267,6 @@ if {"edit" == $form_mode && [info exists ticket_id]} {
 
 	}
     } else {
-	    
 	# Set the lock on the ticket
 	db_dml set_lock "
 		update im_biz_objects set
@@ -228,7 +274,7 @@ if {"edit" == $form_mode && [info exists ticket_id]} {
 			lock_date = now(),
 			lock_user = :current_user_id
 		where object_id = :ticket_id
-        "
+	"
     }
 }
 
@@ -239,12 +285,8 @@ if {"edit" == $form_mode && [info exists ticket_id]} {
 set title_label [lang::message::lookup {} intranet-helpdesk.Name {Title}]
 set title_help [lang::message::lookup {} intranet-helpdesk.Title_Help {Please enter a descriptive name for the new ticket.}]
 
-set edit_p [im_permission $current_user_id add_tickets_for_customers]
-set delete_p $edit_p
-
 set actions {}
-if {$edit_p} { lappend actions [list [lang::message::lookup {} intranet-helpdesk.Edit Edit] edit] }
-#if {$delete_p} { lappend actions [list [lang::message::lookup {} intranet-helpdesk.Delete Delete] delete] }
+if {$write_p} { lappend actions [list [lang::message::lookup {} intranet-helpdesk.Edit Edit] edit] }
 
 ns_log Notice "new: ad_form: Setup fields"
 ad_form \
@@ -270,46 +312,27 @@ ad_form \
 set tid [value_if_exists ticket_id]
 set ticket_action_customize_html "<a href=[export_vars -base "/intranet/admin/categories/index" {{select_category_type "Intranet Ticket Action"}}]>[im_gif -translate_p 1 wrench "Custom Actions"]</a>"
 if {!$user_admin_p} { set ticket_action_customize_html "" }
-set ticket_action_html "
-<form action=/intranet-helpdesk/action name=helpdesk_action>
-[export_form_vars return_url tid]
-[im_category_select \
+
+set ticket_action_select [im_category_select \
      -translate_p 1 \
      -package_key "intranet-helpdesk" \
      -plain_p 1 \
-     -include_empty_p 1 \
+     -include_empty_p 0 \
      -include_empty_name "" \
      "Intranet Ticket Action" \
      action_id \
 ]
-<input type=submit value='[lang::message::lookup "" intranet-helpdesk.Action "Action"]'>
+
+set action_l10n [lang::message::lookup "" intranet-helpdesk.Action "Action"]
+set export_vars [export_form_vars return_url tid]
+set ticket_action_html "
+<form action=/intranet-helpdesk/action name=helpdesk_action>
+$export_vars
+$ticket_action_select
+<input type=submit value='$action_l10n'>
 $ticket_action_customize_html
 </form>
 "
-
-if {!$view_tickets_all_p} { set ticket_action_html "" }
-
-
-# ------------------------------------------------------------------
-# Delete pressed?
-# ------------------------------------------------------------------
-
-# Delete button disable. Now there is a "Nuke" action available
-set ttt {
-    set button_pressed [template::form get_action helpdesk_ticket]
-    if {"delete" == $button_pressed} {
-	db_dml mark_ticket_deleted "
-	update	im_tickets
-	set	ticket_status_id = [im_ticket_status_deleted]
-	where	ticket_id = :ticket_id
-        "
-	
-	# Write Audit Trail
-	im_project_audit -project_id $ticket_id -action delete
-	
-	ad_returnredirect $return_url
-    }
-}
 
 
 # ------------------------------------------------------------------
@@ -379,7 +402,7 @@ foreach var_from_url $vars_from_url {
     ad_set_element_value -element $var_from_url [im_opt_val $var_from_url]
 }
 
-if {"new" == $ticket_sla_id && $user_can_create_new_customer_sla_p} {
+if {"new" == $ticket_sla_id && $add_projects_p} {
 
     # Copy all ticket form values to local variables
     catch {
@@ -467,8 +490,7 @@ if {"new" == $ticket_customer_contact_id && $user_can_create_new_customer_contac
 # ------------------------------------------------------------------
 
 if {[exists_and_not_null ticket_customer_id]} {
-
-    set customer_sla_options [im_helpdesk_ticket_sla_options -customer_id $ticket_customer_id -include_create_sla_p 1]
+    set customer_sla_options [im_helpdesk_ticket_sla_options -customer_id $ticket_customer_id -include_create_sla_p $add_projects_p]
     set customer_contact_options [db_list_of_lists customer_contact_options "
 	select	im_name_from_user_id(u.user_id) as name,
 		u.user_id
@@ -482,53 +504,41 @@ if {[exists_and_not_null ticket_customer_id]} {
 		order by name
     "]
 } else {
-    set customer_sla_options [im_helpdesk_ticket_sla_options -include_create_sla_p 1]
+    set customer_sla_options [im_helpdesk_ticket_sla_options -include_create_sla_p $add_projects_p]
     set customer_contact_options [im_user_options -include_empty_p 0]
 }
 
-set ttt {
-			-- Customers of the SLA's customer
-			-- Member of the SLA
-
-			-- The previous customer_contact from this ticket.
-			-- This way we will not loose the stored value
-		UNION	select customer_contact_id from im_tickets where ticket_id = :ticket_id
-
-}
 # customer_contact_options
 #
-if {$user_can_create_new_customer_p} {
+if {$add_companies_p} {
     set customer_contact_options [linsert $customer_contact_options 0 [list "Create New Customer Contact" "new"]]
 }
 set customer_contact_options [linsert $customer_contact_options 0 [list "" ""]]
 
 
 # ------------------------------------------------------------------
-# Check permission if the user is allowed to create a ticket for somebody else
+# Check if the user is allowed to create a ticket for somebody else
 # ------------------------------------------------------------------
 
 set ticket_elements [list]
 
-if {[im_permission $current_user_id add_tickets_for_customers]} {
+if {$add_tickets_for_customers_p} {
 
     lappend ticket_elements {ticket_sla_id:text(select) {label "[lang::message::lookup {} intranet-helpdesk.SLA SLA]"} {options $customer_sla_options}}
     lappend ticket_elements {ticket_customer_contact_id:text(select),optional {label "[lang::message::lookup {} intranet-helpdesk.Customer_Contact {<nobr>Customer Contact</nobr>}]"} {options $customer_contact_options}}
 
 } else {
 
-#    lappend ticket_elements {ticket_sla_id:text(hidden) {options $customer_sla_options}}
-#    lappend ticket_elements {ticket_customer_contact_id:text(hidden) {label "[lang::message::lookup {} intranet-helpdesk.Customer_Contact {<nobr>Customer Contact</nobr>}]"} {options $customer_contact_options}}
-
-    lappend ticket_elements {ticket_sla_id:text(select) {mode display} {label "[lang::message::lookup {} intranet-helpdesk.SLA SLA]"} {options $customer_sla_options}}
     set ticket_customer_contact_id $current_user_id
+    lappend ticket_elements {ticket_sla_id:text(select) {mode display} {label "[lang::message::lookup {} intranet-helpdesk.SLA SLA]"} {options $customer_sla_options}}
     lappend ticket_elements {ticket_customer_contact_id:text(select),optional {mode display} {label "[lang::message::lookup {} intranet-helpdesk.Customer_Contact {<nobr>Customer Contact</nobr>}]"} {options $customer_contact_options}}
 
 }
 
 
-
 # ---------------------------------------------
 # Status & Type
+# ---------------------------------------------
 
 lappend ticket_elements {ticket_type_id:text(im_category_tree) {label "[lang::message::lookup {} intranet-helpdesk.Type Type]"} {custom {category_type "Intranet Ticket Type" translate_p 1 package_key "intranet-helpdesk"}}}
 
@@ -536,11 +546,7 @@ if {$edit_ticket_status_p} {
     lappend ticket_elements {ticket_status_id:text(im_category_tree) {label "[lang::message::lookup {} intranet-helpdesk.Status Status]"} {custom {category_type "Intranet Ticket Status" translate_p 1 package_key "intranet-helpdesk"}} }
 }
 
-
-# Extend the form with new fields
-ns_log Notice "new: ad_form: extend with ticket_elements"
 ad_form -extend -name helpdesk_ticket -form $ticket_elements
-
 
 
 # ---------------------------------------------
@@ -554,11 +560,11 @@ set dynfield_ticket_id ""
 if {[info exists ticket_id]} { set dynfield_ticket_id $ticket_id }
 
 set field_cnt [im_dynfield::append_attributes_to_form \
-                       -form_display_mode $form_mode \
-                       -object_subtype_id $dynfield_ticket_type_id \
-                       -object_type "im_ticket" \
-                       -form_id "helpdesk_ticket" \
-                       -object_id $dynfield_ticket_id \
+		       -form_display_mode $form_mode \
+		       -object_subtype_id $dynfield_ticket_type_id \
+		       -object_type "im_ticket" \
+		       -form_id "helpdesk_ticket" \
+		       -object_id $dynfield_ticket_id \
 ]
 
 # ------------------------------------------------------------------
@@ -571,10 +577,8 @@ set form_action [template::form::get_action "helpdesk_ticket"]
 if {"" != $form_action} { set form_mode "edit" }
 set next_ticket_nr ""
 
-ns_log Notice "new: before ad_form on_request"
 ad_form -extend -name helpdesk_ticket -on_request {
 
-    ns_log Notice "new: on_request"
     # Populate elements from local variables
     if {![info exists ticket_name] || "" == $ticket_name} { 
 	set next_ticket_nr [im_ticket::next_ticket_nr] 
@@ -587,8 +591,8 @@ ad_form -extend -name helpdesk_ticket -on_request {
     }
 
     if {0 != $escalate_from_ticket_id} {
-	# Populate from another ticket
 
+	# Populate from another ticket
 	set sql "
 		select	t.*,
 			p.*
@@ -618,16 +622,13 @@ ad_form -extend -name helpdesk_ticket -on_request {
 
 		    # Write the value into the form if the form element exists
 		    if {[lsearch $form_elements $var] > -1} {
-		        template::element::set_value helpdesk_ticket $var $val
+			template::element::set_value helpdesk_ticket $var $val
 		    }	
 
 		}
 	    }
 	}
 	db_release_unused_handles
-    } else {
-	# ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.TicketNotFound "Ticket not found."]
-	# return 
     }
 
 } -select_query {
@@ -646,28 +647,26 @@ ad_form -extend -name helpdesk_ticket -on_request {
 
 } -new_data {
 
-    ns_log Notice "new: new_data"
+    if {!$add_tickets_p} {
+	ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.No_right_to_create_new_ticket "You don't have the permission to create a new ticket."]
+	ad_script_abort
+    }
 
     set message ""
     if {[info exists ticket_note]} { append message $ticket_note } else { set ticket_note "" }
     if {[info exists ticket_description]} { append message $ticket_description } else { set ticket_description "" }
     if {![exists_and_not_null project_name]} { set project_name $ticket_name}
 
-    ns_log notice  "intranet-helpdesk::new.tcl: ticket_sla_id: $ticket_sla_id, ticket_name: $ticket_name, ticket_nr: $ticket_nr" 
-    ns_log notice  "intranet-helpdesk::new.tcl: ticket_customer_contact_id: $ticket_customer_contact_id, ticket_type_id: $ticket_type_id"
-    ns_log notice  "intranet-helpdesk::new.tcl: ticket_status_id: $ticket_status_id, start_date: $start_date, end_date: $end_date"
-    ns_log notice  "intranet-helpdesk::new.tcl: message: $message" 
-
     set ticket_id [im_ticket::new \
 	-ticket_sla_id $ticket_sla_id \
-        -ticket_name $ticket_name \
-        -ticket_nr $ticket_nr \
+	-ticket_name $ticket_name \
+	-ticket_nr $ticket_nr \
 	-ticket_customer_contact_id $ticket_customer_contact_id \
-        -ticket_type_id $ticket_type_id \
-        -ticket_status_id $ticket_status_id \
-        -ticket_start_date $start_date \
-        -ticket_end_date $end_date \
-        -ticket_note $message \
+	-ticket_type_id $ticket_type_id \
+	-ticket_status_id $ticket_status_id \
+	-ticket_start_date $start_date \
+	-ticket_end_date $end_date \
+	-ticket_note $message \
     ]
 
     im_dynfield::attribute_store \
@@ -682,34 +681,34 @@ ad_form -extend -name helpdesk_ticket -on_request {
     if {[info exists ticket_queue_id] && "" != $ticket_queue_id} {
 	im_biz_object_add_role $ticket_queue_id $ticket_id 1300
     }
-    
-    
-    # NOTIFICATION
+
+    # --------------------------------------------
+    # Notifications
     if {[catch {
-        set sla_name [db_string get_data "select project_name from im_projects where project_id = :ticket_sla_id" -default 0]
+	set sla_name [db_string get_data "select project_name from im_projects where project_id = :ticket_sla_id" -default 0]
     } err_msg]} {
-        global errorInfo
-        ns_log Error $errorInfo
-        set sla_name ""
+	global errorInfo
+	ns_log Error $errorInfo
+	set sla_name ""
     }
 
     set ticket_link "[parameter::get -package_id [apm_package_id_from_key acs-kernel] -parameter "SystemURL" -default ""]/intranet-helpdesk/new?form_mode=display&ticket_id=$ticket_id"
     set notif_message [lang::message::lookup "" intranet-helpdesk.NotificationBody "A new ticket has been created:\n\nName: %ticket_name%\nLink: %ticket_link%\nNote: %ticket_note%\nDescription: %ticket_description%\n "]
 
     notification::new \
-        -type_id [notification::type::get_type_id -short_name ticket_notif] \
-        -object_id $ticket_id \
-        -response_id "" \
-        -notif_subject [lang::message::lookup "" intranet-helpdesk.NotificationSubject "Ticket Notification for SLA: %sla_name%"] \
-        -notif_text $notif_message
+	-type_id [notification::type::get_type_id -short_name ticket_notif] \
+	-object_id $ticket_id \
+	-response_id "" \
+	-notif_subject [lang::message::lookup "" intranet-helpdesk.NotificationSubject "Ticket Notification for SLA: %sla_name%"] \
+	-notif_text $notif_message
 
     # TICKET ASSIGNMENTS 
     # For smaller organization this is probably all what's needed.
     # Employees that can 'handle' tickets will be simply added to the SLA project 
     # Whenever a new ticket has been created, these employees get auto-assigned to the ticket. 
     # They can view/edit the ticket and appear in the notification dropdown of the ticket forum portlet.
-    # For alternative handling simply set invisible parameter to 'false' 
-    if { [parameter::get -package_id [apm_package_id_from_key intranet-helpdisk] -parameter "AutoAssignEmployeeMembersOfSLAToTicket" -default 1]  } {
+    # For alternative handling simply set invisible parameter to 'false'
+    if { [parameter::get -package_id [apm_package_id_from_key intranet-helpdisk] -parameter "AutoAssignEmployeeMembersOfSLAToTicket" -default 0]  } {
 	# Get all employee_id's from SLA 
 	set employee_group_id [im_employee_group_id] 
 	set sql "
@@ -727,7 +726,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
 			 select     m.member_id
 			 from       group_member_map m, membership_rels mr
 			 where      m.rel_id = mr.rel_id and
-			            m.group_id = acs__magic_object_id('registered_users') and
+				    m.group_id = acs__magic_object_id('registered_users') and
 				    m.container_id = m.group_id and
 				    mr.member_state != 'approved'
 			) and
@@ -738,31 +737,31 @@ ad_form -extend -name helpdesk_ticket -on_request {
 	}
     }
 
-    # Let's do the same for customer accounts related to the SLA 
-    if { [parameter::get -package_id [apm_package_id_from_key intranet-helpdisk] -parameter "AutoAssignCustomerMembersOfSLAToTicket" -default 1]  } {
+    # Let's do the same for customer accounts related to the SLA
+    if {[parameter::get -package_id [apm_package_id_from_key intranet-helpdisk] -parameter "AutoAssignCustomerMembersOfSLAToTicket" -default 0]} {
 	# Get all customer_id's from SLA
 	set customer_group_id [im_customer_group_id]
-        set sql "
-                select
-                     rels.object_id_two as party_id
-                from
-                     acs_rels rels
-                     LEFT OUTER JOIN im_biz_object_members bo_rels ON (rels.rel_id = bo_rels.rel_id)
-                     LEFT OUTER JOIN im_categories c ON (c.category_id = bo_rels.object_role_id)
-                where
-                         rels.object_id_one = :ticket_sla_id and
-                         rels.object_id_two in (select party_id from parties) and
-                         rels.object_id_two not in (
-                         -- Exclude banned or deleted users
-                         select     m.member_id
-                         from       group_member_map m, membership_rels mr
-                         where      m.rel_id = mr.rel_id and
-                                    m.group_id = acs__magic_object_id('registered_users') and
-                                    m.container_id = m.group_id and
-                                    mr.member_state != 'approved'
-                        ) and
-                        rels.object_id_two in (select member_id from group_distinct_member_map m where group_id = :customer_group_id);
-        "
+	set sql "
+		select
+		     rels.object_id_two as party_id
+		from
+		     acs_rels rels
+		     LEFT OUTER JOIN im_biz_object_members bo_rels ON (rels.rel_id = bo_rels.rel_id)
+		     LEFT OUTER JOIN im_categories c ON (c.category_id = bo_rels.object_role_id)
+		where
+			 rels.object_id_one = :ticket_sla_id and
+			 rels.object_id_two in (select party_id from parties) and
+			 rels.object_id_two not in (
+			 -- Exclude banned or deleted users
+			 select     m.member_id
+			 from       group_member_map m, membership_rels mr
+			 where      m.rel_id = mr.rel_id and
+				    m.group_id = acs__magic_object_id('registered_users') and
+				    m.container_id = m.group_id and
+				    mr.member_state != 'approved'
+			) and
+			rels.object_id_two in (select member_id from group_distinct_member_map m where group_id = :customer_group_id);
+	"
 	db_foreach r $sql {
 	    im_biz_object_add_role $party_id $ticket_id 1300
 	}
@@ -771,38 +770,45 @@ ad_form -extend -name helpdesk_ticket -on_request {
     if {[info exists escalate_from_ticket_id] && 0 != $escalate_from_ticket_id} {
 	# Add an escalation relationship between the two tickets
 	db_string add_ticket_ticket_rel "
-                        select im_ticket_ticket_rel__new (
-                                null,
-                                'im_ticket_ticket_rel',
-                                :ticket_id,
-                                :escalate_from_ticket_id,
-                                null,
-                                :current_user_id,
-                                '[ad_conn peeraddr]',
-                                0
-                        )
+			select im_ticket_ticket_rel__new (
+				null,
+				'im_ticket_ticket_rel',
+				:ticket_id,
+				:escalate_from_ticket_id,
+				null,
+				:current_user_id,
+				'[ad_conn peeraddr]',
+				0
+			)
        "
     }
 
     # Write Audit Trail
     im_project_audit -project_id $ticket_id -action after_create
 
-    # fraber 100928: Disabling return_url.
-    # For a new ticket it makes sense to be sent to the new ticket page...
+    # Using this page to create new tickets for HTML5 apps
     if {"json" == $format} { 
 	doc_return 200 "application/json" "{\"success\": true}" 
 	ad_script_abort
     }
 
+    # fraber 100928: Disabling return_url.
+    # For a new ticket it makes sense to be sent to the new ticket page...
     ad_returnredirect [export_vars -base "/intranet-helpdesk/new" {ticket_id {form_mode display}}]
     ad_script_abort
 
 } -edit_data {
 
-    ns_log Notice "new: edit_data"
+    if {!$write_p} {
+	ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.No_right_to_create_new_ticket "You don't have the permission to create a new ticket."]
+	ad_script_abort
+    }
+
+    # Fix the ticket_nr. I don't understand why, but that should be OK...
     set ticket_nr [string trim [string tolower $ticket_nr]]
     if {"" == $ticket_nr} { set ticket_nr [im_ticket::next_ticket_nr] }
-    if {![exists_and_not_null project_name]} { set project_name $ticket_name}
+
+    if {![exists_and_not_null project_name]} { set project_name $ticket_name }
     set start_date_sql [template::util::date get_property sql_date $start_date]
     set end_date_sql [template::util::date get_property sql_timestamp $end_date]
 
@@ -822,24 +828,10 @@ ad_form -extend -name helpdesk_ticket -on_request {
 	im_biz_object_add_role $ticket_queue_id $ticket_id 1300
     }
     
-    
     # Write Audit Trail
     im_project_audit -project_id $ticket_id -action after_update
 
-    # notification::new \
-    #    -type_id [notification::type::get_type_id -short_name ticket_notif] \
-    #    -object_id $ticket_id \
-    #    -response_id "" \
-    #    -notif_subject "Edit: Subject" \
-    #    -notif_text "Text"
-
-} -on_submit {
-
-	ns_log Notice "new: on_submit"
-
 } -after_submit {
-
-    ns_log Notice "new: after_submit"
 
     # Reset the lock on the ticket
     db_dml set_lock "
@@ -854,6 +846,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
 	doc_return 200 "application/json" "{\"success\": true}" 
 	ad_script_abort
     }
+
     ad_returnredirect $return_url
     ad_script_abort
 
@@ -871,10 +864,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
 # Setup the subnavbar
 set bind_vars [ns_set create]
 if {[info exists ticket_id]} { ns_set put $bind_vars ticket_id $ticket_id }
-
-
 if {![info exists ticket_id]} { set ticket_id "" }
-
 set ticket_parent_menu_id [db_string parent_menu "select menu_id from im_menus where label='helpdesk'" -default 0]
 set sub_navbar [im_sub_navbar \
     -components \
@@ -937,8 +927,6 @@ if {$show_components_p} {
 }
 
 
-
-
 # ---------------------------------------------------------------
 # Filter with Dynamic Fields
 # ---------------------------------------------------------------
@@ -950,7 +938,7 @@ set action_url "/intranet-helpdesk/index"
 set form_mode "edit"
 
 set mine_p_options {}
-if {[im_permission $current_user_id "view_tickets_all"]} { 
+if {$view_tickets_all_p} { 
     lappend mine_p_options [list [lang::message::lookup "" intranet-helpdesk.All "All"] "all" ] 
 }
 lappend mine_p_options [list [lang::message::lookup "" intranet-helpdesk.My_group "My Group"] "queue"]
@@ -966,16 +954,13 @@ set ticket_member_options [util_memoize [list db_list_of_lists ticket_members "
 	order by user_name
 "] 300]
 set ticket_member_options [linsert $ticket_member_options 0 [list [_ intranet-core.All] ""]]
-
 set ticket_queue_options [im_helpdesk_ticket_queue_options]
 set ticket_sla_options [im_helpdesk_ticket_sla_options -include_create_sla_p 1 -include_empty_p 1]
 set sla_exists_p 1
 if {[llength $ticket_sla_options] < 2 && !$view_tickets_all_p} { set sla_exists_p 0}
 
-# No SLA defined for this user?
-# Allow the user to request a new SLA
+# No SLA defined for this user? Then allow the user to request a new SLA.
 if {!$sla_exists_p} {
-
     # Check if there is already an SLA request
     set sla_requested_p [db_string sla_requested_p "
 	select	count(*)
@@ -1001,10 +986,10 @@ ad_form \
     -method GET \
     -export {start_idx order_by how_many view_name letter } \
     -form {
-    	{mine_p:text(select),optional {label "Mine/All"} {options $mine_p_options }}
+	{mine_p:text(select),optional {label "Mine/All"} {options $mine_p_options }}
     }
 
-if {[im_permission $current_user_id "view_tickets_all"]} {  
+if {$view_tickets_all_p} {
     ad_form -extend -name $form_id -form {
 	{ticket_status_id:text(im_category_tree),optional {label "[lang::message::lookup {} intranet-helpdesk.Status Status]"} {custom {category_type "Intranet Ticket Status" translate_p 1 package_key "intranet-helpdesk"}} }
 	{ticket_type_id:text(im_category_tree),optional {label "[lang::message::lookup {} intranet-helpdesk.Type Type]"} {custom {category_type "Intranet Ticket Type" translate_p 1 package_key "intranet-helpdesk"} } }
@@ -1052,7 +1037,7 @@ if {$user_admin_p} {
     append admin_html "<li><a href=\"/admin/group-types/one?group_type=im_ticket_queue\">[lang::message::lookup "" intranet-helpdesk.Admin_Helpdesk_Queues "Admin Helpdesk Queues"]</a>\n"
 }
 
-if {[im_permission $current_user_id "add_tickets"]} {
+if {$add_tickets_p} {
     append admin_html "<li><a href=\"[export_vars -base "/intranet-helpdesk/new" {ticket_sla_id}]\">[lang::message::lookup "" intranet-helpdesk.Add_a_new_ticket "New Ticket"]</a>\n"
 
     set wf_oid_col_exists_p [im_column_exists wf_workflows object_type]
@@ -1080,7 +1065,6 @@ append admin_html "</ul>"
 
 
 
-
 # ----------------------------------------------------------
 # Navbars
 # ----------------------------------------------------------
@@ -1088,7 +1072,6 @@ append admin_html "</ul>"
 # Compile and execute the formtemplate if advanced filtering is enabled.
 eval [template::adp_compile -string {<formtemplate id="ticket_filter"></formtemplate>}]
 set form_html $__adp_output
-
 set left_navbar_html "
 	    <div class='filter-block'>
 		<div class='filter-title'>
@@ -1098,7 +1081,6 @@ set left_navbar_html "
 	    </div>
 	    <hr/>
 "
-
 if {$sla_exists_p} {
     append left_navbar_html "
 	    <div class='filter-block'>
@@ -1124,31 +1106,31 @@ if {0 != $render_template_id} {
 
 	set template_from_param [ad_parameter -package_id [im_package_helpdesk_id] DefaultTicketTemplate "" ""]
 	if {"" == $template_from_param} {
-            # Use the default template that comes as part of the module
-            set template_body "default.adp"
-            set template_path "[acs_root_dir]/packages/intranet-helpdesk/templates/"
-        } else {
-            # Use the user's template in the template path
-            set template_body $template_from_param
-            set template_path [ad_parameter -package_id [im_package_invoices_id] InvoiceTemplatePathUnix "" "/tmp/templates/"]
-        }
+	    # Use the default template that comes as part of the module
+	    set template_body "default.adp"
+	    set template_path "[acs_root_dir]/packages/intranet-helpdesk/templates/"
+	} else {
+	    # Use the user's template in the template path
+	    set template_body $template_from_param
+	    set template_path [ad_parameter -package_id [im_package_invoices_id] InvoiceTemplatePathUnix "" "/tmp/templates/"]
+	}
     } else {
 	set template_body [im_category_from_id $render_template_id]
 	set template_path [ad_parameter -package_id [im_package_invoices_id] InvoiceTemplatePathUnix "" "/tmp/templates/"]
     }
 
     if {"" == $template_body} {
-        ad_return_complaint 1 "<li>You haven't specified a template for your ticket."
-        ad_script_abort
+	ad_return_complaint 1 "<li>You haven't specified a template for your ticket."
+	ad_script_abort
     }
 
     set template_path "${template_path}/${template_body}"
 
     if {![file isfile $template_path] || ![file readable $template_path]} {
-        ad_return_complaint "Unknown Ticket Template" "
-        <li>Ticket template'$template_path' doesn't exist or is not readable
-        for the web server. Please notify your system administrator."
-        ad_script_abort
+	ad_return_complaint "Unknown Ticket Template" "
+	<li>Ticket template'$template_path' doesn't exist or is not readable
+	for the web server. Please notify your system administrator."
+	ad_script_abort
     }
 
     # -----------------------------------------------------
@@ -1157,7 +1139,7 @@ if {0 != $render_template_id} {
     # SQL fails when there's no t.ticket_customer_contact_id
     set ticket_customer_contact_id [db_string get_data "select ticket_customer_contact_id from im_tickets where ticket_id = :ticket_id" -default 0]
     if { "" == $ticket_customer_contact_id } {
-	ad_return_complaint 1  [lang::message::lookup "" intranet-helpdesk.NoTicketCustomerContactIdFound "View not available, please set ticket attribute 'Customer Contact' first."]
+	ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.NoTicketCustomerContactIdFound "View not available, please set ticket attribute 'Customer Contact' first."]
 	ad_script_abort
     }
 
@@ -1182,12 +1164,9 @@ if {0 != $render_template_id} {
 		p.parent_id = sla.project_id and
 		t.ticket_customer_contact_id = cuc.user_id
     "
-
     set forum_html [im_forum_full_screen_component -object_id $ticket_id -read_only_p 1]
-
     set user_locale [lang::user::locale]
     set locale $user_locale
-
 
     # Render the page using the template
     set invoices_as_html [ns_adp_parse -file $template_path]

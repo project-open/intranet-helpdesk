@@ -44,6 +44,10 @@ set return_url [im_url_with_query]
 
 # Unprivileged users can only see their own tickets
 set view_tickets_all_p [im_permission $current_user_id "view_tickets_all"]
+set edit_ticket_status_p [im_permission $current_user_id edit_ticket_status]
+set add_tickets_p [im_permission $current_user_id "add_tickets"]
+
+
 if {"all" == $mine_p && !$view_tickets_all_p} {
     set mine_p "queue"
 }
@@ -609,12 +613,12 @@ if {[string equal $letter "ALL"]} {
 
 set admin_html "<ul>"
 
-if {[im_is_user_site_wide_or_intranet_admin $current_user_id]} {
+if {$user_is_admin_p} {
     append admin_html "<li><a href=\"/intranet-helpdesk/admin/\">[lang::message::lookup "" intranet-helpdesk.Admin_Helpdesk "Admin Helpdesk"]</a>\n"
-#    append admin_html "<li><a href=\"/admin/group-types/one?group_type=im_ticket_queue\">[lang::message::lookup "" intranet-helpdesk.Admin_Helpdesk_Queues "Admin Helpdesk Queues"]</a>\n"
 }
 
-if {[im_permission $current_user_id "add_tickets"]} {
+
+if {$add_tickets_p} {
     append admin_html "<li><a href=\"[export_vars -base "/intranet-helpdesk/new" {ticket_sla_id return_url}]\">[lang::message::lookup "" intranet-helpdesk.Add_a_new_ticket "New Ticket"]</a>\n"
 
     set wf_oid_col_exists_p [im_column_exists wf_workflows object_type]
@@ -646,7 +650,6 @@ append admin_html "</ul>"
 # Quickly create a new Ticket
 # ---------------------------------------------------------------
 
-set edit_ticket_status_p [im_permission $current_user_id edit_ticket_status]
 set title_label [lang::message::lookup {} intranet-helpdesk.Name {Title}]
 set action_url "/intranet-helpdesk/new"
 

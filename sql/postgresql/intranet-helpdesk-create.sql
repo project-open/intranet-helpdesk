@@ -136,6 +136,9 @@ create index im_ticket_status_id_idx on im_tickets(ticket_status_id);
 select acs_privilege__create_privilege('view_tickets_all','View all Tickets','');
 select acs_privilege__add_child('admin', 'view_tickets_all');
 
+select acs_privilege__create_privilege('edit_tickets_all','Edit all Tickets','');
+select acs_privilege__add_child('admin', 'edit_tickets_all');
+
 select acs_privilege__create_privilege('add_tickets','Add new Tickets','');
 select acs_privilege__add_child('admin', 'add_tickets');
 
@@ -146,22 +149,19 @@ select acs_privilege__create_privilege('add_tickets_for_customers','Add new Tick
 select acs_privilege__add_child('admin', 'add_tickets_for_customers');
 
 
-
-select im_priv_create('view_tickets_all', 'P/O Admins');
 select im_priv_create('view_tickets_all', 'Senior Managers');
 select im_priv_create('view_tickets_all', 'Project Managers');
 select im_priv_create('view_tickets_all', 'Employees');
 
-select im_priv_create('add_tickets', 'P/O Admins');
+select im_priv_create('edit_tickets_all', 'Senior Managers');
+
 select im_priv_create('add_tickets', 'Senior Managers');
 select im_priv_create('add_tickets', 'Project Managers');
 select im_priv_create('add_tickets', 'Employees');
 select im_priv_create('add_tickets', 'Customers');
 
-select im_priv_create('edit_ticket_status', 'P/O Admins');
 select im_priv_create('edit_ticket_status', 'Senior Managers');
 
-select im_priv_create('add_tickets_for_customers', 'P/O Admins');
 select im_priv_create('add_tickets_for_customers', 'Senior Managers');
 select im_priv_create('add_tickets_for_customers', 'Project Managers');
 select im_priv_create('add_tickets_for_customers', 'Employees');

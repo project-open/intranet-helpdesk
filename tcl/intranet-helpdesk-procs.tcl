@@ -108,6 +108,7 @@ ad_proc -public im_ticket_permissions {
     set add_tickets_for_customers_p [im_permission $user_id add_tickets_for_customers]
     set add_tickets_p [im_permission $user_id "add_tickets"]
     set view_tickets_all_p [im_permission $user_id "view_tickets_all"]
+    set edit_tickets_all_p [im_permission $user_id "edit_tickets_all"]
 
     # Determine the list of all groups in which the current user is a member
     set user_parties [im_profile::profiles_for_user -user_id $user_id]
@@ -179,8 +180,8 @@ ad_proc -public im_ticket_permissions {
     set assignee_p [expr $user_id == $ticket_assignee_id]
     set customer_p [expr $user_id == $ticket_customer_contact_id]
 
-    set read [expr $admin_p || $owner_p || $assignee_p || $customer_p || $ticket_member_p || $holding_user_p || $case_assignee_p || $queue_member_p || $view_tickets_all_p || $add_tickets_for_customers_p || $edit_ticket_status_p]
-    set write [expr ($read && $edit_ticket_status_p) || $ticket_admin_p]
+    set read [expr $admin_p || $owner_p || $assignee_p || $customer_p || $ticket_member_p || $holding_user_p || $case_assignee_p || $queue_member_p || $view_tickets_all_p || $edit_tickets_all_p]
+    set write [expr $admin_p || $edit_tickets_all_p || $ticket_admin_p]
 
     set view $read
     set admin $write
@@ -983,12 +984,15 @@ ad_proc -public im_helpdesk_ticket_sla_options {
     # Determine the list of all groups in which the current user is a member
     set user_parties [im_profile::profiles_for_user -user_id $user_id]
     lappend user_parties $user_id
-    # ([join $user_parties ","])
+
+    # Don't offer to create a new SLA if the user doesn't have the rights to do so...
+    if {![im_permission $user_id "add_projects"]} {
+        set include_create_sla_p 0
+    }
 
     # Can the user see all projects?
     set permission_sql ""
     if {![im_permission $user_id "view_projects_all"]} {
-	set include_create_sla_p 0
 	set permission_sql "and p.project_id in (
 		select object_id_one from acs_rels where object_id_two = :user_id UNION 
 		select project_id from im_projects where company_id = :customer_id UNION
@@ -1558,7 +1562,6 @@ ad_proc -public im_menu_tickets_admin_links {
     }
 
     if {[im_permission $current_user_id "add_tickets"]} {
-
         lappend result_list [list [lang::message::lookup "" intranet-helpdesk.Add_a_new_ticket "New Ticket"] "[export_vars -base "/intranet-helpdesk/new" {ticket_sla_id return_url}]"]
 
 	set wf_oid_col_exists_p [im_column_exists wf_workflows object_type]
