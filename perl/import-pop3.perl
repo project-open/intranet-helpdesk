@@ -25,8 +25,8 @@ use Data::Dumper;
 
 # --------------------------------------------------------
 # Debug? 0=no output, 10=very verbose
-$debug = 5;
-MIME::Tools->debugging(1);
+$debug = 3;
+MIME::Tools->debugging(0);
 
 # --------------------------------------------------------
 # Database Connection Parameters
@@ -84,11 +84,10 @@ $date = `/bin/date +"%Y%m%d.%H%M"` ||
 chomp($date);
 
 
-
 # --------------------------------------------------------
 # Establish the database connection
 # The parameters are defined in common_constants.pm
-$dbh = DBI->connect($db_datasource, $db_username, $db_pwd, {pg_enable_utf8 => 1}) ||
+$dbh = DBI->connect($db_datasource, $db_username, $db_pwd, {pg_enable_utf8 => 1, PrintWarn => 0, PrintError => 1}) ||
     die "import-pop3: Unable to connect to database.\n";
 
 
@@ -238,20 +237,21 @@ sub decode_body {
     my $fh = IO::File->new( \$output, '>:' ) or croak("Cannot open in-memory file: $!");
     $part->print_bodyhandle($fh);
     $fh->close;
-    print "import-pop3: decode_body: output='", $output, "'\n" if ($debug >= 1);
+    print "import-pop3: decode_body: output='", $output, "'\n" if ($debug >= 7);
 
     # Decode and deal with Latin-1 from Outlook vs. UTF-8 from Google
     my $enc = guess_encoding($output, qw/utf8 latin1/);
     if (!ref($enc)) {
 	print "import-pop3: decode_body: guess_encoding didn't find encoding\n" if ($debug >= 1);
-	print "import-pop3: decode_body: output='", unpack("H*", $output), "'\n" if ($debug >= 1);
+	print "import-pop3: decode_body: output='", unpack("H*", $output), "'\n" if ($debug >= 7);
 	$body = decode("iso-8859-1", $output);
+	$body = Encode::encode("UTF-8", $body);    # Make sure there are no invalid UTF-8 sequences in body
     } else {
 	print "import-pop3: decode_body: encoding=", $enc->name, "'\n" if ($debug >= 1);
 	$utf8 = $enc->decode($output);
 	$body = decode("iso-8859-1", $utf8);
-	print "import-pop3: decode_body: utf8='", $utf8, "'\n" if ($debug >= 1);
-	print "import-pop3: decode_body: utf8='", unpack("H*", $utf8), "'\n" if ($debug >= 1);
+	print "import-pop3: decode_body: utf8='", $utf8, "'\n" if ($debug >= 7);
+	print "import-pop3: decode_body: utf8='", unpack("H*", $utf8), "'\n" if ($debug >= 7);
     }
 
     my $unistr = decode("utf8", $body);
@@ -320,6 +320,13 @@ sub process_message {
     my $x_mailer = $header->get('X-Mailer');
     defined($x_mailer) or $x_mailer = "";
     my $subject_raw = $header->get('Subject');
+    if (!defined $subject_raw) { $subject_raw = 'No Subject'; }
+
+    if (!defined $from && !defined $to && !defined $id) { 
+	print "import-pop3: Found an email without from, to or id fields - skipping\n" if ($debug >= 1);
+	return; 
+    }
+
     chomp($from);
     chomp($to);
     chomp($id);
@@ -328,9 +335,12 @@ sub process_message {
     chomp($subject_raw);
 
     my $subject = decode_subject_line($subject_raw, $x_mailer);
+    $subject =~ s/[\000-\037]/ /g;                 # Replace control characters by spaces
+    $subject = substr $subject, 0, 100;            # maximum length
     my $subject_q = $dbh->quote($subject);
 
     print "import-pop3: \n" if ($debug >= 1);
+    print "import-pop3: id:\t$id\n" if ($debug >= 1);
     print "import-pop3: from:\t$from\n" if ($debug >= 1);
     print "import-pop3: to:\t$to\n" if ($debug >= 1);
     print "import-pop3: subject:\t$subject_q\n" if ($debug >= 1);
@@ -347,10 +357,10 @@ sub process_message {
     # Parse the email
     my $body = process_parts($mime_entity, "main");
     print "import-pop3: body=$body\n" if ($debug >= 1);
-    print "import-pop3: hex(body)=", unpack("H*", $body), "\n" if ($debug >= 1);
+    print "import-pop3: hex(body)=", unpack("H*", $body), "\n" if ($debug >= 7);
 
     my $body_q = $dbh->quote($body);
-    
+
     # --------------------------------------------------------
     # Calculate ticket database fields
     
@@ -495,7 +505,8 @@ sub process_message {
 			ticket_type_id			= '$ticket_type_id',
 			ticket_status_id		= '$ticket_status_id',
 			ticket_customer_contact_id	= '$ticket_customer_contact_id',
-			ticket_prio_id			= '$ticket_prio_id'
+			ticket_prio_id			= '$ticket_prio_id',
+			ticket_telephony_old_number	= '$id'
 		where
 			ticket_id = $ticket_id
     ";
@@ -548,7 +559,7 @@ sub process_message {
     
     my $topic_type_id = 1108; # Note
     my $topic_status_id = 1200; # open
-    
+
     # Insert a Forum Topic into the ticket container
     print "import-pop3: before im_forum_topics insert\n" if ($debug >= 1);
     $sql = "
@@ -562,8 +573,9 @@ sub process_message {
 			$subject_q, $body_q
 		)
     ";
+
     $sth = $dbh->prepare($sql);
-    $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
+    $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";	
 
 
     # --------------------------------------------------------
@@ -619,6 +631,7 @@ sub process_message {
 
     for($i=0; $i <= $#attname; $i++){
 	my $att_name = $attname[$i];
+	if (!defined $att_name) { next; }
 	my $att_content = $attachment[$i];
 	my $path = "$ticket_file_storage/$customer_path/$ticket_nr";
 	print "import-pop3: Writing attachment to file=$path/$att_name\n" if ($debug >= 1);
@@ -627,9 +640,6 @@ sub process_message {
 	print OUT $att_content;
 	close(OUT);
     }
-
-    # Remove the message from the inbox
-#    $pop3_conn->delete($msg_num);
 }
 
 
@@ -640,6 +650,7 @@ sub process_message {
 #
 if ("" ne $message_file) {
     # The user specified a file at the command line
+    print "import-pop3: Reading input from message_file='$message_file'\n" if ($debug >= 1);
     open my $fh, '<', $message_file or die "import-pop3: Error opening $message_file: $!";
     my $message = do { local $/; <$fh> };
     process_message($message);
