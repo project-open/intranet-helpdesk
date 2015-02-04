@@ -554,11 +554,15 @@ if {$edit_ticket_status_p} {
     lappend ticket_elements {ticket_status_id:text(im_category_tree) {label "[lang::message::lookup {} intranet-helpdesk.Status Status]"} {custom {category_type "Intranet Ticket Status" translate_p 1 package_key "intranet-helpdesk"}} }
 } else {
     lappend ticket_elements {ticket_status_id:text(im_category_tree) {mode display} {label "[lang::message::lookup {} intranet-helpdesk.Status Status]"} {custom {category_type "Intranet Ticket Status" translate_p 1 package_key "intranet-helpdesk"}} }
-
 }
+
+
 
 ad_form -extend -name helpdesk_ticket -form $ticket_elements
 
+if {!$edit_ticket_status_p} {
+    template::element::set_value helpdesk_ticket ticket_status_id $ticket_status_id
+}
 
 # ---------------------------------------------
 # Add DynFields to the form
