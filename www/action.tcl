@@ -33,11 +33,6 @@ set user_name [im_name_from_user_id [ad_get_user_id]]
 # 30590, 'Delete'
 # 30599, 'Nuke'
 
-# Customers should not be able to close, delete or nuke tickets  
-if { [im_profile::member_p -profile_id [im_customer_group_id] -user_id $user_id] && ($action_id == 30500 || $action_id == 30510 || $action_id == 30590 || $action_id == 30599) } {
-    ad_return_complaint 1  [lang::message::lookup "" intranet-helpdesk.No_Permission "As a customer you are not allowed to delete, nuke or close tickets. If the ticket is 'resolved' please mark it as such. "]
-}
-
 # Deal with funky input parameter combinations
 if {"" == $action_id} { ad_returnredirect $return_url }
 if {0 == [llength $tid]} { ad_returnredirect $return_url }
@@ -46,17 +41,37 @@ if {1 == [llength $tid]} { set tid [lindex $tid 0] }
 set action_name [im_category_from_id $action_id]
 set action_forbidden_msg [lang::message::lookup "" intranet-helpdesk.Action_Forbidden "<b>Unable to execute action</b>:<br>You don't have the permissions to execute the action '%action_name%' on this ticket."]
 
+# ------------------------------------------
+# Check the TCL that determines the visibility of the action
+set visible_tcl [util_memoize [list db_string visible_tcl "select visible_tcl from im_categories where category_id = $action_id"]]
+set visible_p 0
+set visible_explicite_permission_p 0
+if {"" == $visible_tcl} {
+    # Not specified - User is allowed to execute but normal permissions apply
+    set visible_p 1
+} else {
+    # Explicitely specified: Check TCL
+    if {[eval $visible_tcl]} {
+	set visible_p 1
+	set visible_explicite_permission_p 1
+    }
+}
+
+# ------------------------------------------
+# Perform the action on multiple tickets
 switch $action_id {
 	30500 - 30510 {
 	    # Close and "Close & Notify"
 	    foreach ticket_id $tid {
-		im_ticket::audit		-ticket_id $ticket_id -action "before_update"
-		im_ticket::check_permissions	-ticket_id $ticket_id -operation "write"
-		im_ticket::set_status_id	-ticket_id $ticket_id -ticket_status_id [im_ticket_status_closed]
-		im_ticket::update_timestamp	-ticket_id $ticket_id -timestamp "done"
-		im_ticket::close_workflow	-ticket_id $ticket_id
-		im_ticket::close_forum		-ticket_id $ticket_id
-		im_ticket::audit		-ticket_id $ticket_id -action "after_update"
+		im_ticket::audit			-ticket_id $ticket_id -action "before_update"
+		if {!$visible_explicite_permission_p} {
+		    im_ticket::check_permissions	-ticket_id $ticket_id -operation "write"
+		}
+		im_ticket::set_status_id		-ticket_id $ticket_id -ticket_status_id [im_ticket_status_closed]
+		im_ticket::update_timestamp		-ticket_id $ticket_id -timestamp "done"
+		im_ticket::close_workflow		-ticket_id $ticket_id
+		im_ticket::close_forum			-ticket_id $ticket_id
+		im_ticket::audit			-ticket_id $ticket_id -action "after_update"
 	    }
 
 	    if {$action_id == 30510} {
@@ -67,11 +82,13 @@ switch $action_id {
 	30530 - 30532 {
 	    # Reopen
 	    foreach ticket_id $tid {
-		im_ticket::audit		-ticket_id $ticket_id -action "before_update"
-		im_ticket::check_permissions	-ticket_id $ticket_id -operation "write"
-		im_ticket::set_status_id	-ticket_id $ticket_id -ticket_status_id [im_ticket_status_open]
+		im_ticket::audit			-ticket_id $ticket_id -action "before_update"
+		if {!$visible_explicite_permission_p} {
+		    im_ticket::check_permissions	-ticket_id $ticket_id -operation "write"
+		}
+		im_ticket::set_status_id		-ticket_id $ticket_id -ticket_status_id [im_ticket_status_open]
 		db_dml project_status_to_open "update im_projects set project_status_id = [im_project_status_open] where project_id = :ticket_id"
-		im_ticket::audit		-ticket_id $ticket_id -action "after_update"
+		im_ticket::audit			-ticket_id $ticket_id -action "after_update"
 	    }
 
 	    if {$action_id == 30532} {
@@ -114,22 +131,42 @@ switch $action_id {
 	30560 {
 	    # Resolved
 	    foreach ticket_id $tid {
-		im_ticket::audit		-ticket_id $ticket_id -action "before_update"
-		im_ticket::check_permissions	-ticket_id $ticket_id -operation "write"
-		im_ticket::set_status_id	-ticket_id $ticket_id -ticket_status_id [im_ticket_status_resolved]
-		im_ticket::update_timestamp	-ticket_id $ticket_id -timestamp "done"
-		im_ticket::audit		-ticket_id $ticket_id -action "after_update"
+		im_ticket::audit			-ticket_id $ticket_id -action "before_update"
+
+		# Allow customers to mark a ticket as "resolved"
+		db_1row ticket_info "
+			select	ticket_customer_contact_id,
+				(select	count(*)
+				from	acs_rels r
+				where	r.object_id_one = p.company_id and
+					r.object_id_two = :user_id
+				) as customer_company_member_p
+			from	im_tickets t,
+				im_projects p
+			where	t.ticket_id = p.project_id and
+				t.ticket_id = :ticket_id
+		"
+		set customer_p [expr $ticket_customer_contact_id == $user_id || $customer_company_member_p > 0]
+
+		if {!$customer_p && !$visible_explicite_permission_p} {
+		    im_ticket::check_permissions	-ticket_id $ticket_id -operation "write"
+		}
+		im_ticket::set_status_id		-ticket_id $ticket_id -ticket_status_id [im_ticket_status_resolved]
+		im_ticket::update_timestamp		-ticket_id $ticket_id -timestamp "done"
+		im_ticket::audit			-ticket_id $ticket_id -action "after_update"
 	    }
 	}
 	30590 {
 	    # Delete
 	    foreach ticket_id $tid {
-		im_ticket::audit		-ticket_id $ticket_id -action "before_update"
-		im_ticket::check_permissions	-ticket_id $ticket_id -operation "write"
-		im_ticket::set_status_id	-ticket_id $ticket_id -ticket_status_id [im_ticket_status_deleted]
-		im_ticket::close_workflow	-ticket_id $ticket_id
-		im_ticket::close_forum		-ticket_id $ticket_id
-		im_ticket::audit		-ticket_id $ticket_id -action "after_update"
+		im_ticket::audit			-ticket_id $ticket_id -action "before_update"
+		if {!$visible_explicite_permission_p} {
+		    im_ticket::check_permissions	-ticket_id $ticket_id -operation "write"
+		}
+		im_ticket::set_status_id		-ticket_id $ticket_id -ticket_status_id [im_ticket_status_deleted]
+		im_ticket::close_workflow		-ticket_id $ticket_id
+		im_ticket::close_forum			-ticket_id $ticket_id
+		im_ticket::audit			-ticket_id $ticket_id -action "after_update"
 	    }
 	}
 	30599 {
@@ -139,8 +176,8 @@ switch $action_id {
 		ad_script_abort
 	    }
 	    foreach ticket_id $tid {
-		im_ticket::audit		-ticket_id $ticket_id -action "before_nuke"
-	        im_ticket::check_permissions	-ticket_id $ticket_id -operation "admin"
+		im_ticket::audit			-ticket_id $ticket_id -action "before_nuke"
+	        im_ticket::check_permissions		-ticket_id $ticket_id -operation "admin"
 		im_project_nuke $ticket_id
 	    }
 
