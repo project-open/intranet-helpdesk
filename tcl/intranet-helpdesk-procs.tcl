@@ -1730,12 +1730,32 @@ ad_proc -public im_helpdesk_inbox_pop3_import_sweeper { } {
     }
     set result ""
     if {[catch {
-
 	set result [exec bash -c $cmd]
-	ns_log Notice "im_helpdesk_inbox_pop3_import_sweeper: Result: $result"
-	
+	ns_log Notice "im_helpdesk_inbox_pop3_import_sweeper: Result: $result"	
     } err_msg]} {
+
+	# Error during import-pop3.perl execution
+	# This is dangerous, because it means that
+	# customer emails may get lost.
 	ns_log Error "im_helpdesk_inbox_pop3_import_sweeper: Error: $err_msg"
+
+	# Send out a warning email
+	set email [parameter::get_from_package_key -package_key "intranet-helpdesk" -parameter "HelpdeskOwner" -default ""]
+	set email "fraber@fraber.de"
+	set sender_email [ad_parameter -package_id [ad_acs_kernel_id] SystemOwner "" [ad_system_owner]]
+	set subject "Error Importing Customer Emails"
+	set message "Error executing: $cmd
+Please search for 'Error:' in the text below.
+No customer emails are lost, however the
+offending ticket may get duplicated.
+$err_msg
+"
+	if [catch {
+	    ns_sendmail $email $sender_email $subject $message
+	} errmsg] {
+	    ns_log Error "im_helpdesk_inbox_pop3_import_sweeper: Error sending to \"$email\": $errmsg"
+	}
+
     }
 
     nsv_incr intranet_helpdesk_pop3_import sweeper_p -1
