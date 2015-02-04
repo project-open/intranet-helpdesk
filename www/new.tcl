@@ -103,14 +103,18 @@ foreach tuple $managable_profiles {
 }
 if {!$add_users_p} { set user_can_create_new_customer_contact_p 0 }
 
-
+# Determine permission for the ticket.
+# Consider the case that we are creating a new ticket which doesn't exist in the DB yet.
+set view_p 1
+set read_p 1
+set write_p 1
+set admin_p 1
+set ticket_exists_p 0
 if {[info exists ticket_id]} {
-    im_ticket_permissions $user_id $ticket_id view_p read_p write_p admin_p
-} else {
-    set view_p 0
-    set read_p 0
-    set write_p 0
-    set admin_p 0
+    set ticket_exists_p [db_string exists_p "select count(*) from im_tickets where ticket_id = :ticket_id"]
+    if {$ticket_exists_p} {
+	im_ticket_permissions $user_id $ticket_id view_p read_p write_p admin_p
+    }
 }
 
 
@@ -174,6 +178,7 @@ if {0 != $escalate_from_ticket_id} {
 # ----------------------------------------------
 # Page Title
 
+
 set page_title [lang::message::lookup "" intranet-helpdesk.New_Ticket "New Ticket"]
 if {[exists_and_not_null ticket_id]} {
     set page_title [db_string title "select project_name from im_projects where project_id = :ticket_id" -default ""]
@@ -207,12 +212,15 @@ if {"edit" == [template::form::get_action helpdesk_action]} { set form_mode "edi
 if {![info exists ticket_id]} { set form_mode "edit" }
 if {![info exists form_mode]} { set form_mode "display" }
 
+
+
 if {[info exists ticket_id]} {
     if {!$read_p} {
 	ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.No_right_to_read_ticket "You don't have the permission to see this ticket."]
 	ad_script_abort
     }
 }
+
 
 # Check if the user is allowed to create a new ticket
 if {"edit" == $form_mode && ![info exists ticket_id]} {
@@ -221,7 +229,6 @@ if {"edit" == $form_mode && ![info exists ticket_id]} {
 	ad_script_abort
     }
 }
-
 
 # Show the ADP component plugins?
 if {"edit" == $form_mode} { set show_components_p 0 }
@@ -278,6 +285,7 @@ if {"edit" == $form_mode && [info exists ticket_id]} {
     }
 }
 
+
 # ---------------------------------------------
 # The base form. Define this early so we can extract the form status
 # ---------------------------------------------
@@ -316,7 +324,7 @@ if {!$user_admin_p} { set ticket_action_customize_html "" }
 set ticket_action_select [im_category_select \
      -translate_p 1 \
      -package_key "intranet-helpdesk" \
-     -plain_p 1 \
+     -plain_p 0 \
      -include_empty_p 0 \
      -include_empty_name "" \
      "Intranet Ticket Action" \
@@ -544,6 +552,9 @@ lappend ticket_elements {ticket_type_id:text(im_category_tree) {label "[lang::me
 
 if {$edit_ticket_status_p} {
     lappend ticket_elements {ticket_status_id:text(im_category_tree) {label "[lang::message::lookup {} intranet-helpdesk.Status Status]"} {custom {category_type "Intranet Ticket Status" translate_p 1 package_key "intranet-helpdesk"}} }
+} else {
+    lappend ticket_elements {ticket_status_id:text(im_category_tree) {mode display} {label "[lang::message::lookup {} intranet-helpdesk.Status Status]"} {custom {category_type "Intranet Ticket Status" translate_p 1 package_key "intranet-helpdesk"}} }
+
 }
 
 ad_form -extend -name helpdesk_ticket -form $ticket_elements
