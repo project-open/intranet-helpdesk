@@ -510,7 +510,7 @@ namespace eval im_ticket {
 	    }
 
 	    # Add the current user to the project
-	    im_biz_object_add_role $current_user_id $ticket_id [im_biz_object_role_project_manager]
+	    im_biz_object_add_role $current_user_id $ticket_id [im_biz_object_role_full_member]
 	
 	    # Start a new workflow case
 	    im_workflow_start_wf -object_id $ticket_id -object_type_id $ticket_type_id -skip_first_transition_p 1
@@ -739,13 +739,9 @@ namespace eval im_ticket {
     } {
 	set user_id [ad_get_user_id]
 	set user_name [im_name_from_user_id $user_id]
-	im_ticket_permissions $user_id $ticket_id view read write admin
-	if {!$write} { 
-	    set action_forbidden_msg [lang::message::lookup "" intranet-helpdesk.Forbidden_to_change_ticket_status_msg "
-	    <b>Unable to change the status of the ticket</b>:<br>You don't have the permissions to modify ticket #%ticket_id%."]
-	    ad_return_complaint 1 $action_forbidden_msg 
-	    ad_script_abort
-	}
+
+	# Fraber 140202: Permission should be checked using check_permissions above!
+	# im_ticket_permissions $user_id $ticket_id view read write admin
 	db_dml update_ticket_status "
 		update im_tickets set 
 			ticket_status_id = :ticket_status_id
