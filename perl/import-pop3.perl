@@ -575,8 +575,28 @@ sub process_message {
     ";
 
     $sth = $dbh->prepare($sql);
-    $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";	
+    $sth->execute();
 
+    # Check if there was an error inserting. This usually happens
+    # because of wrong UTF8-Encoding. In this case just try again
+    # after fixing the encoding.
+    if ($sth->err) {
+	$body = Encode::encode("UTF-8", $body);    # Make sure there are no invalid UTF-8 sequences in body
+	$body_q = $dbh->quote($body);
+	$sql = "
+		insert into im_forum_topics (
+			topic_id, object_id, parent_id,
+			topic_type_id, topic_status_id, owner_id,
+			subject, message
+		) values (
+			'$topic_id', '$ticket_id', null,
+			'$topic_type_id', '$topic_status_id', '$ticket_customer_contact_id',
+			$subject_q, $body_q
+		)
+        ";
+	$sth = $dbh->prepare($sql);
+	$sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";	
+    }
 
     # --------------------------------------------------------
     # Start a new dynamic workflow around the ticket
