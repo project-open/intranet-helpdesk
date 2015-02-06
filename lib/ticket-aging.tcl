@@ -27,7 +27,7 @@ if {![info exists diagram_title] || "" == $diagram_title} { set diagram_title [l
 set prio1_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio1 "Prio 1"]
 set prio2_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio23 "Prio 2-3"]
 set prio3_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio46 "Prio 4-6"]
-set prio4_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio46 "Prio 7-..."]
+set prio4_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio7 "Prio 7-..."]
 
 set day_l10n [lang::message::lookup "" intranet-core.day_age "day age"]
 set days_l10n [lang::message::lookup "" intranet-core.days_age "days age"]
