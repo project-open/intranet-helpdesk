@@ -1823,6 +1823,9 @@ update im_reports
 set report_description = 'Shows the number of tickets per ticket age.'
 where report_code = 'rest_ticket_aging_histogram';
 
+
+
+
 update im_reports 
 set report_sql = '
 select	age,
@@ -1857,7 +1860,6 @@ order by age
 LIMIT %limit%
 '
 where report_code = 'rest_ticket_aging_histogram';
-
 
 SELECT acs_permission__grant_permission(
 	(select menu_id from im_menus where label = 'rest_ticket_aging_histogram'),
