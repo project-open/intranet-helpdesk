@@ -226,6 +226,20 @@ sub process_parts {
 sub decode_body {
     my ($part) = @_;
     print "import-pop3: decode_body: part='", Dumper($part), "'\n" if ($debug >= 1);
+   
+    my $result = "";
+    eval {
+	$result = decode_body_helper($part);
+    };
+    if (my $err = $@) {
+	print "import-pop3: decode_body: cought error: $err\n";
+    }
+    return $result
+}
+
+sub decode_body_helper {
+    my ($part) = @_;
+    print "import-pop3: decode_body_helper: part='", Dumper($part), "'\n" if ($debug >= 1);
     my $utf8 = "";
     my $latin1 = "";
     my $body = "";
@@ -309,7 +323,7 @@ sub process_message {
     # Parse the MIME email
     my $mime_entity = $mime_parser->parse_data($message);
     my $error = ($@ || $mime_parser->last_error);
-    print "import-pop3: error:$error\n" if ("" ne $error);
+    print "import-pop3: error: $error\n" if ("" ne $error);
     my $header = $mime_entity->head();
 
     my $to = $header->get('To');
