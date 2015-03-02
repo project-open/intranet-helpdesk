@@ -328,7 +328,9 @@ sub process_message {
 
     my $to = $header->get('To');
     my $from = $header->get('From');
-    my $id = $header->get('Message-ID');
+    my $email_id = $header->get('Message-ID');
+    my $in_reply_to_email_id = $header->get('In-Reply-To');
+    defined($in_reply_to_email_id) or $in_reply_to_email_id = "";
     my $content_type = $header->get('Content-Type');
     defined($content_type) or $content_type = "";
     my $x_mailer = $header->get('X-Mailer');
@@ -336,14 +338,16 @@ sub process_message {
     my $subject_raw = $header->get('Subject');
     if (!defined $subject_raw) { $subject_raw = 'No Subject'; }
 
-    if (!defined $from && !defined $to && !defined $id) { 
+    if (!defined $from && !defined $to && !defined $email_id) { 
 	print "import-pop3: Found an email without from, to or id fields - skipping\n" if ($debug >= 1);
 	return; 
     }
 
     chomp($from);
     chomp($to);
-    chomp($id);
+    chomp($email_id);
+    $email_id =~ s/[^ _a-zA-Z0-9\@\<\>\=\+\-\.]//g;
+    chomp($in_reply_to_email_id);
     chomp($content_type);
     chomp($x_mailer);
     chomp($subject_raw);
@@ -354,7 +358,8 @@ sub process_message {
     my $subject_q = $dbh->quote($subject);
 
     print "import-pop3: \n" if ($debug >= 1);
-    print "import-pop3: id:\t$id\n" if ($debug >= 1);
+    print "import-pop3: id:\t$email_id\n" if ($debug >= 1);
+    print "import-pop3: in-reply-to:\t$in_reply_to_email_id\n" if ($debug >= 1);
     print "import-pop3: from:\t$from\n" if ($debug >= 1);
     print "import-pop3: to:\t$to\n" if ($debug >= 1);
     print "import-pop3: subject:\t$subject_q\n" if ($debug >= 1);
@@ -363,7 +368,7 @@ sub process_message {
     # Save the email in the /tmp directory with Message-ID
     if ("" eq $message_file && $debug >= 3) {
 	my $dir = dir("/tmp");
-	my $file = $dir->file("email-".$id);
+	my $file = $dir->file("email-".$email_id);
 	my $file_handle = $file->openw();        # Get a file_handle (IO::File object) you can write to
 	$file_handle->print(@$message);
     }
@@ -376,12 +381,31 @@ sub process_message {
     my $body_q = $dbh->quote($body);
 
     # --------------------------------------------------------
+    # Check for duplicates
+    
+    $sth = $dbh->prepare("SELECT min(ticket_id) as duplicate_ticket_id from im_tickets where ticket_email_id = '$email_id'");
+    $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
+    my $row = $sth->fetchrow_hashref;
+    my $duplicate_ticket_id = $row->{duplicate_ticket_id};
+
+    if (defined $duplicate_ticket_id) {
+	# We have found a ticket with the same mail-id!!!
+	print "import-pop3: error: Found an email with a duplicate Message-Id\n";
+	print "import-pop3: error: Duplicate Message-ID: $email_id\n";
+	print "import-pop3: error: Duplicate From: $from\n";
+	print "import-pop3: error: Duplicate To: $to\n";
+	print "import-pop3: error: Duplicate Subject: $subject_raw\n";
+	print "import-pop3: error: Duplicate ticket_id: $duplicate_ticket_id\n";
+	return;
+    }
+
+    # --------------------------------------------------------
     # Calculate ticket database fields
     
     # Ticket Nr: Take current number from the im_ticket_seq sequence
     $sth = $dbh->prepare("SELECT nextval('im_ticket_seq') as ticket_nr");
     $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
-    my $row = $sth->fetchrow_hashref;
+    $row = $sth->fetchrow_hashref;
     my $ticket_nr = $row->{ticket_nr};
     
     # Ticket Name: Ticket Nr + Mail Subject
@@ -493,7 +517,7 @@ sub process_message {
     # Insert the basis ticket into the SQL database
     print "import-pop3: before im_ticket__new\n" if ($debug >= 1);
     $sth = $dbh->prepare("
-		SELECT im_ticket__new (
+		SELECT im_ticket__new_with_email_id (
 			nextval('t_acs_object_id_seq')::integer, -- p_ticket_id
 			'im_ticket'::varchar,			-- object_type
 			now(),					-- creation_date
@@ -505,7 +529,10 @@ sub process_message {
 			'$ticket_nr'::varchar,
 			'$ticket_customer_id'::integer,
 			'$ticket_type_id'::integer,
-			'$ticket_status_id'::integer
+			'$ticket_status_id'::integer,
+
+			'$email_id',
+			'$in_reply_to_email_id'
 		) as ticket_id
     ");
     $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
@@ -519,8 +546,7 @@ sub process_message {
 			ticket_type_id			= '$ticket_type_id',
 			ticket_status_id		= '$ticket_status_id',
 			ticket_customer_contact_id	= '$ticket_customer_contact_id',
-			ticket_prio_id			= '$ticket_prio_id',
-			ticket_telephony_old_number	= '$id'
+			ticket_prio_id			= '$ticket_prio_id'
 		where
 			ticket_id = $ticket_id
     ";
