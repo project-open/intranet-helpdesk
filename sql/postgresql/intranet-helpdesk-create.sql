@@ -102,6 +102,12 @@ create table im_tickets (
 	ticket_alarm_date		timestamptz,
 	ticket_alarm_action		text,
 	ticket_note			text,
+	-- Unique ID for tickets created from an email
+	ticket_email_id			text
+					constraint im_tickets_mail_id_un 
+					unique,
+	-- Remember if the mail was sent in reply to another email
+	ticket_in_reply_to_email_id	text,
 
 	-- Creation
 	ticket_creation_date		timestamptz,
