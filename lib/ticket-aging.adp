@@ -20,7 +20,7 @@ Ext.onReady(function () {
     });
 
     // Define the colors for the diagram
-    var colors = ['#b4003f','#7e007b','#4702b7', '#0f00f1'];   // '#5800a2','#3300cb'
+    var colors = ['#ff0000', '#b4003f','#7e007b','#4702b7', '#0f00f1'];   // '#5800a2','#3300cb'
     var baseColor = '#eee';
     Ext.define('Ext.chart.theme.Custom', {
 	extend: 'Ext.chart.theme.Base',
