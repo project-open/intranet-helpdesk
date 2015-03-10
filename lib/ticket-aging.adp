@@ -18,16 +18,26 @@ Ext.onReady(function () {
             reader: { type: 'json', root: 'data' }		// Standard reader: Data are prefixed by "data".
 	}
     });
+
+    // Define the colors for the diagram
+    var colors = ['#b4003f','#7e007b','#4702b7', '#0f00f1'];   // '#5800a2','#3300cb'
+    var baseColor = '#eee';
+    Ext.define('Ext.chart.theme.Custom', {
+	extend: 'Ext.chart.theme.Base',
+	constructor: function(config) {
+	    this.callParent([Ext.apply({
+		colors: colors
+	    }, config)]);
+	}
+    });
     
     var ticketAgingChart = new Ext.chart.Chart({
 	xtype: 'chart',
-
-        width: @diagram_width@,
+	width: @diagram_width@,
         height: @diagram_height@,
         title: '@diagram_title@',
 	renderTo: '@diagram_id@',
         layout: 'fit',
-
 	animate: true,
 	shador: true,
 	store: ticketAgingStore,

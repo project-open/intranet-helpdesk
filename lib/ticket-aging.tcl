@@ -15,7 +15,7 @@ if {![info exists diagram_report_code] || "" == $diagram_report_code} { set diag
 if {![info exists diagram_width] || "" == $diagram_width} { set diagram_width 200 }
 if {![info exists diagram_height] || "" == $diagram_height } { set diagram_height 250 }
 if {![info exists diagram_font] || "" == $diagram_font} { set diagram_font "10px Helvetica, sans-serif" }
-if {![info exists diagram_theme] || "" == $diagram_theme} { set diagram_theme "Blue" }
+if {![info exists diagram_theme] || "" == $diagram_theme} { set diagram_theme "Custom" }
 if {![info exists diagram_limit] || "" == $diagram_limit} { set diagram_limit 40 }
 if {![info exists diagram_inset_padding] || "" == $diagram_inset_padding} { set diagram_inset_padding 5 }
 if {![info exists diagram_tooltip_width] || "" == $diagram_tooltip_width} { set diagram_tooltip_width 230 }
