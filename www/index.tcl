@@ -314,7 +314,7 @@ array set extra_sql_array [im_dynfield::search_sql_criteria_from_form \
 
 set criteria [list]
 if { ![empty_string_p $ticket_status_id] && $ticket_status_id > 0 } {
-    lappend criteria "t.ticket_status_id in ([join [im_sub_categories $ticket_status_id] ","])"
+    lappend criteria "t.ticket_status_id in (select * from im_sub_categories($ticket_status_id))"
 }
 if { ![empty_string_p $ticket_type_id] && $ticket_type_id != 0 } {
     lappend criteria "t.ticket_type_id in ([join [im_sub_categories $ticket_type_id] ","])"
