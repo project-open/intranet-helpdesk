@@ -78,7 +78,13 @@ Ext.onReady(function () {
 		    var ticketsL10n = (storeItem.get(item.yField) == 1) ? ' @ticket_l10n@' : ' @tickets_l10n@';
                     this.setTitle(fieldName + ': ' + storeItem.get(item.yField) + ticketsL10n + ' @of_l10n@ ' + ageDays + daysL10n);
                 }
-            }
+            },
+	    listeners: {
+		itemclick: function(item,e) {
+		    console.log('ticket-aging: itemclick on:');
+		    console.log(item);
+		}
+	    }
 	}],
 	legend: { 
 		position: 'float',
