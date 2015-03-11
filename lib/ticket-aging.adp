@@ -83,6 +83,13 @@ Ext.onReady(function () {
 		itemclick: function(item,e) {
 		    console.log('ticket-aging: itemclick on:');
 		    console.log(item);
+
+		    var ticketAge = Number(item.value[0]);
+		    var ticketDate = new Date(new Date().getTime() - ticketAge * 1000 * 3600 * 24);
+		    var ticketStartDate = ticketDate.toISOString().substring(0,10);
+		    var ticketEndDate = new Date(ticketDate.getTime() + 1000 * 3600 * 24).toISOString().substring(0,10);
+		    var url = "/intranet-helpdesk/index?mine_p=all&start_date="+ticketStartDate+"&end_date="+ticketEndDate+"&ticket_status_id=30000"
+		    window.open(url);
 		}
 	    }
 	}],
