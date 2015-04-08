@@ -591,7 +591,8 @@ SELECT im_category_new (2502, 'Service Level Agreement', 'Intranet Project Type'
 -- 30300-30399	Intranet Ticket Technical Priority (100)
 -- 30400-30499	Intranet Service Catalog (100)
 -- 30500-30599	Intranet Ticket Action (100)
--- 30600-30699	Intranet Ticket Telephony Request Type
+-- 30600-30699	Intranet Ticket Telephony Request Type (100)
+-- 30700-30799	Jira Intranet Ticket Resolution (100)
 -- 31000-31999	Intranet Ticket Class (1000)
 -- 32000-32999	Intranet Service Catalog (Extension 1000)
 -- 33000-33999	reserved (1000)
@@ -675,7 +676,6 @@ update im_categories set category_description = 'Request training time or traini
 where category = 'Training Request' and category_type = 'Intranet Ticket Type';
 update im_categories set category_description = 'Generic heavy-weight problemm responsible for multiple incidents.' 
 where category = 'Generic Problem Ticket' and category_type = 'Intranet Ticket Type';
-
 
 
 ----------------------------------------------------------
