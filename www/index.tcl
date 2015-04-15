@@ -133,9 +133,15 @@ db_foreach column_list_sql $column_sql {
 			acs_attributes aa
 		where	a.acs_attribute_id = aa.attribute_id
 			and aa.object_type = 'im_ticket'
+		UNION select 'mine_p'
+		UNION select 'start_date'
+		UNION select 'end_date'
 	"
 	db_foreach pass_through_vars $dynfield_sql {
-	    append col_url "&$attribute_name=[im_opt_val $attribute_name]"
+	    set value [im_opt_val $attribute_name]
+	    if {"" != $value} {
+		append col_url "&$attribute_name=$value"
+	    }
 	}
 
 	set admin_link "<a href=[export_vars -base "/intranet/admin/views/new-column" {return_url column_id {form_mode display}}]>[im_gif wrench]</a>"
