@@ -10,14 +10,14 @@
     <inherit-templates-p>t</inherit-templates-p>
     <auto-mount>intranet-helpdesk</auto-mount>
 
-    <version name="4.1.0.0.3" url="http://www.project-open.org/download/apm/intranet-helpdesk-4.1.0.0.3.apm">
+    <version name="4.1.0.0.4" url="http://www.project-open.org/download/apm/intranet-helpdesk-4.1.0.0.4.apm">
         <owner url="mailto:frank.bergmann@project-open.com">Frank Bergmann</owner>
         <summary>Helpdesk Management</summary>
         <vendor url="http://www.project-open.com/">]project-open[</vendor>
         <description format="text/plain">Helpdesk Management is similar to Change Management. However, Helpdesk tickets have different characteristics then RFC tickets and require special functionality such as queue management etc.</description>
         <maturity>0</maturity>
 
-        <provides url="intranet-helpdesk" version="4.1.0.0.3"/>
+        <provides url="intranet-helpdesk" version="4.1.0.0.4"/>
         <requires url="intranet-confdb" version="3.4.0.0.0"/>
         <requires url="intranet-core" version="3.4.0.0.0"/>
         <requires url="intranet-workflow" version="4.0.4.0.0"/>
@@ -28,13 +28,10 @@
             <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="DefaultNewTicketStatus"  default="" description="Default status for new tickets. Leave empty for system default (Open). Otherwise please enter the category_id of the desired status (example: 30000 for Open)."/>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="DefaultTicketTemplate" default="" description="Default ticket for showing a printer friendly version of a ticket. The template is located in the default template path (~/filestorage/templates/) defined by the parameter InvoiceTemplatePathUnix. There is an example available in ~/packages/intranet-helpdesk/templates/default.adp. The default template is used if this parameter is empty."/>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="HelpdeskOwner"  default="frank.bergmann@project-open.com" description="Employee in charge of HelpDesk. Can be the recipient of undeliverable notifications due to missing/deactivated users or mal configuration."/>
-
             <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="InboxPOP3SweeperInterval" default="0" description="Interval (seconds) between POP3 inbox checks. Default is 0 to disable POP3 import"/>
-
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="InboxPOP3Host" default="" description="Host of the POP3 inbox used for receiving tickets via mail, for example &quot;mail.yourserver.com&quot;. Default is the empty string in order to disable mail popping."/>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="InboxPOP3Pwd" default="" description="Password of the POP3 inbox used for receiving tickets via mail, for example &quot;secret&quot;. Unfortunately there is no way to keep this password secret. Instead, you may could edit the &quot;import-pop3.perl&quot; script in /pacakges/intranet-helpdesk/perl&quot; and set the password there. Default is the empty string in order to disable mail popping."/>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="InboxPOP3User" default="" description="User of the POP3 inbox used for receiving tickets via mail, for example &quot;support@myserver.com&quot;. Default is the empty string in order to disable mail popping."/>
-
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="NextTicketNrMethod"  default="sequence" description="How show we determine the Nr of the next ticket? 'sequence' creates a new number every time while 'incremental' will take the last Nr and add +1. The default is 'sequence' in order to avoid any issues with duplicates."/>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="RenderSlaNameSql"  default="company_name || ' (' || project_name || ')'" description="Allows to determine how SLAs are shown in the TicketListPage. Examples are `project_name` or `company_name || ' (' || project_name || ')'`"/>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="NewTypeSelectUrl"  default="/intranet-helpdesk/new-typeselect" description="URL of a page that determines the SLA and the type of a new ticket. Default is an empty string which is equal to '/intranet-helpdesk/new-typeselect' (the ]po[ default page for selecting the type and SLA of a ticket. The parameter allows you to define your own page for selecting ticket type and SLA."/>

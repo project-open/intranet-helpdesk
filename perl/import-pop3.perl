@@ -50,7 +50,7 @@ $pop3_user = "";					# "mailbox\@your-server.com" - you need to quote the at-sig
 $pop3_pwd = "";						# "secret" - POP3 password
 $pop3_limit = 0;					# 0=no limit, otherwise limit to N messages
 $pop3_no_create = 0;					# 0=normal operations, 1=don't create tickets
-
+$pop3_ticket_status_id = "30000";			# 30000 for ticket status "Open"
 
 # --------------------------------------------------------
 # Check for command line options
@@ -114,6 +114,16 @@ if ("" eq $pop3_pwd) {
     $row = $sth->fetchrow_hashref;
     $pop3_pwd = $row->{attr_value};
 }
+
+$sth = $dbh->prepare("SELECT attr_value FROM apm_parameters ap, apm_parameter_values apv WHERE ap.parameter_id = apv.parameter_id and ap.package_key = 'intranet-helpdesk' and ap.parameter_name = 'DefaultNewTicketStatus'");
+$sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
+$row = $sth->fetchrow_hashref;
+my $value  = $row->{attr_value};
+if (defined $value) { 
+    print "import-pop3: DefaultNewTicketStatus=$value\n";
+    $pop3_ticket_status_id = $value; 
+}
+
 
 
 print "import-pop3: host=$pop3_host, user=$pop3_user, pwd=$pop3_pwd\n" if ($debug > 9);
@@ -498,7 +508,7 @@ sub process_message {
     #    30096 | Resolved
     #    30097 | Deleted
     #    30098 | Canceled
-    my $ticket_status_id = 30000;
+    my $ticket_status_id = $pop3_ticket_status_id;
     
     # Ticket Prio
     # 30201 |	 	1 - Highest
