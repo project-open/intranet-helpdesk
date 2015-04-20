@@ -1610,7 +1610,9 @@ ad_proc -public im_helpdesk_ticket_aging_diagram {
     # Sencha check and permissions
     if {![im_sencha_extjs_installed_p]} { return "" }
     set current_user_id [ad_get_user_id]
-    if {![im_permission $current_user_id view_tickets_all]} { return "" }
+
+    # Fraber 150420: No need for permissions, really, because no critical information is shown
+    # if {![im_permission $current_user_id view_tickets_all]} { return "" }
     im_sencha_extjs_load_libraries
 
     # Call the portlet page
