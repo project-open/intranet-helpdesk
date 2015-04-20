@@ -1158,7 +1158,7 @@ if {0 != $render_template_id} {
 	ad_script_abort
     }
 
-    db_1row ticket_info "
+    db_1row template_ticket_info "
 	select	p.*,
 		t.*,
 		im_name_from_id(ticket_customer_contact_id) as ticket_customer_contact_name,
@@ -1170,14 +1170,12 @@ if {0 != $render_template_id} {
 		cuc.*,
 		(select country_name from country_codes where iso = cuc.ha_country_code) as ha_country_name,
 		(select country_name from country_codes where iso = cuc.wa_country_code) as wa_country_name
-	from	im_projects p,
-		im_tickets t,
-		im_projects sla,
-		users_contact cuc
+	from	im_tickets t
+		LEFT OUTER JOIN users_contact cuc ON (t.ticket_customer_contact_id = cuc.user_id),
+		im_projects p
+		LEFT OUTER JOIN im_projects sla ON (p.parent_id = sla.project_id)
 	where	p.project_id = t.ticket_id and
-		t.ticket_id = :ticket_id and
-		p.parent_id = sla.project_id and
-		t.ticket_customer_contact_id = cuc.user_id
+		t.ticket_id = :ticket_id
     "
     set forum_html [im_forum_full_screen_component -object_id $ticket_id -read_only_p 1]
     set user_locale [lang::user::locale]
