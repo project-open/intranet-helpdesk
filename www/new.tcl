@@ -502,14 +502,24 @@ if {[exists_and_not_null ticket_customer_id]} {
     set customer_contact_options [db_list_of_lists customer_contact_options "
 	select	im_name_from_user_id(u.user_id) as name,
 		u.user_id
-	from	cc_users u
+	from	users u
 	where	u.user_id in (
 			-- Members of group helpdesk
 			select member_id from group_distinct_member_map where group_id = [im_profile_helpdesk]
 		UNION	select object_id_two from acs_rels where object_id_one = :ticket_customer_id
 		UNION	select object_id_two from acs_rels where object_id_one = :ticket_sla_id
+		) and
+		user_id not in (
+			select  u.user_id
+			from    users u,
+			        acs_rels r,
+			        membership_rels mr
+			where   r.rel_id = mr.rel_id and
+			        r.object_id_two = u.user_id and
+			        r.object_id_one = acs__magic_object_id('registered_users') and
+			        mr.member_state != 'approved'		
 		)
-		order by name
+	order by name
     "]
 } else {
     set customer_sla_options [im_helpdesk_ticket_sla_options -include_create_sla_p $add_projects_p]
