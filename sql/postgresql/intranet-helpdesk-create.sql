@@ -1814,6 +1814,16 @@ SELECT acs_permission__grant_permission(
 	(select group_id from groups where group_name = 'Employees'),
 	'read'
 );
+SELECT acs_permission__grant_permission(
+	(select plugin_id from im_component_plugins where plugin_name = 'Ticket Aging' and package_name = 'intranet-helpdesk'), 
+	(select group_id from groups where group_name = 'Customers'),
+	'read'
+);
+SELECT acs_permission__grant_permission(
+	(select plugin_id from im_component_plugins where plugin_name = 'Ticket Aging' and package_name = 'intranet-helpdesk'), 
+	(select group_id from groups where group_name = 'Freelancers'),
+	'read'
+);
 
 -- REST Data-Source for the report
 SELECT im_report_new (
