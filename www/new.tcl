@@ -506,8 +506,20 @@ if {[exists_and_not_null ticket_customer_id]} {
 	where	u.user_id in (
 			-- Members of group helpdesk
 			select member_id from group_distinct_member_map where group_id = [im_profile_helpdesk]
+			-- Members of the ticket customer
 		UNION	select object_id_two from acs_rels where object_id_one = :ticket_customer_id
+		UNION	select	member_id
+			from	group_member_map gmm,
+				acs_rels r
+			where	r.object_id_two = gmm.group_id and
+				r.object_id_one = :ticket_customer_id
+			-- Members of the ticket SLA
 		UNION	select object_id_two from acs_rels where object_id_one = :ticket_sla_id
+		UNION	select	member_id
+			from	group_member_map gmm,
+				acs_rels r
+			where	r.object_id_two = gmm.group_id and
+				r.object_id_one = :ticket_sla_id
 		) and
 		user_id not in (
 			select  u.user_id
