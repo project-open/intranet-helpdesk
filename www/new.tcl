@@ -981,6 +981,18 @@ if {$view_tickets_all_p} {
 lappend mine_p_options [list [lang::message::lookup "" intranet-helpdesk.My_group "My Group"] "queue"]
 lappend mine_p_options [list [lang::message::lookup "" intranet-helpdesk.Mine "Mine"] "mine"]
 
+# Add custom searches to drop-down
+if {[im_table_exists im_sql_selectors]} {
+    set selector_sql "
+	select	s.name, s.short_name
+	from	im_sql_selectors s
+	where	s.object_type = 'im_ticket'
+    "
+    db_foreach selectors $selector_sql {
+	lappend mine_p_options [list $name $short_name]
+    }
+}
+
 set ticket_member_options [util_memoize [list db_list_of_lists ticket_members "
 	select  distinct
 		im_name_from_user_id(object_id_two) as user_name,
