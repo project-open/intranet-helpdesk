@@ -550,18 +550,13 @@ if {"" != $dynfield_extra_where} {
 set sql "
 		SELECT
 			t.*,
-			im_category_from_id(t.ticket_type_id) as ticket_type,
-			im_category_from_id(t.ticket_status_id) as ticket_status,
-			im_category_from_id(t.ticket_prio_id) as ticket_prio,
-			im_name_from_user_id(t.ticket_customer_contact_id) as ticket_customer_contact,
-			im_name_from_user_id(t.ticket_assignee_id) as ticket_assignee,
 			(select group_name from groups where group_id = ticket_queue_id) as ticket_queue_name,
 			p.*,
 			to_char(p.start_date, 'YYYY-MM-DD') as start_date_formatted,
 			to_char(p.end_date, 'YYYY-MM-DD') as end_date_formatted,
 			to_char(t.ticket_alarm_date, 'YYYY-MM-DD') as ticket_alarm_date_formatted,
 			ci.*,
-			(select substring(replace(sft.message, E'\\\\n', ' ') from 1 for 40) from im_forum_topics sft where sft.topic_id in (
+			(select substring(sft.message from 1 for 40) from im_forum_topics sft where sft.topic_id in (
 				select min(sft2.topic_id) from im_forum_topics sft2 where sft2.object_id = p.project_id
 			)) as message40,
 			c.company_name,
@@ -698,6 +693,16 @@ set bgcolor(1) " class=rowodd "
 set ctr 0
 set idx $start_idx
 db_foreach tickets_info_query $selection -bind $form_vars {
+
+    # Moved from SQL to there for performance reasons
+    set ticket_type [im_category_from_id $ticket_type_id]
+    set ticket_status [im_category_from_id $ticket_status_id]
+    set ticket_prio [im_category_from_id $ticket_prio_id]
+
+    set ticket_customer_contact [im_name_from_user_id $ticket_customer_contact_id]
+    set ticket_assignee [im_name_from_user_id $ticket_assignee_id]
+
+    regsub -all {\n} $message40 " " message40
 
     # Bulk Action Checkbox
     set action_checkbox "<input type=checkbox name=tid value=$ticket_id id=ticket,$ticket_id>\n"
