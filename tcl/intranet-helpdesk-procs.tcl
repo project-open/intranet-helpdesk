@@ -222,10 +222,10 @@ ad_proc -public im_ticket_permission_read_sql {
 		acs_objects o
 	where	t.ticket_id = p.project_id and
 		t.ticket_id = o.object_id and
-		(t.ticket_assignee_id = :user_id OR
-		t.ticket_customer_contact_id = :user_id OR
-		o.creation_user = :user_id OR
-		exists(
+		(t.ticket_assignee_id = :user_id
+		OR t.ticket_customer_contact_id = :user_id
+		OR o.creation_user = :user_id
+		OR exists(
 			-- member of an explicitely assigned ticket_queue
 			select	g.group_id
 			from	acs_rels r, 
@@ -233,39 +233,29 @@ ad_proc -public im_ticket_permission_read_sql {
 			where	r.object_id_one = g.group_id and
 				r.object_id_two = :user_id and
 				g.group_id = t.ticket_queue_id			
-		) OR exists (
+		) OR t.ticket_id in (
 			-- member of the ticket - any role_id will do.
 			select	r.object_id_one
 			from	acs_rels r,
 				im_biz_object_members bom
 			where	r.rel_id = bom.rel_id and
 				r.object_id_two in ([join $user_parties ","])
-		) OR exists (
-			-- admin of the ticket
-			select	distinct r.object_id_one
-			from	acs_rels r,
-				im_biz_object_members bom
-			where	r.rel_id = bom.rel_id and
-				r.object_id_two in ([join $user_parties ","]) and
-				bom.object_role_id in (1301, 1302)
-		) OR exists (
+		) OR t.ticket_id in (
 			-- cases with user as task_assignee
 			select	wfc.object_id
 			from	wf_task_assignments wfta,
 				wf_tasks wft,
 				wf_cases wfc
-			where	t.ticket_id = wfc.object_id and
-				wft.state in ('enabled', 'started') and
+			where	wft.state in ('enabled', 'started') and
 				wft.case_id = wfc.case_id and
 				wfta.task_id = wft.task_id and
 				wfta.party_id in ([join $user_parties ","])
-		) OR exists (
+		) OR t.ticket_id in (
 			-- cases with user as task holding_user
 			select	wfc.object_id
 			from	wf_tasks wft,
 				wf_cases wfc
-			where	t.ticket_id = wfc.object_id and
-				wft.holding_user = :user_id and
+			where	wft.holding_user = :user_id and
 				wft.state in ('enabled', 'started') and
 				wft.case_id = wfc.case_id
 		))
