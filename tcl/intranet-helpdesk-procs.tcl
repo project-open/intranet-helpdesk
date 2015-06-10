@@ -143,6 +143,31 @@ ad_proc -public im_ticket_permissions {
 				r.object_id_two in ([join $user_parties ","]) and
 				bom.object_role_id in (1301, 1302)
 		) t) as ticket_admin_p,
+
+		(select count(*) from (
+			-- user is a member of the SLA - any role will do
+			select	rp.project_id
+			from	acs_rels r,
+				im_projects rp,
+				im_biz_object_members bom
+			where	r.rel_id = bom.rel_id and
+				r.object_id_one = rp.project_id and
+				rp.project_id = p.parent_id and
+				r.object_id_two in ([join $user_parties ","])
+		) t) as sla_member_p,
+
+		(select count(*) from (
+			-- user is a member of the ticket customer - any role will do
+			select	rc.company_id
+			from	acs_rels r,
+				im_companies rc,
+				im_biz_object_members bom
+			where	r.rel_id = bom.rel_id and
+				r.object_id_one = rc.company_id and
+				r.object_id_two in ([join $user_parties ","]) and
+				p.company_id = rc.company_id
+		) t) as customer_member_p,
+
 		(select count(*) from (
 			-- cases with user as task_assignee
 			select distinct wfc.object_id
@@ -178,18 +203,15 @@ ad_proc -public im_ticket_permissions {
 
     set owner_p [expr $user_id == $creation_user_id]
     set assignee_p [expr $user_id == $ticket_assignee_id]
-    set customer_p [expr $user_id == $ticket_customer_contact_id]
+    set customer_p [expr $customer_member_p || $user_id == $ticket_customer_contact_id]
 
-    set read [expr $admin_p || $owner_p || $assignee_p || $customer_p || $ticket_member_p || $holding_user_p || $case_assignee_p || $queue_member_p || $view_tickets_all_p || $edit_tickets_all_p]
+    set read [expr $admin_p || $owner_p || $assignee_p || $customer_p || $sla_member_p || $ticket_member_p || $holding_user_p || $case_assignee_p || $queue_member_p || $view_tickets_all_p || $edit_tickets_all_p]
     set write [expr $admin_p || $edit_tickets_all_p || $ticket_admin_p]
 
     set view $read
     set admin $write
 
 }
-
-
-
 
 ad_proc -public im_ticket_permission_read_sql {
     { -user_id "" }
@@ -239,6 +261,24 @@ ad_proc -public im_ticket_permission_read_sql {
 			from	acs_rels r,
 				im_biz_object_members bom
 			where	r.rel_id = bom.rel_id and
+				r.object_id_two in ([join $user_parties ","])
+		) OR p.parent_id in (
+			-- user is a member of the SLA - any role will do
+			select	rp.project_id
+			from	acs_rels r,
+				im_projects rp,
+				im_biz_object_members bom
+			where	r.rel_id = bom.rel_id and
+				r.object_id_one = rp.project_id and
+				r.object_id_two in ([join $user_parties ","])
+		) OR p.company_id in (
+			-- user is a member of the ticket customer - any role will do
+			select	rc.company_id
+			from	acs_rels r,
+				im_companies rc,
+				im_biz_object_members bom
+			where	r.rel_id = bom.rel_id and
+				r.object_id_one = rc.company_id and
 				r.object_id_two in ([join $user_parties ","])
 		) OR t.ticket_id in (
 			-- cases with user as task_assignee
