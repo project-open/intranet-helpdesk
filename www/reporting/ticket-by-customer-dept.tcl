@@ -1,4 +1,3 @@
-
 # /packages/intranet-helpdesk/www/reporting/ticket-by-customer-dept.tcl
 #
 # Copyright (c) 2003-2008 ]project-open[
@@ -20,7 +19,8 @@ ad_page_contract {
     { report_prio_id "" }
     { report_queue_id "" }
     { report_assignee_id "" }
-    { report_assignee_dept_id "" }
+    { report_assignee_dept_id "943830" }
+    { report_message_substring_len 120 }
 }
 
 # ------------------------------------------------------------
@@ -61,6 +61,11 @@ if {"" != $report_end_date && ![regexp {^[0-9][0-9][0-9][0-9]\-[0-9][0-9]\-[0-9]
     Expected format: 'YYYY-MM-DD'"
 }
 
+if {![string is integer $report_message_substring_len]} {
+    set report_message_substring_len 200
+}
+
+
 
 # ------------------------------------------------------------
 # Defaults
@@ -69,17 +74,20 @@ if {"" != $report_end_date && ![regexp {^[0-9][0-9][0-9][0-9]\-[0-9][0-9]\-[0-9]
 set days_in_future 31
 db_1row todays_date "
 select
-	to_char(sysdate::date + :days_in_future::integer, 'YYYY') as todays_year,
-	to_char(sysdate::date + :days_in_future::integer, 'MM') as todays_month
+	to_char(sysdate::date, 'YYYY') as todays_year,
+	to_char(sysdate::date, 'MM') as todays_month,
+	to_char(sysdate::date + :days_in_future::integer, 'YYYY') as next_month_year,
+	to_char(sysdate::date + :days_in_future::integer, 'MM') as next_month_month
 from dual
 "
 
-if {"" == $report_start_date} { set report_start_date "2015-01-01" }
-if {"" == $report_end_date} { set report_end_date "$todays_year-$todays_month-01" }
+if {"" == $report_start_date} { set report_start_date "$todays_year-$todays_month-01" }
+if {"" == $report_end_date} { set report_end_date "$next_month_year-$next_month_month-01" }
 
+set ticket_url "/intranet-helpdesk/new?form_mode=display&ticket_id="
 set user_url "/intranet/users/view?user_id="
 set this_url [export_vars -base "/intranet-helpdesk/reporting/ticket-by-customer-dept" {report_start_date} ]
-set levels {2 "Evaluees + Evaluators"} 
+set levels {1 "Main Dept" 2 "Main Dept + Tickets" 3 "Main Dept + Tickets + Discussions"} 
 
 
 # ------------------------------------------------------------
@@ -99,7 +107,7 @@ if {"" != $report_type_id} { lappend criteria "t.ticket_type_id in ([join [im_su
 if {"" != $report_prio_id} { lappend criteria "t.ticket_prio_id in ([join [im_sub_categories $report_prio_id] ","])" }
 
 if {"" != $report_assignee_dept_id} {
-    set cc_code [db_string cc_code "select cost_center_code from im_cost_centers where cost_center_id = :report_cost_center" -default ""]
+    set cc_code [db_string cc_code "select cost_center_code from im_cost_centers where cost_center_id = :report_assignee_dept_id" -default ""]
     set cc_len [string length $cc_code]
     lappend criteria "t.ticket_assignee_id in (
 	select e.employee_id
@@ -119,6 +127,16 @@ if { ![empty_string_p $where_clause] } {
 
 
 # ------------------------------------------------------------
+# Calculate the ticket_first_discussion_topic_id_lazy_cached
+# for those tickets that have not yet been calculated
+#
+db_dml first_discussion_topic "
+update im_tickets
+set ticket_first_discussion_topic_id_lazy_cached = (select min(topic_id) from im_forum_topics ft where ft.object_id = ticket_id)
+where ticket_first_discussion_topic_id_lazy_cached is null
+"
+
+# ------------------------------------------------------------
 # Define the report - SQL, counters, headers and footers 
 #
 
@@ -130,6 +148,7 @@ from	(
 	select
 		child.tree_sortkey as child_tree_sortkey,
 		child.*,
+		substring(child.message for :report_message_substring_len) as message_substring,
 		t.*,
 		p.*,
 		p.project_name as ticket_name,
@@ -148,15 +167,14 @@ from	(
 		im_name_from_user_id(o.creation_user) as ticket_creation_user_name,
 		acs_object__name(t.ticket_queue_id) as ticket_queue
 	from
-		im_forum_topics parent,
-		im_forum_topics child,
-		im_tickets t,
+		acs_objects o,
 		im_projects p,
-		acs_objects o
+		im_tickets t
+		LEFT OUTER JOIN im_forum_topics parent ON parent.topic_id = t.ticket_first_discussion_topic_id_lazy_cached,
+		im_forum_topics child
 	where
 		t.ticket_id = p.project_id and
 		t.ticket_id = o.object_id and
-		parent.topic_id = (select min(topic_id) from im_forum_topics ft where ft.object_id = t.ticket_id) and
 		child.tree_sortkey between parent.tree_sortkey and tree_right(parent.tree_sortkey)
 		$where_clause
 	) t
@@ -178,25 +196,23 @@ set report_def [list \
 	content [list  \
 		group_by ticket_nr \
 		header {
-			$ticket_nr
-		        $ticket_name
+		        $customer_contact_dept
+			"<a href=$ticket_url$ticket_id target=_blank>$ticket_nr</a>"
+			"<a href=$ticket_url$ticket_id target=_blank>$ticket_name</a>"
 		} \
 		content [list \
 			header {
-				$topic_name
-				$subject
+			    "\#colspan=99 $message_substring"
 			} \
 			content {} \
 		] \
 	] \
-	footer {
-		$customer_contact_dept
-	} \
+	footer { } \
 ]
 
 
 # Global header/footer
-set header0 {"Nr" "Ticket"}
+set header0 {"Cust<br>Dept" "Nr" "Ticket"}
 set footer0 {"" "" "" "" "" "" "" ""}
 
 set counters [list]
@@ -234,6 +250,21 @@ switch $report_output_format {
 		    <input type=textfield name=report_end_date value=$report_end_date>
 		  </td>
 		</tr>
+
+		<tr>
+		  <td class=form-label>Customer Contact Dept</td>
+		  <td class=form-widget>
+		    [im_cost_center_select report_assignee_dept_id $report_assignee_dept_id]
+		  </td>
+		</tr>
+
+		<tr>
+		  <td class=form-label>Discussions Message Length</td>
+		  <td class=form-widget>
+		    <input type=textfield name=report_message_substring_len value=$report_message_substring_len>
+		  </td>
+		</tr>
+
                 <tr>
                   <td class=form-label>Format</td>
                   <td class=form-widget>
@@ -260,6 +291,8 @@ set footer_array_list [list]
 set last_value_list [list]
 set class "rowodd"
 db_foreach sql $sql {
+
+    if {$report_message_substring_len == [string length $message_substring]} { append message_substring "..." }
 
     im_report_display_footer \
 	-output_format $report_output_format \
