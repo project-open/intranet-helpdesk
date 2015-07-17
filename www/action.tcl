@@ -133,9 +133,9 @@ switch $action_id {
 	    foreach ticket_id $tid {
 		im_ticket::audit			-ticket_id $ticket_id -action "before_update"
 
-		# Allow customers to mark a ticket as "resolved"
+		# Allow customers to mark a ticket as "resolved" even if they don't have write permissions normally
 		db_1row ticket_info "
-			select	ticket_customer_contact_id,
+			select	coalesce(ticket_customer_contact_id,0) as ticket_customer_contact_id,
 				(select	count(*)
 				from	acs_rels r
 				where	r.object_id_one = p.company_id and
