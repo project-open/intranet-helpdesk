@@ -18,10 +18,10 @@ Ext.require([
  * after all essential data have been loaded into the
  * browser.
  */
-function launchTicketAgePerQueue(debug, ticketTypes) {
+function launchTicketStatsPerQueue(debug, ticketTypes) {
 
+    var ticketNumStore = Ext.StoreManager.get('ticketNumStore');
     var ticketAgeStore = Ext.StoreManager.get('ticketAgeStore');
-
 
     // Define the colors for the diagram
     var colors = ['#ff0000', '#b4003f','#7e007b','#4702b7', '#0f00f1'];   // '#5800a2','#3300cb'
@@ -34,19 +34,27 @@ function launchTicketAgePerQueue(debug, ticketTypes) {
             }, config)]);
         }
     });
-    
-    var ticketAgingChart = new Ext.chart.Chart({
+
+    var serie = {
+            type: 'bar',
+            axis: 'bottom',
+            yField: ticketTypes,
+            title: ticketTypes,
+            stacked: true,
+            highlight: true
+    };
+
+    var ticketChart = new Ext.chart.Chart({
         xtype: 'chart',
         width: @diagram_width@,
         height: @diagram_height@,
         title: '@diagram_title@',
-        renderTo: '@diagram_id@',
         layout: 'fit',
         animate: true,
         shador: true,
-        store: ticketAgeStore,
+        store: ticketNumStore,
         insetPadding: @diagram_inset_padding@,
-        theme: '@diagram_theme@',
+//        theme: '@diagram_theme@',
         axes: [{
             type: 'Numeric',
             position: 'bottom',
@@ -63,40 +71,7 @@ function launchTicketAgePerQueue(debug, ticketTypes) {
             // title: 'Age of tickets (days)',
             minimum: 0
         }],
-        series: [{
-            type: 'bar',
-            axis: 'bottom',
-            xField: 'age',
-            yField: ticketTypes,
-            title: ticketTypes,
-            stacked: true,
-            highlight: true,
-            tips: {
-                trackMouse: false,
-                width: @diagram_tooltip_width@,
-                height: @diagram_tooltip_height@,
-                renderer: function(storeItem, item) {
-                    var fieldName = item.series.title[item.series.yField.indexOf(item.yField)];
-                    var ageDays = storeItem.get('age');
-                    var daysL10n = (ageDays == 1) ? ' @day_l10n@' : ' @days_l10n@';
-                    var ticketsL10n = (storeItem.get(item.yField) == 1) ? ' @ticket_l10n@' : ' @tickets_l10n@';
-                    this.setTitle(fieldName + ': ' + storeItem.get(item.yField) + ticketsL10n + ' @of_l10n@ ' + ageDays + daysL10n);
-                }
-            },
-            listeners: {
-                itemclick: function(item,e) {
-                    console.log('ticket-aging: itemclick on:');
-                    console.log(item);
-
-                    var ticketAge = Number(item.value[0]);
-                    var ticketDate = new Date(new Date().getTime() - ticketAge * 1000 * 3600 * 24);
-                    var ticketStartDate = ticketDate.toISOString().substring(0,10);
-                    var ticketEndDate = new Date(ticketDate.getTime() + 1000 * 3600 * 24).toISOString().substring(0,10);
-                    var url = "/intranet-helpdesk/index?mine_p=all&start_date="+ticketStartDate+"&end_date="+ticketEndDate+"&ticket_status_id=30000"
-                    window.open(url);
-                }
-            }
-        }],
+        series: [serie],
         legend: { 
                 position: 'float',
                 x: @diagram_width@ - @diagram_legend_width@,
@@ -104,6 +79,59 @@ function launchTicketAgePerQueue(debug, ticketTypes) {
                 labelFont: '@diagram_font@'
         }
     });
+
+    var panel = Ext.create('Ext.panel.Panel', {
+        renderTo: '@diagram_id@',
+	items: [
+	    ticketChart
+	],
+	dockedItems : [{
+	    xtype : 'toolbar',
+	    dock  : 'top',
+	    items : [{
+		xtype: 'combobox',
+		name: 'uom_id',
+		displayField: 'category',
+		valueField: 'category_id',
+		queryMode: 'local',
+		fieldLabel: "Show:",
+		hideLabel: true,
+		emptyText: 'Number of Tickets',
+		width: 200,
+		margins: '0 6 0 0',
+		store: Ext.create('Ext.data.Store', { fields: ['category_id', 'category'], data: [
+                    {category_id: "num", category: 'Number of Tickets'},
+                    {category_id: "age", category: 'Age of Tickets'}
+		]}),
+		allowBlank: false,
+		forceSelection: true,
+		listeners: {
+		    change: function(el, newValue, oldValue) {
+			var series = ticketChart.series;
+			series.clear();
+			switch (newValue) {
+			case "num":
+			    serie.stacked = true;
+			    series.add(serie);
+			    ticketChart.bindStore(ticketNumStore);
+			    ticketChart.redraw();
+			    break;
+			case "age": 
+			    serie.stacked = false;
+			    series.add(serie);
+			    ticketChart.bindStore(ticketAgeStore);
+			    ticketChart.redraw();
+			    break;
+			default:
+			    break;
+			}
+                    }
+		}
+	    }]
+	}]
+    });
+
+
 };
 
 
@@ -135,7 +163,22 @@ Ext.onReady(function () {
 
     // Derived stores with aggreated numbers and age per queue and ticket type
     var ticketAgeStore = Ext.create('Ext.data.ArrayStore', {storeId: 'ticketAgeStore'});
-    var ticketNumberStore = Ext.create('Ext.data.ArrayStore', {storeId: 'ticketNumberStore'});
+    var ticketNumStore = Ext.create('Ext.data.ArrayStore', {storeId: 'ticketNumStore'});
+
+    var simplifyTicketType = function(str) {
+	str = str.replace("Ticket", "");
+	str = str.replace("Request", "");
+	str = str.replace("Generic", "");
+	str = str.replace("Alert", "");
+	str = str.replace("  ", " ");
+	return str;
+    };
+
+    var simplifyQueue = function(str) {
+	str = str.replace("Admins", "");
+	str = str.replace("  ", " ");
+	return str;
+    };
 
     // Reformat once the raw data are loaded
     rawStore.on('load', function(store, records, successful, eOpts) {
@@ -150,9 +193,11 @@ Ext.onReady(function () {
         var ticketTypes = [];
         rawStore.each(function(record) {
             var type = record.get('type');
+	    type = simplifyTicketType(type);
             if (ticketTypes.indexOf(type) < 0) ticketTypes.push(type);
 
             var queue = record.get('queue');
+	    queue = simplifyQueue(queue);
             if ("" == queue) { queue = "No Queue"; }
             if (queues.indexOf(queue) < 0) queues.push(queue);
         });
@@ -165,33 +210,50 @@ Ext.onReady(function () {
         ticketTypes.forEach(function(type) {ageFields.push(type); });
 
         var ageData = [];
+        var numData = [];
         queues.forEach(function(queue) {
             var row = {'queue': queue};
-            ticketTypes.forEach(function(type) {row[type] = 0; });
+            ticketTypes.forEach(function(type) { row[type] = 0.0; });
             ageData.push(row);
+
+            var row2 = {'queue': queue};
+            ticketTypes.forEach(function(type) { row2[type] = 0.0; });
+            numData.push(row2);
         });
 
         rawStore.each(function(record) {
-            var age = record.get('age');
-            var num = record.get('number');
+            var age = parseFloat(record.get('age'));
+            var num = parseFloat(record.get('number'));
             var queue = record.get('queue');
+	    queue = simplifyQueue(queue);
             if ("" == queue) { queue = "No Queue"; }
-            var type = record.get('type');
-            
-            // Check if there is already an entry
             var queueIndex = queues.indexOf(queue);
+            var type = record.get('type');
+	    type = simplifyTicketType(type);
+            
+            // Update the Age store
             var queueRow = ageData[queueIndex];
-            queueRow[type]++;
+            queueRow[type] = queueRow[type] + age;
+
+            // Update the Num store
+            var queueRow2 = numData[queueIndex];
+            queueRow2[type] = queueRow2[type] + num;
         });
 
         // Setup custom store with ticket queue fields from rawStore
-        ticketAgeStore = Ext.create('Ext.data.Store', {
-            storeId: 'ticketAgeStore',
-          fields: ageFields,
-          data: ageData
+        ticketNumStore = Ext.create('Ext.data.Store', {
+            storeId: 'ticketNumStore',
+            fields: ageFields,
+            data: numData
         });
 
-        launchTicketAgePerQueue(debug, ticketTypes);
+        ticketAgeStore = Ext.create('Ext.data.Store', {
+            storeId: 'ticketAgeStore',
+            fields: ageFields,
+            data: ageData
+        });
+
+        launchTicketStatsPerQueue(debug, ticketTypes);
         
     });
 
