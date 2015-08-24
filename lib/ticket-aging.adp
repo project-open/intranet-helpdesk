@@ -1,6 +1,5 @@
 <div id=@diagram_id@></div>
 <script type='text/javascript'>
-
 Ext.require(['Ext.chart.*', 'Ext.Window', 'Ext.fx.target.Sprite', 'Ext.layout.container.Fit']);
 Ext.onReady(function () {
     
@@ -13,7 +12,14 @@ Ext.onReady(function () {
             extraParams: {
 		format: 'json',					// Ask for data in JSON format
 		limit: @diagram_limit@,				// Limit the number of returned rows
-		report_code: '@diagram_report_code@'	// The code of the data-source to retreive
+		report_code: '@diagram_report_code;noquote@',	// The code of the data-source to retreive
+		sla_id: '@diagram_ticket_sla_id;noquote@',
+		customer_dept_code: '@diagram_ticket_customer_contact_dept_code;noquote@',
+		customer_contact_id: '@diagram_ticket_customer_contact_id;noquote@',
+		assignee_dept_code: '@diagram_ticket_assignee_dept_code;noquote@',
+		type_id: '@diagram_ticket_type_id;noquote@',
+		status_id: '@diagram_ticket_status_id;noquote@',
+		prio_id: '@diagram_ticket_prio_id;noquote@'
             },
             reader: { type: 'json', root: 'data' }		// Standard reader: Data are prefixed by "data".
 	}

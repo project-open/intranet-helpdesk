@@ -1624,6 +1624,16 @@ ad_proc -public im_menu_tickets_admin_links {
 # ---------------------------------------------------------------
 
 ad_proc -public im_helpdesk_ticket_aging_diagram {
+    {-diagram_ticket_customer_contact_dept_id 0 }
+    {-diagram_ticket_customer_contact_id 0 }
+    {-diagram_ticket_assignee_dept_id 0 }
+    {-diagram_ticket_sla_id 0 }
+    {-diagram_ticket_type_id 0 }
+    {-diagram_ticket_status_id 0 }
+    {-diagram_ticket_prio_id 0 }
+    {-diagram_exclude_ticket_type_ids "" }
+    {-diagram_exclude_ticket_status_ids "" }
+    {-diagram_exclude_ticket_prio_ids "" }
     {-diagram_width ""}
     {-diagram_height ""}
     {-diagram_title ""}
@@ -1647,6 +1657,15 @@ ad_proc -public im_helpdesk_ticket_aging_diagram {
 
     # Call the portlet page
     set params [list \
+                    [list diagram_ticket_customer_contact_dept_id $diagram_ticket_customer_contact_dept_id] \
+                    [list diagram_ticket_customer_contact_id $diagram_ticket_customer_contact_id] \
+                    [list diagram_ticket_assignee_dept_id $diagram_ticket_assignee_dept_id] \
+                    [list diagram_ticket_sla_id $diagram_ticket_sla_id] \
+                    [list diagram_ticket_type_id $diagram_ticket_type_id] \
+                    [list diagram_ticket_status_id $diagram_ticket_status_id] \
+                    [list diagram_exclude_ticket_type_ids $diagram_exclude_ticket_type_ids] \
+                    [list diagram_exclude_ticket_status_ids $diagram_exclude_ticket_status_ids] \
+                    [list diagram_exclude_ticket_prio_ids $diagram_exclude_ticket_prio_ids] \
                     [list diagram_width $diagram_width] \
                     [list diagram_height $diagram_height] \
                     [list diagram_title $diagram_title] \
@@ -1660,6 +1679,42 @@ ad_proc -public im_helpdesk_ticket_aging_diagram {
     ]
 
     set result [ad_parse_template -params $params "/packages/intranet-helpdesk/lib/ticket-aging"]
+    return [string trim $result]
+}
+
+
+
+# ---------------------------------------------------------------
+# 
+# ---------------------------------------------------------------
+
+ad_proc -public im_helpdesk_ticket_age_number_per_queue {
+    {-diagram_width ""}
+    {-diagram_height ""}
+    {-diagram_title ""}
+    {-diagram_font ""}
+    {-diagram_theme ""}
+} {
+    Returns a HTML component with a bar chart with tickets and age per queue
+} {
+    # Sencha check and permissions
+    if {![im_sencha_extjs_installed_p]} { return "" }
+    set current_user_id [ad_get_user_id]
+
+    # No need for permissions, really, because no critical information is shown
+    # if {![im_permission $current_user_id view_tickets_all]} { return "" }
+    im_sencha_extjs_load_libraries
+
+    # Call the portlet page
+    set params [list \
+                    [list diagram_width $diagram_width] \
+                    [list diagram_height $diagram_height] \
+                    [list diagram_title $diagram_title] \
+                    [list diagram_font $diagram_font] \
+                    [list diagram_theme $diagram_theme] \
+    ]
+
+    set result [ad_parse_template -params $params "/packages/intranet-helpdesk/lib/ticket-age-per-queue"]
     return [string trim $result]
 }
 

@@ -1950,6 +1950,78 @@ SELECT acs_permission__grant_permission(
 
 
 
+-----------------------------------------------------------
+-- Ticket number and age per dept
+--
+
+SELECT im_component_plugin__new (
+        null,                           -- plugin_id
+        'im_component_plugin',          -- object_type
+        now(),                          -- creation_date
+        null,                           -- creation_user
+        null,                           -- creation_ip
+        null,                           -- context_id
+        'Ticket Age per Queue',                 -- plugin_name - shown in menu
+        'intranet-helpdesk',            -- package_name
+        'right',                        -- location
+        '/intranet-helpdesk/index',     -- page_url
+        null,                           -- view_name
+        30,                             -- sort_order
+        'im_helpdesk_ticket_age_number_per_queue',     -- component_tcl
+        'lang::message::lookup "" "intranet-helpdesk.Ticket_Age_per_Queue" "Ticket Age per Queue"'
+);
+
+SELECT acs_permission__grant_permission(
+        (select plugin_id from im_component_plugins where plugin_name = 'Ticket Age per Queue' and package_name = 'intranet-helpdesk'),
+        (select group_id from groups where group_name = 'Employees'),
+        'read'
+);
+
+
+-- REST Data-Source for the report
+SELECT im_report_new (
+	'REST Open Ticket Age per Queue and Type',			-- report_name
+	'rest_open_ticket_age_per_queue_type',					-- report_code
+	'intranet-helpdesk',						-- package_key
+	220,								-- report_sort_order
+	(select menu_id from im_menus where label = 'reporting-rest'),	-- parent_menu_id
+	''
+);
+
+update im_reports 
+set report_description = 'Shows the number and average age of tickets per queue.'
+where report_code = 'rest_open_ticket_age_per_queue_type';
+
+
+update im_reports 
+set report_sql = '
+select	count(*) as number,
+	round(avg(age),1) as age,
+	queue,
+	im_category_from_id(type_id) as type
+from	(
+	select	1 as number,
+		now()::date - o.creation_date::date as age,
+		coalesce(acs_object__name(t.ticket_queue_id), '''') as queue,
+		t.ticket_type_id as type_id
+	from	im_tickets t,
+		im_projects p,
+		acs_objects o
+	where	t.ticket_id = o.object_id and
+		t.ticket_id = p.project_id and
+		t.ticket_status_id in (select * from im_sub_categories(30000))
+	) t
+group by queue, type
+order by lower(queue), type;
+'
+where report_code = 'rest_open_ticket_age_per_queue_type';
+
+SELECT acs_permission__grant_permission(
+	(select menu_id from im_menus where label = 'rest_open_ticket_age_per_queue_type'),
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
+
 
 
 

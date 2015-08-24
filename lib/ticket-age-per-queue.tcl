@@ -1,6 +1,6 @@
-# /packages/intranet-reporting-dashboard/lib/ticket-aging.tcl
+# /packages/intranet-reporting-dashboard/lib/ticket-age-per-queue.tcl
 #
-# Copyright (C) 2012 ]project-open[
+# Copyright (C) 2015 ]project-open[
 #
 # All rights reserved. Please check
 # http://www.project-open.com/license/ for details.
@@ -11,7 +11,7 @@
 
 # The following variables are expected in the environment
 # defined by the calling /tcl/*.tcl libary:
-if {![info exists diagram_report_code] || "" == $diagram_report_code} { set diagram_report_code "rest_ticket_aging_histogram" }
+if {![info exists diagram_report_code] || "" == $diagram_report_code} { set diagram_report_code "rest_open_ticket_age_per_queue_type" }
 if {![info exists diagram_width] || "" == $diagram_width} { set diagram_width 200 }
 if {![info exists diagram_height] || "" == $diagram_height } { set diagram_height 250 }
 if {![info exists diagram_font] || "" == $diagram_font} { set diagram_font "10px Helvetica, sans-serif" }
@@ -22,27 +22,6 @@ if {![info exists diagram_tooltip_width] || "" == $diagram_tooltip_width} { set 
 if {![info exists diagram_tooltip_height] || "" == $diagram_tooltip_height} { set diagram_tooltip_height 20 }
 if {![info exists diagram_legend_width] || "" == $diagram_legend_width} { set diagram_legend_width 83 }
 if {![info exists diagram_title] || "" == $diagram_title} { set diagram_title [lang::message::lookup "" intranet-helpdesk.Ticket_Aging "Ticket Aging"] }
-
-set diagram_ticket_customer_contact_dept_code ""
-if {[info exists diagram_ticket_customer_contact_dept_id] && [string is integer $diagram_ticket_customer_contact_dept_id]} { 
-    set diagram_ticket_customer_contact_dept_code [db_string dept_code "select im_cost_center_code_from_id(:diagram_ticket_customer_contact_dept_id)" -default ""]
-}
-
-set diagram_ticket_assignee_dept_code ""
-if {[info exists diagram_ticket_assignee_dept_id] && [string is integer $diagram_ticket_assignee_dept_id]} { 
-    set diagram_ticket_assignee_dept_code [db_string dept_code "select im_cost_center_code_from_id(:diagram_ticket_assignee_dept_id)" -default ""]
-}
-
-set prio_id 0
-if {[info exists diagram_ticket_prio_id]} { set prio_id $diagram_ticket_prio_id }
-set diagram_ticket_prio_id $prio_id
-
-
-
-set prio1_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio1 "Prio 1"]
-set prio2_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio23 "Prio 2-3"]
-set prio3_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio46 "Prio 4-6"]
-set prio4_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio7 "Prio 7-..."]
 
 set day_l10n [lang::message::lookup "" intranet-core.day_age "day age"]
 set days_l10n [lang::message::lookup "" intranet-core.days_age "days age"]
