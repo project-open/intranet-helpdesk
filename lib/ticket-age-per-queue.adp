@@ -73,10 +73,10 @@ function launchTicketStatsPerQueue(debug, ticketTypes) {
         }],
         series: [serie],
         legend: { 
-                position: 'float',
-                x: @diagram_width@ - @diagram_legend_width@,
-                y: 0,
-                labelFont: '@diagram_font@'
+            position: 'float',
+            x: @diagram_width@ - @diagram_legend_width@,
+            y: 0,
+            labelFont: '@diagram_font@'
         }
     });
 
@@ -90,15 +90,12 @@ function launchTicketStatsPerQueue(debug, ticketTypes) {
 	    dock  : 'top',
 	    items : [{
 		xtype: 'combobox',
-		name: 'uom_id',
+                tooltip: 'Show age or number of tickets?',
 		displayField: 'category',
 		valueField: 'category_id',
-		queryMode: 'local',
-		fieldLabel: "Show:",
 		hideLabel: true,
 		emptyText: 'Number of Tickets',
-		width: 200,
-		margins: '0 6 0 0',
+		width: 150,
 		store: Ext.create('Ext.data.Store', { fields: ['category_id', 'category'], data: [
                     {category_id: "num", category: 'Number of Tickets'},
                     {category_id: "age", category: 'Age of Tickets'}
@@ -111,21 +108,32 @@ function launchTicketStatsPerQueue(debug, ticketTypes) {
 			series.clear();
 			switch (newValue) {
 			case "num":
-			    serie.stacked = true;
+			    serie.stacked = true;			// Numbers can be stacked, they add up
 			    series.add(serie);
-			    ticketChart.bindStore(ticketNumStore);
+			    ticketChart.bindStore(ticketNumStore);	// Store with number of tickets
 			    ticketChart.redraw();
 			    break;
 			case "age": 
-			    serie.stacked = false;
+			    serie.stacked = false;			// Age doesn't add up
 			    series.add(serie);
-			    ticketChart.bindStore(ticketAgeStore);
+			    ticketChart.bindStore(ticketAgeStore);	// Store with age of tickets
 			    ticketChart.redraw();
 			    break;
 			default:
 			    break;
 			}
                     }
+		}
+	    }, '->', {
+		xtype: 'button',
+                id: 'buttonToggleChart',
+		icon: '/intranet/images/navbar_default/layout.png',
+                tooltip: 'Show or hide legend',
+		pressed: true,
+		enableToggle: true,
+		handler: function(button) {
+		    var legend = ticketChart.legend;
+		    legend.toggle(button.pressed);
 		}
 	    }]
 	}]
@@ -143,6 +151,7 @@ function launchTicketStatsPerQueue(debug, ticketTypes) {
  */
 Ext.onReady(function () {
 
+    Ext.QuickTips.init();
     var debug = true;
 
     // "Raw" store with age, queue and ticket type from the database
