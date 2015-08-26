@@ -37,6 +37,22 @@ set prio_id 0
 if {[info exists diagram_ticket_prio_id]} { set prio_id $diagram_ticket_prio_id }
 set diagram_ticket_prio_id $prio_id
 
+set type_id 0
+if {[info exists diagram_ticket_type_id]} { set type_id $diagram_ticket_type_id }
+set diagram_ticket_type_id $type_id
+
+set status_id 0
+if {[info exists diagram_ticket_status_id]} { set status_id $diagram_ticket_status_id }
+set diagram_ticket_status_id $status_id
+
+set sla_id 0
+if {[info exists diagram_ticket_sla_id]} { set sla_id $diagram_ticket_sla_id }
+set diagram_ticket_sla_id $sla_id
+
+set customer_contact_id 0
+if {[info exists diagram_ticket_customer_contact_id]} { set customer_contact_id $diagram_ticket_customer_contact_id }
+set diagram_ticket_customer_contact_id $customer_contact_id
+
 
 
 set prio1_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_Prio1 "Prio 1"]
