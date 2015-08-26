@@ -14,13 +14,13 @@ ad_page_contract {
     { report_level_of_detail 2 }
     { report_output_format "html" }
     { report_sla_id "" }
-    { report_status_id "" }
+    { report_status_id [im_ticket_status_open] }
     { report_type_id "" }
     { report_prio_id "" }
     { report_queue_id "" }
     { report_assignee_id "" }
     { report_assignee_dept_id "943830" }
-    { report_message_substring_len 120 }
+    { report_message_substring_len 200 }
 }
 
 # ------------------------------------------------------------
@@ -85,6 +85,7 @@ if {"" == $report_start_date} { set report_start_date "$todays_year-$todays_mont
 if {"" == $report_end_date} { set report_end_date "$next_month_year-$next_month_month-01" }
 
 set ticket_url "/intranet-helpdesk/new?form_mode=display&ticket_id="
+set project_url "/intranet/projects/view?project_id="
 set user_url "/intranet/users/view?user_id="
 set this_url [export_vars -base "/intranet-helpdesk/reporting/ticket-by-customer-dept" {report_start_date} ]
 set levels {1 "Main Dept" 2 "Main Dept + Tickets" 3 "Main Dept + Tickets + Discussions"} 
@@ -142,8 +143,9 @@ where ticket_first_discussion_topic_id_lazy_cached is null
 
 set sql "
 select	t.*,
-	substring(customer_contact_dept for 2) as customer_contact_dept_2char,
-	substring(customer_contact_dept for 4) as customer_contact_dept_4char
+	coalesce(im_cost_center_code_from_id(customer_contact_dept_id), 'undefined') as customer_contact_dept_code,
+	coalesce(im_cost_center_name_from_id(customer_contact_dept_id), 'Tickets with no customer contact') as customer_contact_dept_name,
+	trim(substring(ticket_prio for 2)) as ticket_prio_substring
 from	(
 	select
 		child.tree_sortkey as child_tree_sortkey,
@@ -154,16 +156,16 @@ from	(
 		p.project_name as ticket_name,
 		p.project_nr as ticket_nr,
 		o.creation_user as ticket_creation_user_id,
-		im_name_from_user_id(t.ticket_customer_contact_id) as customer_contact_name,
-		(select im_cost_center_code_from_id(department_id) from im_employees 
-		 where employee_id = t.ticket_customer_contact_id
-		) as customer_contact_dept,
+		p.parent_id as ticket_sla_id,
+		acs_object__name(p.parent_id) as ticket_sla_name,
+		im_name_from_user_id(t.ticket_customer_contact_id) as ticket_customer_contact_name,
+		im_name_from_user_id(t.ticket_assignee_id) as ticket_assignee_name,
+		coalesce((select department_id from im_employees where employee_id = t.ticket_customer_contact_id), 0) as customer_contact_dept_id,
 		im_category_from_id(t.ticket_status_id) as ticket_status,
 		im_category_from_id(t.ticket_type_id) as ticket_type,
 		im_category_from_id(t.ticket_prio_id) as ticket_prio,
 		to_char(t.ticket_creation_date, 'YYYY-MM-DD') as ticket_creation_date_pretty,
 		im_name_from_user_id(o.creation_user) as creation_user_name,
-		im_name_from_user_id(o.creation_user) as ticket_creation_user_name,
 		im_name_from_user_id(o.creation_user) as ticket_creation_user_name,
 		acs_object__name(t.ticket_queue_id) as ticket_queue
 	from
@@ -179,7 +181,8 @@ from	(
 		$where_clause
 	) t
 order by
-	customer_contact_dept_4char,
+	customer_contact_dept_code,
+	ticket_prio,
 	ticket_name,
 	child_tree_sortkey
 "
@@ -189,15 +192,22 @@ order by
 
 
 set report_def [list \
-	group_by customer_contact_dept_2char \
+	group_by customer_contact_dept_code \
 	header {
-		"\#colspan=99 <b>$customer_contact_dept</b>"
+		"\#colspan=99 <b>$customer_contact_dept_code - $customer_contact_dept_name</b>"
 	} \
 	content [list  \
 		group_by ticket_nr \
 		header {
-		        $customer_contact_dept
+		        $customer_contact_dept_code
 			"<a href=$ticket_url$ticket_id target=_blank>$ticket_nr</a>"
+		        $ticket_prio_substring
+		        $ticket_type
+		        $ticket_status
+		        $ticket_queue
+		        "<a href=$project_url$ticket_sla_id target=_blank>$ticket_sla_name</a>"
+		        "<a href=$user_url$ticket_assignee_id target=_blank>$ticket_assignee_name</a>"
+		        "<a href=$user_url$ticket_customer_contact_id target=_blank>$ticket_customer_contact_name</a>"
 			"<a href=$ticket_url$ticket_id target=_blank>$ticket_name</a>"
 		} \
 		content [list \
@@ -206,16 +216,26 @@ set report_def [list \
 			} \
 			content {} \
 		] \
+		footer { } \
 	] \
-	footer { } \
+	footer {} \
 ]
 
 
 # Global header/footer
-set header0 {"Cust<br>Dept" "Nr" "Ticket"}
+set header0 {"Cust<br>Dept" "Nr" "Prio" "Type" "Status" "Queue" "SLA" "Assignee" "Contact" "Ticket"}
 set footer0 {"" "" "" "" "" "" "" ""}
 
-set counters [list]
+set tickets_per_dept_counter [list \
+        pretty_name Tickets \
+        var tickets_per_dept_subtotal \
+        reset \$customer_contact_dept_id \
+        expr 1 \
+]
+
+set counters [list ]
+
+
 
 # ------------------------------------------------------------
 # Start formatting the page
@@ -250,18 +270,28 @@ switch $report_output_format {
 		    <input type=textfield name=report_end_date value=$report_end_date>
 		  </td>
 		</tr>
-
+		<tr>
+		  <td class=form-label>Ticket Type</td>
+		  <td class=form-widget>
+		    [im_category_select -package_key "intranet-helpdesk" -include_empty_p 1 -include_empty_name "All" "Intranet Ticket Type" report_type_id $report_type_id]
+		  </td>
+		</tr>
+		<tr>
+		  <td class=form-label>Ticket Status</td>
+		  <td class=form-widget>
+		    [im_category_select -package_key "intranet-helpdesk" -include_empty_p 1 -include_empty_name "All" "Intranet Ticket Status" report_status_id $report_status_id]
+		  </td>
+		</tr>
 		<tr>
 		  <td class=form-label>Customer Contact Dept</td>
 		  <td class=form-widget>
 		    [im_cost_center_select report_assignee_dept_id $report_assignee_dept_id]
 		  </td>
 		</tr>
-
 		<tr>
 		  <td class=form-label>Discussions Message Length</td>
 		  <td class=form-widget>
-		    <input type=textfield name=report_message_substring_len value=$report_message_substring_len>
+		    <input type=textfield name=report_message_substring_len value=$report_message_substring_len size=6>
 		  </td>
 		</tr>
 
