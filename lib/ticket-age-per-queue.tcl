@@ -20,7 +20,7 @@ if {![info exists diagram_limit] || "" == $diagram_limit} { set diagram_limit 40
 if {![info exists diagram_inset_padding] || "" == $diagram_inset_padding} { set diagram_inset_padding 5 }
 if {![info exists diagram_tooltip_width] || "" == $diagram_tooltip_width} { set diagram_tooltip_width 230 }
 if {![info exists diagram_tooltip_height] || "" == $diagram_tooltip_height} { set diagram_tooltip_height 20 }
-if {![info exists diagram_legend_width] || "" == $diagram_legend_width} { set diagram_legend_width 83 }
+if {![info exists diagram_legend_width] || "" == $diagram_legend_width} { set diagram_legend_width 100 }
 if {![info exists diagram_title] || "" == $diagram_title} { set diagram_title [lang::message::lookup "" intranet-helpdesk.Ticket_Aging "Ticket Aging"] }
 
 set day_l10n [lang::message::lookup "" intranet-core.day_age "day age"]
