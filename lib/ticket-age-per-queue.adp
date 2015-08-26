@@ -92,10 +92,14 @@ function launchTicketStatsPer(debug, ticketTypes) {
             x: @diagram_width@ - @diagram_legend_width@,
             y: 0,
             labelFont: '@diagram_font@'
-        }
+        },
+	listeners: {'boxready': function() { 
+	    configureDiagram(); 
+	}}
     });
 
     var configureDiagram = function () {
+	if (!ticketChart.rendered) return;                        // Chart has not been rendered yet
         var series = ticketChart.series;
         var buttonToggleLegend = Ext.getCmp('buttonToggleLegend');
         var comboNumberAge = Ext.getCmp("comboNumberAge");
