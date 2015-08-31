@@ -17,12 +17,13 @@ ad_page_contract {
     { ticket_name "" }
     { ticket_status_id:integer "[im_ticket_status_open]" } 
     { ticket_type_id:integer 0 } 
-    { ticket_queue_id:integer 0 } 
+    { ticket_queue_id:nohtml 0 } 
     { ticket_sla_id:integer "" } 
     { ticket_creator_id:integer 0 } 
     { customer_id:integer 0 } 
     { customer_contact_id:integer 0 } 
     { assignee_id:integer 0 } 
+    { assignee_dept_id:nohtml 0 } 
     { letter:trim "" }
     { start_idx:integer 0 }
     { how_many "" }
@@ -309,51 +310,68 @@ set mine_p $org_mine_p
 
 array set extra_sql_array [im_dynfield::search_sql_criteria_from_form \
 			       -form_id $form_id \
-			       -object_type $object_type
+			       -object_type $object_type \
+			       -exclude_attributes {ticket_queue_id}
 ]
-
-# ad_return_complaint 1 [array get extra_sql_array]
 
 # ---------------------------------------------------------------
 # Generate SQL Query
 # ---------------------------------------------------------------
 
 set criteria [list]
-if { ![empty_string_p $ticket_status_id] && $ticket_status_id > 0 } {
+if {![empty_string_p $ticket_status_id] && $ticket_status_id > 0 } {
     lappend criteria "t.ticket_status_id in (select * from im_sub_categories($ticket_status_id))"
 }
-if { ![empty_string_p $ticket_type_id] && $ticket_type_id != 0 } {
+if {![empty_string_p $ticket_type_id] && $ticket_type_id != 0 } {
     lappend criteria "t.ticket_type_id in ([join [im_sub_categories $ticket_type_id] ","])"
 }
-if { ![empty_string_p $ticket_queue_id] && $ticket_queue_id != 0 } {
-    lappend criteria "t.ticket_queue_id = :ticket_queue_id"
+if {![empty_string_p $ticket_queue_id] && $ticket_queue_id != 0 } {
+    if {"null" == $ticket_queue_id} {
+	lappend criteria "t.ticket_queue_id is null"
+    } else {
+	lappend criteria "t.ticket_queue_id = :ticket_queue_id"
+    }
 }
 
-if { [empty_string_p $ticket_sla_id] == 0 && $ticket_sla_id != 0 } {
+if {[empty_string_p $ticket_sla_id] == 0 && $ticket_sla_id != 0 } {
     lappend criteria "p.parent_id = :ticket_sla_id"
 }
 
-if { [empty_string_p $ticket_creator_id] == 0 && $ticket_creator_id != 0 } {
+if {[empty_string_p $ticket_creator_id] == 0 && $ticket_creator_id != 0 } {
     lappend criteria "t.ticket_id in (select object_id from acs_objects where creation_user = :ticket_creator_id)"
 }
 
 if {0 != $assignee_id && "" != $assignee_id} {
     lappend criteria "t.ticket_assignee_id = :assignee_id"
 }
-if { ![empty_string_p $customer_id] && $customer_id != 0 } {
+if {0 != $assignee_dept_id && "" != $assignee_dept_id} {
+    if {"null" == $assignee_dept_id} {
+	lappend criteria "t.ticket_assignee_id is null"
+    } else {
+	lappend criteria "t.ticket_assignee_id in (
+		select	e.employee_id
+		from	im_employees e,
+			im_cost_centers cc
+		where	cc.cost_center_id = :assignee_dept_id and
+			e.department_id = cc.cost_center_id
+        )"
+    }
+}
+
+if {![empty_string_p $customer_id] && $customer_id != 0 } {
     lappend criteria "p.company_id = :customer_id"
 }
-if { ![empty_string_p $customer_contact_id] && $customer_contact_id != 0 } {
+if {![empty_string_p $customer_contact_id] && $customer_contact_id != 0 } {
     lappend criteria "t.ticket_customer_contact_id = :customer_contact_id"
 }
 
-if { ![empty_string_p $start_date] && $start_date != "" } {
+if {![empty_string_p $start_date] && $start_date != "" } {
     lappend criteria "o.creation_date >= :start_date::timestamptz"
 }
-if { ![empty_string_p $end_date] && $end_date != "" } {
+if {![empty_string_p $end_date] && $end_date != "" } {
     lappend criteria "o.creation_date < :end_date::timestamptz"
 }
-if { ![empty_string_p $ticket_name] && $ticket_name != "" } {
+if {![empty_string_p $ticket_name] && $ticket_name != "" } {
     if {0 && ![string isalphanum $ticket_name]} {
 	ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.Only_alphanum_allowed "
 		Only alphanumerical characters are allowed for searching for security reasons.
@@ -366,7 +384,7 @@ if { ![empty_string_p $ticket_name] && $ticket_name != "" } {
 
 set letter [string toupper $letter]
 
-if { ![empty_string_p $letter] && [string compare $letter "ALL"] != 0 && [string compare $letter "SCROLL"] != 0 } {
+if {![empty_string_p $letter] && [string compare $letter "ALL"] != 0 && [string compare $letter "SCROLL"] != 0 } {
     lappend criteria "im_first_letter_default_to_a(p.project_name) = upper(:letter)"
 }
 
@@ -461,7 +479,7 @@ switch $mine_p {
 		)
 	)"
     }
-    "default" { 
+    "default" {
 	# The short name of a SQL selector
 	set selector_sql [db_string selector_sql "select selector_sql from im_sql_selectors where short_name = :mine_p" -default ""]
 	if {"" == $selector_sql} {
@@ -534,6 +552,8 @@ for {set i 0} {$i < $tmp_var_size} { incr i } {
     ns_set put $form_vars $key $value
 }
 
+
+
 # Add the additional condition to the "where_clause"
 if {"" != $dynfield_extra_where} {
     append where_clause "
@@ -560,6 +580,7 @@ set sql "
 				select min(sft2.topic_id) from im_forum_topics sft2 where sft2.object_id = p.project_id
 			)) as message40,
 			c.company_name,
+			now()::date - o.creation_date::date as age,
 			sla.project_id as sla_id,
 			sla.project_name as sla_name
 			$extra_select
@@ -582,6 +603,7 @@ set sql "
 		$order_by_clause
 "
 
+
 # ---------------------------------------------------------------
 # 5a. Limit the SQL query to MAX rows and provide << and >>
 # ---------------------------------------------------------------
@@ -591,6 +613,7 @@ set sql "
 eval "set sql \"$sql\""
 
 # ad_return_complaint 1 "<pre>$sql</pre>"
+
 
 if {[string equal $letter "ALL"]} {
     # Set these limits to negative values to deactivate them
