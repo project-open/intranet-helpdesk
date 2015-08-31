@@ -9,6 +9,8 @@
 # Variables
 # ---------------------------------------------------------------------
 
+set current_user_id [ad_get_user_id]
+
 # The following variables are expected in the environment
 # defined by the calling /tcl/*.tcl libary:
 if {![info exists diagram_report_code] || "" == $diagram_report_code} { set diagram_report_code "rest_open_ticket_age_per_queue_type" }
@@ -23,13 +25,24 @@ if {![info exists diagram_tooltip_height] || "" == $diagram_tooltip_height} { se
 if {![info exists diagram_legend_width] || "" == $diagram_legend_width} { set diagram_legend_width 100 }
 if {![info exists diagram_title] || "" == $diagram_title} { set diagram_title [lang::message::lookup "" intranet-helpdesk.Ticket_Aging "Ticket Aging"] }
 
-set day_l10n [lang::message::lookup "" intranet-core.day_age "day age"]
-set days_l10n [lang::message::lookup "" intranet-core.days_age "days age"]
+# Default customer: 0 means no customer contact specified
+if {![info exists ticket_customer_contact_id] || "" == $ticket_customer_contact_id} { set ticket_customer_contact_id 0 }
 
-set ticket_l10n [lang::message::lookup "" intranet-core.Ticket "Ticket"]
-set tickets_l10n [lang::message::lookup "" intranet-core.Tickets "Tickets"]
+set day_l10n [lang::message::lookup "" intranet-helpdesk.day_age "day age"]
+set days_l10n [lang::message::lookup "" intranet-helpdesk.days_age "days age"]
 
-set of_l10n [lang::message::lookup "" intranet-core.Ticket_Aging_of "of"]
+set ticket_l10n [lang::message::lookup "" intranet-helpdesk.Ticket "Ticket"]
+set tickets_l10n [lang::message::lookup "" intranet-helpdesk.Tickets "Tickets"]
+
+set of_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_of "of"]
+
+set not_assigned_l10n [lang::message::lookup "" intranet-helpdesk.Not_assigned "Not assigned"]
+set show_or_hide_legend_l10n [lang::message::lookup "" intranet-helpdesk.Show_or_hide_legend "Show or hide legend"]
+
+set number_l10n [lang::message::lookup "" intranet-helpdesk.Number "Number"]
+set age_l10n [lang::message::lookup "" intranet-helpdesk.Age "Age"]
+set queue_l10n [lang::message::lookup "" intranet-helpdesk.Queue "Queue"]
+set dept_l10n [lang::message::lookup "" intranet-helpdesk.Dept "Department"]
 
 
 # ----------------------------------------------------

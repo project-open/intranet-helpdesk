@@ -1689,6 +1689,7 @@ ad_proc -public im_helpdesk_ticket_aging_diagram {
 # ---------------------------------------------------------------
 
 ad_proc -public im_helpdesk_ticket_age_number_per_queue {
+    {-ticket_customer_contact_id 0}
     {-diagram_width ""}
     {-diagram_height ""}
     {-diagram_title ""}
@@ -1707,6 +1708,7 @@ ad_proc -public im_helpdesk_ticket_age_number_per_queue {
 
     # Call the portlet page
     set params [list \
+                    [list ticket_customer_contact_id $ticket_customer_contact_id] \
                     [list diagram_width $diagram_width] \
                     [list diagram_height $diagram_height] \
                     [list diagram_title $diagram_title] \
