@@ -1624,16 +1624,16 @@ ad_proc -public im_menu_tickets_admin_links {
 # ---------------------------------------------------------------
 
 ad_proc -public im_helpdesk_ticket_aging_diagram {
-    {-diagram_ticket_customer_contact_dept_id 0 }
-    {-diagram_ticket_customer_contact_id 0 }
-    {-diagram_ticket_assignee_dept_id 0 }
-    {-diagram_ticket_sla_id 0 }
-    {-diagram_ticket_type_id 0 }
-    {-diagram_ticket_status_id 0 }
-    {-diagram_ticket_prio_id 0 }
-    {-diagram_exclude_ticket_type_ids "" }
-    {-diagram_exclude_ticket_status_ids "" }
-    {-diagram_exclude_ticket_prio_ids "" }
+    {-ticket_customer_contact_dept_id 0 }
+    {-ticket_customer_contact_id 0 }
+    {-ticket_assignee_dept_id 0 }
+    {-ticket_sla_id 0 }
+    {-ticket_type_id 0 }
+    {-ticket_status_id 0 }
+    {-ticket_prio_id 0 }
+    {-exclude_ticket_type_ids "" }
+    {-exclude_ticket_status_ids "" }
+    {-exclude_ticket_prio_ids "" }
     {-diagram_width ""}
     {-diagram_height ""}
     {-diagram_title ""}
@@ -1657,15 +1657,15 @@ ad_proc -public im_helpdesk_ticket_aging_diagram {
 
     # Call the portlet page
     set params [list \
-                    [list diagram_ticket_customer_contact_dept_id $diagram_ticket_customer_contact_dept_id] \
-                    [list diagram_ticket_customer_contact_id $diagram_ticket_customer_contact_id] \
-                    [list diagram_ticket_assignee_dept_id $diagram_ticket_assignee_dept_id] \
-                    [list diagram_ticket_sla_id $diagram_ticket_sla_id] \
-                    [list diagram_ticket_type_id $diagram_ticket_type_id] \
-                    [list diagram_ticket_status_id $diagram_ticket_status_id] \
-                    [list diagram_exclude_ticket_type_ids $diagram_exclude_ticket_type_ids] \
-                    [list diagram_exclude_ticket_status_ids $diagram_exclude_ticket_status_ids] \
-                    [list diagram_exclude_ticket_prio_ids $diagram_exclude_ticket_prio_ids] \
+                    [list ticket_customer_contact_dept_id $ticket_customer_contact_dept_id] \
+                    [list ticket_customer_contact_id $ticket_customer_contact_id] \
+                    [list ticket_assignee_dept_id $ticket_assignee_dept_id] \
+                    [list ticket_sla_id $ticket_sla_id] \
+                    [list ticket_type_id $ticket_type_id] \
+                    [list ticket_status_id $ticket_status_id] \
+                    [list exclude_ticket_type_ids $exclude_ticket_type_ids] \
+                    [list exclude_ticket_status_ids $exclude_ticket_status_ids] \
+                    [list exclude_ticket_prio_ids $exclude_ticket_prio_ids] \
                     [list diagram_width $diagram_width] \
                     [list diagram_height $diagram_height] \
                     [list diagram_title $diagram_title] \
