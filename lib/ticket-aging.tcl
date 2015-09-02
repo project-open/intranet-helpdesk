@@ -23,35 +23,36 @@ if {![info exists diagram_tooltip_height] || "" == $diagram_tooltip_height} { se
 if {![info exists diagram_legend_width] || "" == $diagram_legend_width} { set diagram_legend_width 83 }
 if {![info exists diagram_title] || "" == $diagram_title} { set diagram_title [lang::message::lookup "" intranet-helpdesk.Ticket_Aging "Ticket Aging"] }
 
-set diagram_ticket_customer_contact_dept_code ""
-if {[info exists diagram_ticket_customer_contact_dept_id] && [string is integer $diagram_ticket_customer_contact_dept_id]} { 
-    set diagram_ticket_customer_contact_dept_code [db_string dept_code "select im_cost_center_code_from_id(:diagram_ticket_customer_contact_dept_id)" -default ""]
+
+set ticket_customer_contact_dept_code ""
+if {[info exists ticket_customer_contact_dept_id] && [string is integer $ticket_customer_contact_dept_id]} { 
+    set ticket_customer_contact_dept_code [db_string dept_code "select im_cost_center_code_from_id(:ticket_customer_contact_dept_id)" -default ""]
 }
 
-set diagram_ticket_assignee_dept_code ""
-if {[info exists diagram_ticket_assignee_dept_id] && [string is integer $diagram_ticket_assignee_dept_id]} { 
-    set diagram_ticket_assignee_dept_code [db_string dept_code "select im_cost_center_code_from_id(:diagram_ticket_assignee_dept_id)" -default ""]
+set ticket_assignee_dept_code ""
+if {[info exists ticket_assignee_dept_id] && [string is integer $ticket_assignee_dept_id]} { 
+    set ticket_assignee_dept_code [db_string dept_code "select im_cost_center_code_from_id(:ticket_assignee_dept_id)" -default ""]
 }
 
 set prio_id 0
-if {[info exists diagram_ticket_prio_id]} { set prio_id $diagram_ticket_prio_id }
-set diagram_ticket_prio_id $prio_id
+if {[info exists ticket_prio_id]} { set prio_id $ticket_prio_id }
+set ticket_prio_id $prio_id
 
 set type_id 0
-if {[info exists diagram_ticket_type_id]} { set type_id $diagram_ticket_type_id }
-set diagram_ticket_type_id $type_id
+if {[info exists ticket_type_id]} { set type_id $ticket_type_id }
+set ticket_type_id $type_id
 
 set status_id 0
-if {[info exists diagram_ticket_status_id]} { set status_id $diagram_ticket_status_id }
-set diagram_ticket_status_id $status_id
+if {[info exists ticket_status_id]} { set status_id $ticket_status_id }
+set ticket_status_id $status_id
 
 set sla_id 0
-if {[info exists diagram_ticket_sla_id]} { set sla_id $diagram_ticket_sla_id }
-set diagram_ticket_sla_id $sla_id
+if {[info exists ticket_sla_id]} { set sla_id $ticket_sla_id }
+set ticket_sla_id $sla_id
 
 set customer_contact_id 0
-if {[info exists diagram_ticket_customer_contact_id]} { set customer_contact_id $diagram_ticket_customer_contact_id }
-set diagram_ticket_customer_contact_id $customer_contact_id
+if {[info exists ticket_customer_contact_id]} { set customer_contact_id $ticket_customer_contact_id }
+set ticket_customer_contact_id $customer_contact_id
 
 
 
