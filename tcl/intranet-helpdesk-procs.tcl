@@ -1150,6 +1150,7 @@ ad_proc -public im_helpdesk_ticket_component {
     {-ticket_type_id 0}
     {-ticket_status_id 0}
     {-ticket_sla_id 0}
+    {-limit 10}
 } {
     Returns a HTML table with the list of tickets of the
     current user. Don't do any fancy sorting and pagination, 
@@ -1305,6 +1306,10 @@ ad_proc -public im_helpdesk_ticket_component {
                 $extra_where
 	order by $org_order_by_clause
     "
+    
+    if {"" != $limit} {
+	append personal_ticket_query "LIMIT $limit\n"
+    }
 
     
     # ---------------------------------------------------------------
