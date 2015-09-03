@@ -23,7 +23,10 @@ ad_page_contract {
     { customer_id:integer 0 } 
     { customer_contact_id:integer 0 } 
     { assignee_id:integer 0 } 
+    { customer_contact_dept_id:nohtml 0 } 
+    { customer_contact_dept_code:nohtml "" } 
     { assignee_dept_id:nohtml 0 } 
+    { assignee_dept_code:nohtml "" } 
     { letter:trim "" }
     { start_idx:integer 0 }
     { how_many "" }
@@ -344,19 +347,48 @@ if {[empty_string_p $ticket_creator_id] == 0 && $ticket_creator_id != 0 } {
 if {0 != $assignee_id && "" != $assignee_id} {
     lappend criteria "t.ticket_assignee_id = :assignee_id"
 }
-if {0 != $assignee_dept_id && "" != $assignee_dept_id} {
-    if {"null" == $assignee_dept_id} {
-	lappend criteria "t.ticket_assignee_id is null"
-    } else {
-	lappend criteria "t.ticket_assignee_id in (
-		select	e.employee_id
-		from	im_employees e,
-			im_cost_centers cc
-		where	cc.cost_center_id = :assignee_dept_id and
-			e.department_id = cc.cost_center_id
-        )"
+
+# Assignee Department
+if {"null" == $assignee_dept_id} {
+    lappend criteria "t.ticket_assignee_id is null"
+    set assignee_dept_code ""
+} else {
+    if {0 != $assignee_dept_id} { 
+	set assignee_dept_code [db_string dept_code "select im_cost_center_code_from_id(:assignee_dept_id)" -default ""] 
     }
 }
+if {"" != $assignee_dept_code} {
+    lappend criteria "t.ticket_assignee_id in (
+	select	e.employee_id
+	from	im_employees e,
+		im_cost_centers cc
+	where	e.department_id = cc.cost_center_id and
+		substring(cc.cost_center_code for (length(:assignee_dept_code))) = :assignee_dept_code
+    )"
+}
+
+
+# Customer_Contact Department
+if {"null" == $customer_contact_dept_id} {
+    lappend criteria "t.ticket_customer_contact_id is null"
+    set customer_contact_dept_code ""
+} else {
+    if {0 != $customer_contact_dept_id} { 
+	set customer_contact_dept_code [db_string dept_code "select im_cost_center_code_from_id(:customer_contact_dept_id)" -default ""] 
+    }
+}
+if {"" != $customer_contact_dept_code} {
+    lappend criteria "t.ticket_customer_contact_id in (
+	select	e.employee_id
+	from	im_employees e,
+		im_cost_centers cc
+	where	e.department_id = cc.cost_center_id and
+		substring(cc.cost_center_code for (length(:customer_contact_dept_code))) = :customer_contact_dept_code
+    )"
+}
+
+
+
 
 if {![empty_string_p $customer_id] && $customer_id != 0 } {
     lappend criteria "p.company_id = :customer_id"

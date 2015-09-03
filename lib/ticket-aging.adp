@@ -102,6 +102,12 @@ Ext.onReady(function () {
                     if ("" != "@ticket_customer_contact_id@" && 0 != parseInt("@ticket_customer_contact_id@")) {
                         url = url + "&ticket_customer_contact_id=@ticket_customer_contact_id@";
                     }
+                    if ("" != "@ticket_customer_contact_dept_code@") {
+                        url = url + "&customer_contact_dept_code=@ticket_customer_contact_dept_code@";
+                    }
+                    if ("" != "@ticket_assignee_dept_code@") {
+                        url = url + "&assignee_dept_code=@ticket_assignee_dept_code@";
+                    }
                     window.open(url);
                 }
             }
