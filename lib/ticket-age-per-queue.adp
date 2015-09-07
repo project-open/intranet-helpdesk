@@ -97,8 +97,6 @@ function launchTicketStatsPer(debug, ticketTypes, objectMap) {
     var ticketChart = new Ext.chart.Chart({
         xtype: 'chart',
 	flex: 1,
-        width: @diagram_width@,
-        height: @diagram_height@,
         title: '@diagram_title@',
         layout: 'fit',
         animate: true,
@@ -163,8 +161,7 @@ function launchTicketStatsPer(debug, ticketTypes, objectMap) {
         legend.toggle(showLegend);
         var numAge = comboNumberAge.getValue();						// "num" or "age"
         var queueDept = comboQueueDept.getValue();					// "queue" or "dept"
-        var stacked = (numAge == "num");						// Numbers can be stacked (adding up), age doesn't
-
+        var stacked = (numAge == "num");						// Numbers add up, age doesn't
 
 	// Position the legend at the right of the diagram
 	var diagramWidth = ticketChart.curWidth;
@@ -195,7 +192,10 @@ function launchTicketStatsPer(debug, ticketTypes, objectMap) {
 
     var panel = Ext.create('Ext.panel.Panel', {
         renderTo: '@diagram_id@',
-	layout: 'hbox',
+        width: @diagram_width@,
+        height: @diagram_height@,
+        title: false,
+	layout: 'fit',
         items: [ticketChart],
         dockedItems : [{
             xtype : 'toolbar',

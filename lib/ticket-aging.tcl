@@ -12,7 +12,7 @@
 # The following variables are expected in the environment
 # defined by the calling /tcl/*.tcl libary:
 if {![info exists diagram_report_code] || "" == $diagram_report_code} { set diagram_report_code "rest_ticket_aging_histogram" }
-if {![info exists diagram_width] || "" == $diagram_width} { set diagram_width 200 }
+if {![info exists diagram_width] || "" == $diagram_width} { set diagram_width 250 }
 if {![info exists diagram_height] || "" == $diagram_height } { set diagram_height 250 }
 if {![info exists diagram_font] || "" == $diagram_font} { set diagram_font "10px Helvetica, sans-serif" }
 if {![info exists diagram_theme] || "" == $diagram_theme} { set diagram_theme "Custom" }
