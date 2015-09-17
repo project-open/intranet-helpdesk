@@ -1,29 +1,19 @@
 <div id=@diagram_id@></div>
 <script type='text/javascript'>
-Ext.require(['Ext.chart.*', 'Ext.Window', 'Ext.fx.target.Sprite', 'Ext.layout.container.Fit']);
-Ext.onReady(function () {
+Ext.Loader.setPath('PO', '/sencha-core');
+Ext.require([
+    'Ext.chart.*', 
+    'Ext.Window', 
+    'Ext.fx.target.Sprite', 
+    'Ext.layout.container.Fit',
+    'PO.controller.StoreLoadCoordinator'
+]);
+
+
+
+function launchDiagram(debug) {
     
-    var ticketAgingStore = Ext.create('Ext.data.Store', {
-        fields: ['age', 'prio1', 'prio2', 'prio3', 'prio4'],
-        autoLoad: true,
-        proxy: {
-            type: 'rest',
-            url: '/intranet-reporting/view',					// This is the generic ]po[ REST interface
-            extraParams: {
-                format: 'json',							// Ask for data in JSON format
-                limit: @diagram_limit@,						// Limit the number of returned rows
-                report_code: '@diagram_report_code;noquote@',			// The code of the data-source to retreive
-                sla_id: '@ticket_sla_id;noquote@',
-                customer_contact_id: '@ticket_customer_contact_id@',
-                customer_dept_code: '@ticket_customer_contact_dept_code;noquote@',
-                assignee_dept_code: '@ticket_assignee_dept_code;noquote@',
-                type_id: '@ticket_type_id@',
-                status_id: '@ticket_status_id@',
-                prio_id: '@ticket_prio_id@'
-            },
-            reader: { type: 'json', root: 'data' }				// Standard reader: Data are prefixed by "data".
-        }
-    });
+    var ticketAgingStore = Ext.StoreManager.get('ticketAgingStore');
 
     // Define the colors for the diagram
     var colors = ['#ff0000', '#b4003f','#7e007b','#4702b7', '#0f00f1'];		// '#5800a2','#3300cb'
@@ -36,7 +26,7 @@ Ext.onReady(function () {
             }, config)]);
         }
     });
-    
+
     var ticketAgingChart = new Ext.chart.Chart({
         xtype: 'chart',
         width: @diagram_width@,
@@ -119,6 +109,52 @@ Ext.onReady(function () {
                 labelFont: '@diagram_font@'
         }
     });
+};
 
+
+Ext.onReady(function () {
+    Ext.QuickTips.init();							// No idea why this is necessary, but it is...
+    Ext.getDoc().on('contextmenu', function(ev) { ev.preventDefault(); });	// Disable Right-click context menu on browser background
+    var debug = true;
+
+    var ticketAgingStore = Ext.create('Ext.data.Store', {
+	storeId: 'ticketAgingStore',
+        fields: ['age', 'prio1', 'prio2', 'prio3', 'prio4'],
+        autoLoad: false,							// Force to use the StoreLoadCoordinator
+        proxy: {
+            type: 'rest',
+            url: '/intranet-reporting/view',					// This is the generic ]po[ REST interface
+            extraParams: {
+                format: 'json',							// Ask for data in JSON format
+                limit: @diagram_limit@,						// Limit the number of returned rows
+                report_code: '@diagram_report_code;noquote@',			// The code of the data-source to retreive
+                sla_id: '@ticket_sla_id;noquote@',
+                customer_contact_id: '@ticket_customer_contact_id@',
+                customer_dept_code: '@ticket_customer_contact_dept_code;noquote@',
+                assignee_dept_code: '@ticket_assignee_dept_code;noquote@',
+                type_id: '@ticket_type_id@',
+                status_id: '@ticket_status_id@',
+                prio_id: '@ticket_prio_id@'
+            },
+            reader: { type: 'json', root: 'data' }				// Standard reader: Data are prefixed by "data".
+        }
+    });
+
+    // Store Coodinator starts app after all stores have been loaded:
+    var coordinator = Ext.create('PO.controller.StoreLoadCoordinator', {
+        debug: debug,
+        stores: [
+            'ticketAgingStore'
+        ],
+        listeners: {
+            load: function() {
+                if ("boolean" == typeof this.loadedP) { return; }		// Check if the application was launched before
+                launchDiagram(debug);					        // Launch the actual application.
+                this.loadedP = true;						// Mark the application as launched
+            }
+        }
+    });
+
+    ticketAgingStore.load();
 });
 </script>
