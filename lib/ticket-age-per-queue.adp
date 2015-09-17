@@ -53,10 +53,13 @@ function launchTicketStatsPer(debug, ticketTypes, objectMap) {
             renderer: function(storeItem, item) {
                 var fieldName = item.series.title[item.series.yField.indexOf(item.yField)];
                 var value = Math.round(10.0 * storeItem.get(item.yField)) / 10.0;
-                this.setTitle(item.yField + ': ' + value);
+		var q = (storeItem.get('queue') == undefined) ? "" : "queue " +storeItem.get('queue');
+		var d = (storeItem.get('dept') == undefined) ? "" : "department " + storeItem.get('dept');
+                this.setTitle(value + " open " + item.yField + "s<br>in " + q+d);
             }
         },
 	renderer: function(sprite, record, attributes, index, store) {
+	    // Replace empty queue/dept with a more readable name.
 	    if (!!record) {
 		var queue = record.get('queue');
 		var dept = record.get('dept');
@@ -191,6 +194,7 @@ function launchTicketStatsPer(debug, ticketTypes, objectMap) {
     };
 
     var panel = Ext.create('Ext.panel.Panel', {
+	id: 'panelTicketAgePerQueuePanel',
         renderTo: '@diagram_id@',
         width: @diagram_width@,
         height: @diagram_height@,
@@ -217,7 +221,7 @@ function launchTicketStatsPer(debug, ticketTypes, objectMap) {
                 allowBlank: false,
                 forceSelection: true,
                 stateful : true,
-                listeners: {change: function(el, newValue, oldValue) { configureDiagram(); }}
+                listeners: {change: function() { configureDiagram(); }}
             }, {
                 xtype: 'combobox',
         	id: "comboNumberAge",
@@ -235,7 +239,7 @@ function launchTicketStatsPer(debug, ticketTypes, objectMap) {
                 allowBlank: false,
                 forceSelection: true,
                 stateful : true,
-                listeners: {change: function(el, newValue, oldValue) { configureDiagram(); }}
+                listeners: {change: function() { configureDiagram(); }}
             }, '->', {
                 xtype: 'button',
                 id: 'buttonToggleLegend',
@@ -243,30 +247,104 @@ function launchTicketStatsPer(debug, ticketTypes, objectMap) {
                 tooltip: '@show_or_hide_legend_l10n@',
                 pressed: true,
                 enableToggle: true,
-                handler: function(button) { 
-		    this.fireEvent('press');
-		    configureDiagram(); 
-		},
+                handler: function(button) { this.fireEvent('press'); configureDiagram(); },
+
+		// Stateful Configuration - remember if the button was pressed.
                 stateful : true,
                 stateEvents: ['press'],
                 stateId : 'buttonToggleLegend',
-                getState: function() { 
-                    return { pressed: this.pressed };
-                },
+                getState: function() { return { pressed: this.pressed }; },
+                applyState: function(state) { this.toggle(state.pressed); },
+                listeners: { toggle: function() { this.fireEvent('press'); configureDiagram(); }}
+            }, {
+                xtype: 'button',
+                id: 'buttonToggleHelp',
+                icon: '/intranet/images/navbar_default/help.png',
+                tooltip: '@show_or_hide_help_l10n@',
+                pressed: true,
+                enableToggle: true,
+                handler: function(button) { 
+		    this.fireEvent('press');
+		    if (this.pressed) {
+			var helpWindows = Ext.getCmp('helpWindow');
+			helpWindow.show();
+		    } else {
+			var helpWindows = Ext.getCmp('helpWindow');
+			helpWindow.hide();
+		    }
+		},
+
+		// Stateful Configuration - remember if the button was pressed.
+                stateful : true,
+                stateEvents: ['press'],
+                stateId : 'buttonToggleHelp',
+                getState: function() { return { pressed: this.pressed }; },
                 applyState: function(state) { 
-                    this.toggle(state.pressed); 
-                },
-                listeners: {
-                    toggle: function(self, pressed, eOpts) {
-                        this.fireEvent('press');
-			configureDiagram();
-                    }
-                }
+		    this.toggle(state.pressed); 
+		    if (state.pressed) {
+//			var helpWindows = Ext.getCmp('helpWindow');
+//			helpWindow.show();
+		    } else {
+//			var helpWindows = Ext.getCmp('helpWindow');
+//			helpWindow.hide();
+		    }
+		},
+                listeners: { toggle: function() { 
+		    this.fireEvent('press'); 
+		}}
             }]
         }]
     });
 
 
+    var panelViewRegion = ticketChart.getViewRegion();		// Get the position of the main panel
+    var helpWindow = Ext.create('Ext.window.Window', {
+	id: 'tipOfTheDayWindow',
+	title: 'Tip of the Day',
+	height: 200,
+	width: panelViewRegion.right - panelViewRegion.left - 20,
+	x: panelViewRegion.x + 10,
+	y: panelViewRegion.y + 10,
+	layout: 'fit',
+	items: {						// Let's put an empty grid in just to illustrate fit layout
+            xtype: 'grid',
+            border: false,
+            columns: [{header: 'World'}],			// One header just for show. There's no data,
+            store: Ext.create('Ext.data.ArrayStore', {})	// A dummy empty data store
+	},
+	closeAction: 'hide'					// Don't destroy the window when closing
+    }).hide();
+
+    var controller = new Ext.create('Ext.app.Controller', {
+	init: function() {
+	    this.control({
+		'#buttonToggleHelp': {
+		    'toggle': this.onButtonToggleHelp,
+		    'applystate': this.onButtonToggleApplyState
+		},
+		'#panelTicketAgePerQueuePanel': { 
+		    'afterrender': this.onPanelAfterRender
+		}
+	    });
+	},
+	
+	onButtonToggleHelp: function(button, pressed) {
+	    console.log('ticketAgePerQueue.onButtonToggleHelp: pressed='+pressed);
+	},
+
+	onButtonToggleApplyState: function() {
+	    console.log('ticketAgePerQueue.onButtonToggleApplyState');
+	},
+
+	onPanelAfterRender: function() {
+	    console.log('ticketAgePerQueue.onPanelAfterRender');
+	},
+
+	redrawGanttBarPanel: function() {
+	    var ganttBarPanel = this.getGanttBarPanel();
+	    ganttBarPanel.redraw();
+	}
+    }).init();
 };
 
 

@@ -20,8 +20,8 @@ if {![info exists diagram_font] || "" == $diagram_font} { set diagram_font "10px
 if {![info exists diagram_theme] || "" == $diagram_theme} { set diagram_theme "Custom" }
 if {![info exists diagram_limit] || "" == $diagram_limit} { set diagram_limit 40 }
 if {![info exists diagram_inset_padding] || "" == $diagram_inset_padding} { set diagram_inset_padding 5 }
-if {![info exists diagram_tooltip_width] || "" == $diagram_tooltip_width} { set diagram_tooltip_width 230 }
-if {![info exists diagram_tooltip_height] || "" == $diagram_tooltip_height} { set diagram_tooltip_height 20 }
+if {![info exists diagram_tooltip_width] || "" == $diagram_tooltip_width} { set diagram_tooltip_width 160 }
+if {![info exists diagram_tooltip_height] || "" == $diagram_tooltip_height} { set diagram_tooltip_height 40 }
 if {![info exists diagram_legend_width] || "" == $diagram_legend_width} { set diagram_legend_width 150 }
 if {![info exists diagram_title] || "" == $diagram_title} { set diagram_title [lang::message::lookup "" intranet-helpdesk.Ticket_Aging "Ticket Aging"] }
 
@@ -38,6 +38,7 @@ set of_l10n [lang::message::lookup "" intranet-helpdesk.Ticket_Aging_of "of"]
 
 set not_assigned_l10n [lang::message::lookup "" intranet-helpdesk.Not_assigned "Not assigned"]
 set show_or_hide_legend_l10n [lang::message::lookup "" intranet-helpdesk.Show_or_hide_legend "Show or hide legend"]
+set show_or_hide_help_l10n [lang::message::lookup "" intranet-helpdesk.Show_or_hide_help_window "Show or hide help window"]
 
 set number_l10n [lang::message::lookup "" intranet-helpdesk.Number "Number"]
 set age_l10n [lang::message::lookup "" intranet-helpdesk.Age "Age"]

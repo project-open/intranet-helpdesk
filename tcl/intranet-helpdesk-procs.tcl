@@ -1652,6 +1652,12 @@ ad_proc -public im_helpdesk_ticket_aging_diagram {
 } {
     Returns a HTML component with a pie chart with top customer
 } {
+    if {"" != $ticket_sla_id && 0 != $ticket_sla_id} {
+	if {[im_security_alert_check_integer -location "im_helpdesk_ticket_aging_diagram" -value $ticket_sla_id]} { return }
+	set project_type_id [util_memoize [list db_string project_type "select project_type_id from im_projects where project_id = $ticket_sla_id" -default 0]]
+	if {![im_category_is_a $project_type_id [im_project_type_sla]]} { return }
+    }
+
     # Sencha check and permissions
     if {![im_sencha_extjs_installed_p]} { return "" }
     set current_user_id [ad_get_user_id]
