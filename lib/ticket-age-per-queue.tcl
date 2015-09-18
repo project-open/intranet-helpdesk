@@ -46,6 +46,14 @@ set queue_l10n [lang::message::lookup "" intranet-helpdesk.Queue "Queue"]
 set dept_l10n [lang::message::lookup "" intranet-helpdesk.Dept "Department"]
 
 
+# Ticket types need to be known up-front
+set ticket_types_sql "select * from im_ticket_types order by ticket_type"
+db_foreach ticket_types $ticket_types_sql {
+    lappend ticket_types_list "'$ticket_type'"
+}
+set ticket_types_json "\[[join $ticket_types_list ","]\]"
+
+
 # ----------------------------------------------------
 # Diagram Setup
 # ----------------------------------------------------

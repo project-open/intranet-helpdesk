@@ -18,12 +18,7 @@ select  im_component_plugin__del_module('intranet-helpdesk');
 -- Forum component on the ticket page itself
 
 SELECT im_component_plugin__new (
-	null,				-- plugin_id
-	'im_component_plugin',		-- object_type
-	now(),				-- creation_date
-	null,				-- creation_user
-	null,				-- creation_ip
-	null,				-- context_id
+	null, 'im_component_plugin', now(), null, null, null,				-- context_id
 	'Discussions',			-- plugin_name - shown in menu
 	'intranet-helpdesk',		-- package_name
 	'bottom',			-- location
@@ -448,9 +443,18 @@ SELECT acs_permission__grant_permission(
 );
 
 
+
+
+
+
+
+
+
 -----------------------------------------------------------
--- Ticket Aging Report
+-- Ticket Aging Reports
 --
+
+
 SELECT im_component_plugin__new (
 	null,				-- plugin_id
 	'im_component_plugin',		-- object_type
@@ -485,6 +489,119 @@ SELECT acs_permission__grant_permission(
 );
 
 
+-- Tickets for a user on the home page
+SELECT im_component_plugin__new (
+	null,					-- plugin_id
+	'im_component_plugin',			-- object_type
+	now(),					-- creation_date
+	null,					-- creation_user
+	null,					-- creation_ip
+	null,					-- context_id
+	'My Tickets Aging',			-- plugin_name - shown in menu
+	'intranet-helpdesk',			-- package_name
+	'right',				-- location
+	'/intranet/index',			-- page_url
+	null,					-- view_name
+	40,					-- sort_order
+	'im_helpdesk_ticket_aging_diagram -diagram_limit 600 -diagram_height 450 -ticket_customer_contact_id [ad_get_user_id]',	-- component_tcl
+	'lang::message::lookup "" "intranet-helpdesk.My_Tickets_Aging" "My Tickets Aging"'
+);
+
+SELECT acs_permission__grant_permission(
+	(select plugin_id from im_component_plugins where plugin_name = 'My Tickets Aging' and package_name = 'intranet-helpdesk'),
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
+
+-- Ticket aging for a SLA on the SLA page
+SELECT im_component_plugin__new (
+	null,					-- plugin_id
+	'im_component_plugin',			-- object_type
+	now(),					-- creation_date
+	null,					-- creation_user
+	null,					-- creation_ip
+	null,					-- context_id
+	'SLA Ticket Aging',			-- plugin_name - shown in menu
+	'intranet-helpdesk',			-- package_name
+	'left',					-- location
+	'/intranet/projects/view',		-- page_url
+	null,					-- view_name
+	40,					-- sort_order
+	'im_helpdesk_ticket_aging_diagram -diagram_limit 600 -diagram_height 450 -ticket_sla_id $project_id',	-- component_tcl
+	'lang::message::lookup "" "intranet-helpdesk.SLA_Ticket_Aging" "SLA Ticket Aging"'
+);
+
+SELECT acs_permission__grant_permission(
+	(select plugin_id from im_component_plugins where plugin_name = 'SLA Ticket Aging' and package_name = 'intranet-helpdesk'),
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
+
+-- Ticket aging for the department of the user
+-- IF the user is a department head
+SELECT im_component_plugin__new (
+	null,					-- plugin_id
+	'im_component_plugin',			-- object_type
+	now(),					-- creation_date
+	null,					-- creation_user
+	null,					-- creation_ip
+	null,					-- context_id
+	'Tickets Created by my Department',	-- plugin_name - shown in menu
+	'intranet-helpdesk',			-- package_name
+	'left',					-- location
+	'/intranet/index',			-- page_url
+	null,					-- view_name
+	40,					-- sort_order
+	'im_helpdesk_ticket_aging_diagram -diagram_limit 600 -diagram_height 450 ' ||
+	'-ticket_customer_contact_dept_id [db_string my_dept "select department_id ' ||
+	'from im_employees where employee_id = [ad_get_user_id]" -default ""]',	-- component_tcl
+	'lang::message::lookup "" "intranet-helpdesk.Tickets_Created_by_my_Department" "Tickets Created by my Department"'
+);
+
+SELECT acs_permission__grant_permission(
+	(select plugin_id from im_component_plugins where plugin_name = 'Tickets Created by my Department' and package_name = 'intranet-helpdesk'),
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
+
+
+
+
+SELECT im_component_plugin__new (
+	null,					-- plugin_id
+	'im_component_plugin',			-- object_type
+	now(),					-- creation_date
+	null,					-- creation_user
+	null,					-- creation_ip
+	null,					-- context_id
+	'Tickets Executed by my Department',	-- plugin_name - shown in menu
+	'intranet-helpdesk',			-- package_name
+	'left',					-- location
+	'/intranet/index',			-- page_url
+	null,					-- view_name
+	40,					-- sort_order
+	'im_helpdesk_ticket_aging_diagram -diagram_limit 600 -diagram_height 450 ' ||
+	'-ticket_assignee_dept_id [db_string my_dept "select department_id ' ||
+	'from im_employees where employee_id = [ad_get_user_id]" -default ""]',	-- component_tcl
+	'lang::message::lookup "" "intranet-helpdesk.Tickets_Executed_by_my_Department" "Tickets Executed by my Department"'
+);
+
+SELECT acs_permission__grant_permission(
+	(select plugin_id from im_component_plugins where plugin_name = 'Tickets Executed by my Department' and package_name = 'intranet-helpdesk'),
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
+
+
+
+
+
+
+
+
+
+
+
 
 -----------------------------------------------------------
 -- Ticket number and age per dept
@@ -512,5 +629,109 @@ SELECT acs_permission__grant_permission(
         (select group_id from groups where group_name = 'Employees'),
         'read'
 );
+
+
+-----------------------------------------------------------
+-- Tickets for a user on the home page
+--
+
+SELECT im_component_plugin__new (
+	null,				-- plugin_id
+	'im_component_plugin',		-- object_type
+	now(),				-- creation_date
+	null,				-- creation_user
+	null,				-- creation_ip
+	null,				-- context_id
+	'My Tickets Execution',		-- plugin_name - shown in menu
+	'intranet-helpdesk',		-- package_name
+	'right',			-- location
+	'/intranet/index',		-- page_url
+	null,				-- view_name
+	40,				-- sort_order
+	'im_helpdesk_ticket_age_number_per_queue -ticket_customer_contact_id [ad_get_user_id]',	-- component_tcl
+	'lang::message::lookup "" "intranet-helpdesk.My_Ticket_Execution" "My Tickets Execution"'
+);
+
+SELECT acs_permission__grant_permission(
+	(select plugin_id from im_component_plugins where plugin_name = 'My Tickets Execution' and package_name = 'intranet-helpdesk'),
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
+
+
+
+
+
+
+-- Enable all reporting menus - no idea why they are disabled...
+update im_menus
+set enabled_p = 't'
+where  parent_menu_id in (select menu_id from im_menus where label = 'reporting');
+
+
+
+-- Update aging report with filters
+update im_reports 
+set report_sql = '
+select	age,
+	sum(prio1) as prio1,
+	sum(prio2) as prio2,
+	sum(prio3) as prio3,
+	sum(prio4) as prio4
+from	(
+	select	t.ticket_id,
+		now()::date - o.creation_date::date as age,
+		CASE WHEN ticket_prio_id in (30201) THEN 1 ELSE 0 END as prio1,
+		CASE WHEN ticket_prio_id in (30202, 30203) THEN 1 ELSE 0 END as prio2,
+		CASE WHEN ticket_prio_id in (30204, 30205, 30206) THEN 1 ELSE 0 END as prio3,
+		CASE WHEN ticket_prio_id not in (30201, 30202, 30203, 30204, 30205, 30206) OR ticket_prio_id is null THEN 1 ELSE 0 END as prio4
+	from	im_tickets t,
+		im_projects p,
+		acs_objects o
+	where	t.ticket_id = o.object_id and
+		t.ticket_id = p.project_id and
+		ticket_status_id in (select * from im_sub_categories(30000)) and
+		(0 = %sla_id% OR p.parent_id = %sla_id%) and
+		(0 = %type_id% OR t.ticket_type_id in (select * from im_sub_categories(%type_id%))) and
+		(0 = %status_id% OR t.ticket_status_id in (select * from im_sub_categories(%status_id%))) and
+		(0 = %prio_id% OR t.ticket_prio_id in (select * from im_sub_categories(%prio_id%))) and
+		(0 = %customer_contact_id% OR t.ticket_customer_contact_id = %customer_contact_id%) and
+		(0 = length(''%customer_dept_code%'') OR t.ticket_customer_contact_id in (
+			select	e.employee_id
+			from	im_employees e,
+				im_cost_centers cc
+			where	e.department_id = cc.cost_center_id and 
+				substring(cc.cost_center_code for (length(''%customer_dept_code%''))) = ''%customer_dept_code%''
+		)) and
+		(0 = length(''%assignee_dept_code%'') OR t.ticket_assignee_id in (
+			select	e.employee_id
+			from	im_employees e, 
+				im_cost_centers cc
+			where	e.department_id = cc.cost_center_id and 
+				substring(cc.cost_center_code for (length(''%assignee_dept_code%''))) = ''%assignee_dept_code%''
+		))
+UNION
+	-- Define one default entry for today
+	select	0 as ticket_id,
+		now()::date - im_day_enumerator::date as age,
+		0 as prio1,
+		0 as prio2,
+		0 as prio3,
+		0 as prio4
+	from	im_day_enumerator(
+			coalesce((select min(creation_date::date) from acs_objects where object_id in (
+				select t.ticket_id from im_tickets t where ticket_status_id in (select * from im_sub_categories(30000))
+			)), now()::date),
+			now()::date+1
+		)
+	) t
+group by age
+order by age
+LIMIT %limit%'
+where report_code = 'rest_ticket_aging_histogram';
+
+
+
+
 
 

@@ -11,7 +11,7 @@ Ext.require([
 
 
 
-function launchDiagram(debug) {
+function launchDiagram@diagram_id@(debug) {
     
     var ticketAgingStore = Ext.StoreManager.get('ticketAgingStore');
 
@@ -35,7 +35,7 @@ function launchDiagram(debug) {
         renderTo: '@diagram_id@',
         layout: 'fit',
         animate: true,
-        shador: true,
+        shadow: false,
         store: ticketAgingStore,
         insetPadding: @diagram_inset_padding@,
         theme: '@diagram_theme@',
@@ -114,7 +114,7 @@ function launchDiagram(debug) {
 
 Ext.onReady(function () {
     Ext.QuickTips.init();							// No idea why this is necessary, but it is...
-    Ext.getDoc().on('contextmenu', function(ev) { ev.preventDefault(); });	// Disable Right-click context menu on browser background
+    // Ext.getDoc().on('contextmenu', function(ev) { ev.preventDefault(); });	// Disable Right-click context menu on browser background
     var debug = true;
 
     var ticketAgingStore = Ext.create('Ext.data.Store', {
@@ -140,21 +140,13 @@ Ext.onReady(function () {
         }
     });
 
-    // Store Coodinator starts app after all stores have been loaded:
-    var coordinator = Ext.create('PO.controller.StoreLoadCoordinator', {
-        debug: debug,
-        stores: [
-            'ticketAgingStore'
-        ],
-        listeners: {
-            load: function() {
-                if ("boolean" == typeof this.loadedP) { return; }		// Check if the application was launched before
-                launchDiagram(debug);					        // Launch the actual application.
-                this.loadedP = true;						// Mark the application as launched
-            }
-        }
-    });
+    // Delay loading the store for 10-110ms to allow the rest
+    // of the page to be more reactive 
+    var task = new Ext.util.DelayedTask(function(){ ticketAgingStore.load(); });
+    task.delay(500 + 2000*Math.random());
 
-    ticketAgingStore.load();
+    // Go create the diagram even thought the store isn't loaded yet.
+    // The diagram will redraw once the data are there.
+    launchDiagram@diagram_id@(debug);
 });
 </script>

@@ -9,9 +9,12 @@ Ext.require([
     'Ext.fx.target.Sprite', 
     'Ext.layout.container.Fit',
     'PO.controller.StoreLoadCoordinator',
-    'PO.class.PreferenceStateProvider'
+    'PO.class.PreferenceStateProvider',
+    'PO.Utilities',
+    'PO.class.PreferenceStateProvider',
+    'PO.store.user.SenchaPreferenceStore',
+    'PO.model.user.SenchaPreference'
 ]);
-
 
 
 /**
@@ -20,7 +23,8 @@ Ext.require([
  * after all essential data have been loaded into the
  * browser.
  */
-function launchTicketStatsPer(debug, ticketTypes, objectMap) {
+var objectMap = {};
+function launchTicketStats@diagram_id@(debug, ticketTypes) {
 
     var queueNumStore = Ext.StoreManager.get('queueNumStore');
     var queueAgeStore = Ext.StoreManager.get('queueAgeStore');
@@ -103,7 +107,7 @@ function launchTicketStatsPer(debug, ticketTypes, objectMap) {
         title: '@diagram_title@',
         layout: 'fit',
         animate: true,
-        shador: true,
+        shadow: false,
         store: queueNumStore,
         insetPadding: @diagram_inset_padding@,
 //        theme: '@diagram_theme@',
@@ -367,7 +371,7 @@ Ext.onReady(function () {
     var rawStore = Ext.create('Ext.data.Store', {
         storeId: 'rawStore',
         fields: ['number', 'age', 'queue', 'queue_id', 'assignee_dept', 'assignee_dept_id', 'type', 'type_id'],
-        autoLoad: true,
+        autoLoad: false,
         proxy: {
             type: 'rest',
             url: '/intranet-reporting/view',						// This is the generic ]po[ REST interface
@@ -380,21 +384,31 @@ Ext.onReady(function () {
         }
     });
 
+    // Load the store 10-110ms after the the rest of the page is ready.
+    // This allows the rest of the page to be more reactive.
+    var task = new Ext.util.DelayedTask(function(){ rawStore.load(); });
+    task.delay(500 + 2000*Math.random());
+
+
+    // Setup the stores for the various views
+    ticketTypes = @ticket_types_json@;
+    var queueFields = ["queue"];
+    var deptFields = ["dept"];
+    ticketTypes.forEach(function(type) {
+        queueFields.push(type); 
+        deptFields.push(type); 
+    });
+    
+    queueNumStore = Ext.create('Ext.data.Store', { storeId: 'queueNumStore', fields: queueFields });
+    queueAgeStore = Ext.create('Ext.data.Store', { storeId: 'queueAgeStore', fields: queueFields });
+    deptNumStore = Ext.create('Ext.data.Store', { storeId: 'deptNumStore', fields: deptFields });
+    deptAgeStore = Ext.create('Ext.data.Store', { storeId: 'deptAgeStore', fields: deptFields });
+
     var simplifyTicketType = function(str) {
-/*
-        str = str.replace("Ticket", "");
-        str = str.replace("Request", "");
-        str = str.replace("Generic", "");
-        str = str.replace("Alert", "");
-        str = str.replace("  ", " ");
-*/
         return str.trim();
     };
 
     var simplifyQueue = function(str) {
-/*        str = str.replace("Admins", "");
-        str = str.replace("  ", " ");
-	*/
         return str.trim();
     };
 
@@ -415,19 +429,14 @@ Ext.onReady(function () {
                 if ("boolean" == typeof this.loadedP) { return; }			// Check if the application was launched before
                 this.loadedP = true;							// Mark the application as launched
 
-                Ext.state.Manager.setProvider(new PO.class.PreferenceStateProvider({url: '/intranet-helpdesk/lib/ticket-age-per-queue'}));
-
-                // Derived stores with aggreated numbers and age per queue and ticket type
-                var queueAgeStore = Ext.create('Ext.data.ArrayStore', {storeId: 'queueAgeStore'});
-                var queueNumStore = Ext.create('Ext.data.ArrayStore', {storeId: 'queueNumStore'});
-                var deptAgeStore = Ext.create('Ext.data.ArrayStore', {storeId: 'deptAgeStore'});
-                var deptNumStore = Ext.create('Ext.data.ArrayStore', {storeId: 'deptNumStore'});
+		Ext.state.Manager.setProvider(new PO.class.PreferenceStateProvider({
+		    url: '/intranet-helpdesk/lib/ticket-age-per-queue'
+		}));
 
                 // Gather the list of ticket types and queues from raw data
                 var queues = [];
                 var depts = [];
-                var ticketTypes = [];
-		var objectMap = {'@not_assigned_l10n@': ''};				// Map from object_name to object_id, hopefully unique :-)
+		objectMap = {'@not_assigned_l10n@': ''};				// Map from object_name to object_id, hopefully unique :-)
                 rawStore.each(function(record) {
                     var type = record.get('type').trim();
                     var type_id = record.get('type_id').trim();
@@ -444,21 +453,11 @@ Ext.onReady(function () {
                     dept = simplifyDept(dept);
 		    objectMap[dept] = dept_id;
 
-                    if (ticketTypes.indexOf(type) < 0) ticketTypes.push(type);
                     if (queues.indexOf(queue) < 0) queues.push(queue);
                     if (depts.indexOf(dept) < 0) depts.push(dept);
                 });
-                ticketTypes.sort();
                 queues.sort().reverse();
                 depts.sort().reverse();
-
-                // Aggregate the data on the level of queues and types
-                var queueFields = ["queue"];
-                var deptFields = ["dept"];
-                ticketTypes.forEach(function(type) {
-                    queueFields.push(type); 
-                    deptFields.push(type); 
-                });
 
                 var queueAgeData = [];
                 var queueNumData = [];
@@ -517,34 +516,16 @@ Ext.onReady(function () {
                 });
 
                 // Setup custom store with ticket queue fields from rawStore
-                queueNumStore = Ext.create('Ext.data.Store', {
-                    storeId: 'queueNumStore',
-                    fields: queueFields,
-                    data: queueNumData
-                });
+		queueNumStore.add(queueNumData);
+		queueAgeStore.add(queueAgeData);
+                deptNumStore.add(deptNumData);
+                deptAgeStore.add(deptAgeData);
 
-                queueAgeStore = Ext.create('Ext.data.Store', {
-                    storeId: 'queueAgeStore',
-                    fields: queueFields,
-                    data: queueAgeData
-                });
-
-                deptNumStore = Ext.create('Ext.data.Store', {
-                    storeId: 'deptNumStore',
-                    fields: deptFields,
-                    data: deptNumData
-                });
-
-                deptAgeStore = Ext.create('Ext.data.Store', {
-                    storeId: 'deptAgeStore',
-                    fields: deptFields,
-                    data: deptAgeData
-                });
-
-                launchTicketStatsPer(debug, ticketTypes, objectMap);
             }
         }
     });
+
+    launchTicketStats@diagram_id@(debug, ticketTypes, objectMap);
 
 });
 </script>
