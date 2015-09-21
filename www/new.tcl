@@ -848,7 +848,12 @@ ad_form -extend -name helpdesk_ticket -on_request {
     set start_date_sql [template::util::date get_property sql_date $start_date]
     set end_date_sql [template::util::date get_property sql_timestamp $end_date]
 
+    # Update the ticket itself
     db_dml ticket_update {}
+
+    # Update the im_projects table with ticket fields and an open/closed project status
+    set project_status_id [im_project_status_open]
+    if {[im_category_is_a $ticket_status_id [im_ticket_status_closed]]} { set project_status_id [im_project_status_closed] }
     db_dml project_update {}
 
     im_dynfield::attribute_store \

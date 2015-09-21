@@ -41,7 +41,8 @@
 		parent_id		= :ticket_sla_id,
 		company_id		= (select company_id from im_projects where project_id = :ticket_sla_id),
 		project_name		= :ticket_name,
-		project_nr		= :ticket_nr
+		project_nr		= :ticket_nr,
+		project_status_id 	= :project_status_id
 	where
 		project_id = :ticket_id;
     </querytext>
