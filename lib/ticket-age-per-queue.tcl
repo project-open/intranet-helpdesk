@@ -46,8 +46,13 @@ set queue_l10n [lang::message::lookup "" intranet-helpdesk.Queue "Queue"]
 set dept_l10n [lang::message::lookup "" intranet-helpdesk.Dept "Department"]
 
 
-# Ticket types need to be known up-front
-set ticket_types_sql "select * from im_ticket_types order by ticket_type"
+# Select out ticket types from all open tickets
+set ticket_types_sql "
+	select	distinct im_category_from_id(ticket_type_id) as ticket_type
+	from 	im_tickets
+	where	ticket_status_id in (select * from im_sub_categories(30000))
+	order by ticket_type
+"
 db_foreach ticket_types $ticket_types_sql {
     lappend ticket_types_list "'$ticket_type'"
 }
