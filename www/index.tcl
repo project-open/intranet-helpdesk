@@ -116,8 +116,7 @@ db_foreach column_list_sql $column_sql {
 	if {"" != $extra_select} { lappend extra_selects $extra_select }
 	if {"" != $extra_from} { lappend extra_froms $extra_from }
 	if {"" != $extra_where} { lappend extra_wheres $extra_where }
-	if {"" != $order_by_clause &&
-	    $order_by==$column_name} {
+	if {"" != $order_by_clause && [string tolower $order_by] == [string tolower $column_name]} {
 	    set view_order_by_clause $order_by_clause
 	}
 
@@ -524,7 +523,7 @@ switch $mine_p {
 }
 
 
-set order_by_clause "order by t.ticket_id DESC"
+set order_by_clause ""
 switch [string tolower $order_by] {
     "creation date" { set order_by_clause "order by p.start_date DESC" }
     "type" { set order_by_clause "order by t.ticket_type_id, p.start_date" }
@@ -536,6 +535,9 @@ switch [string tolower $order_by] {
     "contact" { set order_by_clause "order by lower(im_name_from_user_id(t.ticket_customer_contact_id)), p.start_date" }
     "assignee" { set order_by_clause "order by lower(im_name_from_user_id(t.ticket_assignee_id)), p.start_date" }
 }
+# order_by_clause from view configuration overrides default
+if {"" != $view_order_by_clause} { set order_by_clause $view_order_by_clause }
+if {"" == $order_by_clause} { set order_by_clause "order by t.ticket_id DESC" }
 
 # ---------------------------------------------------------------
 #
