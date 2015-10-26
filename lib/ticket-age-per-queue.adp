@@ -266,6 +266,7 @@ function launchTicketStats@diagram_id@(debug, ticketTypes) {
                 icon: '/intranet/images/navbar_default/help.png',
                 tooltip: '@show_or_hide_help_l10n@',
                 pressed: true,
+		hidden: true,
                 enableToggle: true,
                 handler: function(button) { 
 		    this.fireEvent('press');
