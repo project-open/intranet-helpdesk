@@ -1004,7 +1004,6 @@ ad_proc -public im_helpdesk_ticket_sla_options {
     Returns a list of SLA tuples suitable for ad_form
 } {
     if {0 == $user_id} { set user_id [ad_get_user_id] }
-#    set sla_name_sql [parameter::get_from_package_key -package_key "intranet-helpdesk" -parameter "RenderSlaNameSql" -default "company_name || ' (' || project_name || ')'"]
     set sla_name_sql [parameter::get_from_package_key -package_key "intranet-helpdesk" -parameter "RenderSlaNameSql" -default "project_name"]
 
     # Determine the list of all groups in which the current user is a member
@@ -1016,19 +1015,25 @@ ad_proc -public im_helpdesk_ticket_sla_options {
         set include_create_sla_p 0
     }
 
-    # Can the user see all projects?
-    set permission_sql ""
-    if {![im_permission $user_id "view_projects_all"]} {
-	set permission_sql "and p.project_id in (
-		select object_id_one from acs_rels where object_id_two = :user_id UNION 
-		select project_id from im_projects where company_id = :customer_id UNION
-		select project_id from im_projects where company_id in (
+    # Is it enough to be a member of a customer to see all SLAs?
+    set customer_member_is_sla_member_p [parameter::get_from_package_key -package_key "intranet-helpdesk" -parameter "TreatCustomerMembersAsSLAMembersP" -default 0]
+    set customer_member_sla_sql ""
+    if {$customer_member_is_sla_member_p} {
+	set customer_member_sla_sql "
+		UNION select project_id from im_projects where company_id in (
 			select	object_id_one
 			from	acs_rels
 			where	object_id_two in ([join $user_parties ","])
-		)
-	)"
+                )
+        "
     }
+
+    # Can the user see all projects?
+    set permission_sql "and p.project_id in (
+		select object_id_one from acs_rels where object_id_two = :user_id UNION 
+		select project_id from im_projects where company_id = :customer_id
+		$customer_member_sla_sql
+    )"
 
     set sql "
 	select	$sla_name_sql as sla_name,
