@@ -24,7 +24,7 @@ ad_page_contract {
 
 set user_id [ad_maybe_redirect_for_registration]
 set user_is_admin_p [im_is_user_site_wide_or_intranet_admin $user_id]
-set user_name [im_name_from_user_id [ad_get_user_id]]
+set user_name [im_name_from_user_id [ad_conn user_id]]
 
 # 30500, 'Close'
 # 30510, 'Close &amp; notify'

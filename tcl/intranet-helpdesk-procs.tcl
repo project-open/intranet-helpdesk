@@ -219,7 +219,7 @@ ad_proc -public im_ticket_permission_read_sql {
     Returns a SQL statement that returns the list of ticket_ids
     that are readable for the user
 } {
-    if {"" == $user_id} { set user_id [ad_get_user_id] }
+    if {"" == $user_id} { set user_id [ad_conn user_id] }
     ns_log Notice "im_ticket_permissions_read_sql: user_id=$user_id"
 
     # The SQL for admins and users who can read everything
@@ -328,7 +328,7 @@ ad_proc -public im_ticket_navbar {
 		       search shortcuts, defaults to "projects".
 } {
     # -------- Defaults -----------------------------
-    set user_id [ad_get_user_id]
+    set user_id [ad_conn user_id]
     set url_stub [ns_urldecode [im_url_with_query]]
 
     set sel "<td class=tabsel>"
@@ -432,7 +432,7 @@ namespace eval im_ticket {
 	set ticket_status_id [im_ticket_status_active]
 	set ticket_type_id [im_ticket_type_hardware]
 	set ticket_version ""
-	set ticket_owner_id [ad_get_user_id]
+	set ticket_owner_id [ad_conn user_id]
 	set description ""
 	set note ""
 
@@ -502,7 +502,7 @@ namespace eval im_ticket {
     } {
 	set ticket_id ""
 	set current_user_id $creation_user
-	if {"" == $current_user_id} { set current_user_id [ad_get_user_id] }
+	if {"" == $current_user_id} { set current_user_id [ad_conn user_id] }
 
 	db_transaction {
 
@@ -654,7 +654,7 @@ namespace eval im_ticket {
 	Subscribe a user to notifications on a specific	ticket.
         @author frank.bergmann@project-open.com
     } {
-	if {"" == $user_id} { set user_id [ad_get_user_id] }
+	if {"" == $user_id} { set user_id [ad_conn user_id] }
 	set type_id [notification::type::get_type_id -short_name "ticket_notif"]
 	set interval_id [notification::get_interval_id -name "instant"]
 	set delivery_method_id [notification::get_delivery_method_id -name "email"]
@@ -674,7 +674,7 @@ namespace eval im_ticket {
 	Unsubscribe a user to notifications on a specific ticket.
         @author frank.bergmann@project-open.com
     } {
-	if {"" == $user_id} { set user_id [ad_get_user_id] }
+	if {"" == $user_id} { set user_id [ad_conn user_id] }
 
 	# Get list of requests. We don't want to use a db_foreach
 	# because we don't know how many database connections the unsubscribe
@@ -703,7 +703,7 @@ namespace eval im_ticket {
 	Add a comment to the ticket as forum topic of type "reply".
     } {
 	# Create a new forum topic of type "Reply"
-	set current_user_id [ad_get_user_id]
+	set current_user_id [ad_conn user_id]
 	set topic_id [db_nextval im_forum_topics_seq]
 	set parent_topic_id [db_string topic_id "select min(topic_id) from im_forum_topics where object_id = :ticket_id" -default ""]
 	set topic_type_id [im_topic_type_id_reply]
@@ -739,7 +739,7 @@ namespace eval im_ticket {
     } {
 	Check if the user can perform view, read, write or admin the ticket
     } {
-	set user_id [ad_get_user_id]
+	set user_id [ad_conn user_id]
 	set user_name [im_name_from_user_id $user_id]
 	im_ticket_permissions $user_id $ticket_id view read write admin
 	if {[lsearch {view read write admin} $operation] < 0} { 
@@ -767,7 +767,7 @@ namespace eval im_ticket {
         Set the ticket to the specified status.
 	The procedure deals with some special cases
     } {
-	set user_id [ad_get_user_id]
+	set user_id [ad_conn user_id]
 	set user_name [im_name_from_user_id $user_id]
 
 	# Fraber 140202: Permission should be checked using check_permissions above!
@@ -912,7 +912,7 @@ ad_proc -public im_helpdesk_new_ticket_ticket_rel {
 			:ticket_id,		-- object_id_one
 			:ticket_id_from_search,	-- object_id_two
 			null,			-- context_id
-			[ad_get_user_id],	-- creation_user
+			[ad_conn user_id],	-- creation_user
 			'[ns_conn peeraddr]',	-- creation_ip
 			:sort_order		-- sort_order
 		)
@@ -931,7 +931,7 @@ ad_proc -public im_ticket_options {
 } {
     Returns a list of Tickets suitable for ad_form
 } {
-    set user_id [ad_get_user_id]
+    set user_id [ad_conn user_id]
 
     set ticket_sql "
 	select	child.*,
@@ -965,7 +965,7 @@ ad_proc -public im_helpdesk_ticket_queue_options {
 } {
     Returns a list of Ticket Queue tuples suitable for ad_form
 } {
-    set user_id [ad_get_user_id]
+    set user_id [ad_conn user_id]
 
     set sql "
 	select
@@ -1003,7 +1003,7 @@ ad_proc -public im_helpdesk_ticket_sla_options {
 } {
     Returns a list of SLA tuples suitable for ad_form
 } {
-    if {0 == $user_id} { set user_id [ad_get_user_id] }
+    if {0 == $user_id} { set user_id [ad_conn user_id] }
     set sla_name_sql [parameter::get_from_package_key -package_key "intranet-helpdesk" -parameter "RenderSlaNameSql" -default "project_name"]
 
     # Determine the list of all groups in which the current user is a member
@@ -1120,7 +1120,7 @@ ad_proc -public im_helpdesk_home_component {
     return [im_helpdesk_ticket_component \
 		-show_empty_ticket_list_p $show_empty_ticket_list_p \
 		-view_name $view_name \
-		-ticket_user_id [ad_get_user_id] \
+		-ticket_user_id [ad_conn user_id] \
 		-order_by_clause $order_by_clause \
 		-ticket_type_id $ticket_type_id \
 		-ticket_status_id $ticket_status_id \
@@ -1395,7 +1395,7 @@ ad_proc -public im_navbar_tree_helpdesk {
     Creates an <ul> ...</ul> collapsable menu for the
     system's main NavBar.
 } {
-    set current_user_id [ad_get_user_id]
+    set current_user_id [ad_conn user_id]
     set wiki [im_navbar_doc_wiki]
 
     set html "
@@ -1489,7 +1489,7 @@ ad_proc -public im_navbar_tree_helpdesk_ticket_type {
 } { 
     Show one of {Issue|Incident|Problem|Change} Management
 } {
-    set current_user_id [ad_get_user_id]
+    set current_user_id [ad_conn user_id]
     set wiki [im_navbar_doc_wiki]
 
     set html "
@@ -1588,7 +1588,7 @@ ad_proc -public im_menu_tickets_admin_links {
     Return a list of admin links to be added to the "projects" menu
 } {
     set result_list {}
-    set current_user_id [ad_get_user_id]
+    set current_user_id [ad_conn user_id]
     set return_url [im_url_with_query]
 
 
@@ -1665,7 +1665,7 @@ ad_proc -public im_helpdesk_ticket_aging_diagram {
 
     # Sencha check and permissions
     if {![im_sencha_extjs_installed_p]} { return "" }
-    set current_user_id [ad_get_user_id]
+    set current_user_id [ad_conn user_id]
 
     # Fraber 150420: No need for permissions, really, because no critical information is shown
     # if {![im_permission $current_user_id view_tickets_all]} { return "" }
@@ -1716,7 +1716,7 @@ ad_proc -public im_helpdesk_ticket_age_number_per_queue {
 } {
     # Sencha check and permissions
     if {![im_sencha_extjs_installed_p]} { return "" }
-    set current_user_id [ad_get_user_id]
+    set current_user_id [ad_conn user_id]
 
     # No need for permissions, really, because no critical information is shown
     # if {![im_permission $current_user_id view_tickets_all]} { return "" }
@@ -1754,7 +1754,7 @@ ad_proc im_helpdesk_member_add_queue_component {
     set object_type [util_memoize [list db_string acs_object_type "select object_type from acs_objects where object_id = $object_id" -default ""]]
     if {"im_ticket" != $object_type} { return "" }
 
-    set current_user_id [ad_get_user_id]
+    set current_user_id [ad_conn user_id]
     set perm_cmd "${object_type}_permissions \$current_user_id \$object_id view_p read_p write_p admin_p"
     eval $perm_cmd
     if {!$write_p} { return "" }
