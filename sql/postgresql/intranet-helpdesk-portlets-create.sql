@@ -503,7 +503,7 @@ SELECT im_component_plugin__new (
 	'/intranet/index',			-- page_url
 	null,					-- view_name
 	40,					-- sort_order
-	'im_helpdesk_ticket_aging_diagram -diagram_limit 600 -diagram_height 450 -ticket_customer_contact_id [ad_get_user_id]',	-- component_tcl
+	'im_helpdesk_ticket_aging_diagram -diagram_limit 600 -diagram_height 450 -ticket_customer_contact_id [ad_conn user_id]',	-- component_tcl
 	'lang::message::lookup "" "intranet-helpdesk.My_Tickets_Aging" "My Tickets Aging"'
 );
 
@@ -554,7 +554,7 @@ SELECT im_component_plugin__new (
 	40,					-- sort_order
 	'im_helpdesk_ticket_aging_diagram -diagram_limit 600 -diagram_height 450 ' ||
 	'-ticket_customer_contact_dept_id [db_string my_dept "select department_id ' ||
-	'from im_employees where employee_id = [ad_get_user_id]" -default ""]',	-- component_tcl
+	'from im_employees where employee_id = [ad_conn user_id]" -default ""]',	-- component_tcl
 	'lang::message::lookup "" "intranet-helpdesk.Tickets_Created_by_my_Department" "Tickets Created by my Department"'
 );
 
@@ -582,7 +582,7 @@ SELECT im_component_plugin__new (
 	40,					-- sort_order
 	'im_helpdesk_ticket_aging_diagram -diagram_limit 600 -diagram_height 450 ' ||
 	'-ticket_assignee_dept_id [db_string my_dept "select department_id ' ||
-	'from im_employees where employee_id = [ad_get_user_id]" -default ""]',	-- component_tcl
+	'from im_employees where employee_id = [ad_conn user_id]" -default ""]',	-- component_tcl
 	'lang::message::lookup "" "intranet-helpdesk.Tickets_Executed_by_my_Department" "Tickets Executed by my Department"'
 );
 
@@ -648,7 +648,7 @@ SELECT im_component_plugin__new (
 	'/intranet/index',		-- page_url
 	null,				-- view_name
 	40,				-- sort_order
-	'im_helpdesk_ticket_age_number_per_queue -ticket_customer_contact_id [ad_get_user_id]',	-- component_tcl
+	'im_helpdesk_ticket_age_number_per_queue -ticket_customer_contact_id [ad_conn user_id]',	-- component_tcl
 	'lang::message::lookup "" "intranet-helpdesk.My_Ticket_Execution" "My Tickets Execution"'
 );
 

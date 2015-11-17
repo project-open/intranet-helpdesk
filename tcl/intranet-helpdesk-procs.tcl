@@ -1846,7 +1846,7 @@ ad_proc -public im_helpdesk_inbox_pop3_import_sweeper { } {
 
 	# Send out a warning email
 	set email [parameter::get_from_package_key -package_key "intranet-helpdesk" -parameter "HelpdeskOwner" -default ""]
-	set sender_email [ad_parameter -package_id [ad_acs_kernel_id] SystemOwner "" [ad_system_owner]]
+	set sender_email [im_parameter -package_id [ad_acs_kernel_id] SystemOwner "" [ad_system_owner]]
 	set subject "Error Importing Customer Emails"
 	set message "Error executing: $cmd
 Please search for 'Error:' in the text below.

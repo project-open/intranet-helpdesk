@@ -29,7 +29,7 @@ set page_title [lang::message::lookup "" intranet-helpdesk.Notify_Stakeholders "
 set context_bar [im_context_bar $page_title]
 
 # Get the SystemUrl without trailing "/"
-set system_url [ad_parameter -package_id [ad_acs_kernel_id] SystemURL ""]
+set system_url [im_parameter -package_id [ad_acs_kernel_id] SystemURL ""]
 set sysurl_len [string length $system_url]
 set last_char [string range $system_url [expr $sysurl_len-1] $sysurl_len]
 if {[string equal "/" $last_char]} {

@@ -150,7 +150,7 @@ set copy_from_ticket_name ""
 set message_html ""
 
 if {![info exists ticket_status_id] || "" == $ticket_status_id} {
-    set ticket_status_id [ad_parameter -package_id [im_package_helpdesk_id] DefaultNewTicketStatus "" [im_ticket_status_open]]
+    set ticket_status_id [im_parameter -package_id [im_package_helpdesk_id] DefaultNewTicketStatus "" [im_ticket_status_open]]
 }
 
 
@@ -261,8 +261,8 @@ if {"edit" == $form_mode && [info exists ticket_id]} {
 
 	# Write out a warning if the ticket was modified by a different
 	# user in the last 10 minutes
-	set max_lock_seconds [ad_parameter -package_id [im_package_core_id] LockMaxLockSeconds "" 600]
-	set max_lock_seconds [ad_parameter -package_id [im_package_helpdesk_id] LockMaxLockSeconds "" $max_lock_seconds]
+	set max_lock_seconds [im_parameter -package_id [im_package_core_id] LockMaxLockSeconds "" 600]
+	set max_lock_seconds [im_parameter -package_id [im_package_helpdesk_id] LockMaxLockSeconds "" $max_lock_seconds]
 	if {$lock_seconds < $max_lock_seconds && $lock_user != $current_user_id} {
 	    
 	    set msg [lang::message::lookup "" intranet-helpdesk.Ticket_Recently_Edited "This ticket was locked by %lock_user_name% %lock_minutes% minutes and %lock_seconds% seconds ago."]
@@ -1157,7 +1157,7 @@ if {0 != $render_template_id} {
     if {1 == $render_template_id} {
 	# Default Template
 
-	set template_from_param [ad_parameter -package_id [im_package_helpdesk_id] DefaultTicketTemplate "" ""]
+	set template_from_param [im_parameter -package_id [im_package_helpdesk_id] DefaultTicketTemplate "" ""]
 	if {"" == $template_from_param} {
 	    # Use the default template that comes as part of the module
 	    set template_body "default.adp"
@@ -1165,11 +1165,11 @@ if {0 != $render_template_id} {
 	} else {
 	    # Use the user's template in the template path
 	    set template_body $template_from_param
-	    set template_path [ad_parameter -package_id [im_package_invoices_id] InvoiceTemplatePathUnix "" "/tmp/templates/"]
+	    set template_path [im_parameter -package_id [im_package_invoices_id] InvoiceTemplatePathUnix "" "/tmp/templates/"]
 	}
     } else {
 	set template_body [im_category_from_id $render_template_id]
-	set template_path [ad_parameter -package_id [im_package_invoices_id] InvoiceTemplatePathUnix "" "/tmp/templates/"]
+	set template_path [im_parameter -package_id [im_package_invoices_id] InvoiceTemplatePathUnix "" "/tmp/templates/"]
     }
 
     if {"" == $template_body} {
