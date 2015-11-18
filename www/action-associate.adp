@@ -10,7 +10,7 @@
 </p>
 <br>
 <form action=action-associate-2 method=GET>
-<%= [export_form_vars tid return_url] %>
+<%= [export_vars -form {tid return_url}] %>
 <table class="list">
 
        <thead>

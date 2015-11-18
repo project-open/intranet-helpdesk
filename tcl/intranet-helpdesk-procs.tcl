@@ -1785,11 +1785,13 @@ ad_proc im_helpdesk_member_add_queue_component {
     }
 
     set role_id [im_biz_object_role_full_member]
+
+    # !!!
+
     set result "
 	<form method=GET action=/intranet/member-add-2>
-	[export_form_vars passthrough]
-	[export_form_vars {notify_asignee 0}]
-	[eval "export_form_vars $passthrough"]
+	[export_vars -form {passthrough {notify_asignee 0}}]
+	[eval "export_vars -form {$passthrough}"]
 	<table cellpadding=0 cellspacing=2 border=0>
 	<tr><td>
 	$list_box

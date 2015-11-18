@@ -7,7 +7,7 @@
 <p>@ticket_list_html;noquote@</p>
 <br><br>
 <form action="<%=$form_action%>" method="POST">
-<%= [export_form_vars return_url] %>
+<%= [export_vars -form {return_url}] %>
 @hidden_tid_html;noquote@
 @select_box;noquote@
 <input class="form-button40" name="formbutton:send" value="Submit" type="submit">

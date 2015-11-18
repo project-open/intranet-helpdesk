@@ -331,7 +331,7 @@ set ticket_action_select [im_category_select \
 ]
 
 set action_l10n [lang::message::lookup "" intranet-helpdesk.Action "Action"]
-set export_vars [export_form_vars return_url tid]
+set export_vars [export_vars -form {return_url tid}]
 set ticket_action_html "
 <form action=/intranet-helpdesk/action name=helpdesk_action>
 $export_vars

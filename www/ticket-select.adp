@@ -10,7 +10,7 @@
 <table cellspacing=0 cellpadding=0 border=0 width="100%">
 <form action="@return_url;noquote@" method=GET>
 
-   <%= [export_form_vars action_id return_url] %>
+   <%= [export_vars -form {action_id return_url}] %>
    <tr valign=top>
    <td>
 	<%= [im_box_header $page_title] %>

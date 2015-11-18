@@ -6,7 +6,7 @@
 <h1>@page_title@</h1>
 
 <form action="/intranet/member-notify" method=GET>
-<%= [export_form_vars return_url] %>
+<%= [export_vars -form {return_url}] %>
 
 <table>
 <tr>
