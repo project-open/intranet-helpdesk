@@ -78,5 +78,5 @@ foreach assig $ticket_assignee_options {
 }
 append select_box "</select>\n"    
 
-# set form_action "action-reassign-2?[export_url_vars tid return_url]"
+# set form_action "action-reassign-2?[export_vars -url {tid return_url}]"
 set form_action "action-reassign-2"

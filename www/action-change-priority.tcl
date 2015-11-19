@@ -51,5 +51,5 @@ append ticket_list_html "</ul>"
 
 set select_box [im_category_select_plain "Intranet Ticket Priority" "ticket_prio"]
 
-# set form_action "action-change-priority-2?[export_url_vars tid return_url]"
+# set form_action "action-change-priority-2?[export_vars -url {tid return_url]}"
 set form_action "action-change-priority-2"
