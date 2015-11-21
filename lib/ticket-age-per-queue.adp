@@ -392,7 +392,7 @@ Ext.onReady(function () {
 
 
     // Setup the stores for the various views
-    ticketTypes = @ticket_types_json@;
+    ticketTypes = @ticket_types_json;noquote@;
     var queueFields = ["queue"];
     var deptFields = ["dept"];
     ticketTypes.forEach(function(type) {
