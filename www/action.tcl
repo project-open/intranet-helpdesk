@@ -22,7 +22,7 @@ ad_page_contract {
     return_url
 }
 
-set user_id [ad_maybe_redirect_for_registration]
+set user_id [auth::require_login]
 set user_is_admin_p [im_is_user_site_wide_or_intranet_admin $user_id]
 set user_name [im_name_from_user_id [ad_conn user_id]]
 
@@ -146,7 +146,7 @@ switch $action_id {
 			where	t.ticket_id = p.project_id and
 				t.ticket_id = :ticket_id
 		"
-		set customer_p [expr $ticket_customer_contact_id == $user_id || $customer_company_member_p > 0]
+		set customer_p [expr {$ticket_customer_contact_id == $user_id || $customer_company_member_p > 0}]
 
 		if {!$customer_p && !$visible_explicite_permission_p} {
 		    im_ticket::check_permissions	-ticket_id $ticket_id -operation "write"

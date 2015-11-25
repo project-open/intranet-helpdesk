@@ -17,7 +17,7 @@ ad_page_contract {
 set page_title [_ intranet-core.Done]
 set context_bar [im_context_bar [list /intranet/projects/ "[lang::message::lookup "" intranet-helpdesk.Helpdesk "Helpdesk"]"] $page_title]
 
-set current_user_id [ad_maybe_redirect_for_registration]
+set current_user_id [auth::require_login]
 im_ticket_permissions $current_user_id $ticket_id view read write admin
 
 if {!$admin} {

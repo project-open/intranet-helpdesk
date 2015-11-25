@@ -58,7 +58,7 @@ ad_proc -public im_helpdesk_sourceforge_tracker_import_sweeper { } {
 	set tree [xml_parse -persist $xml]
 	set rss_node [xml_doc_get_first_node $tree]
 	set root_name [xml_node_get_name $rss_node]
-	if { ![string equal $root_name "rss"] } {
+	if { $root_name ne "rss" } {
 	    ns_log Error "im_helpdesk_sourceforge_tracker_import_sweeper: Expected 'rss' as root node of xml file, found: '$root_name'"
 	    return
 	}

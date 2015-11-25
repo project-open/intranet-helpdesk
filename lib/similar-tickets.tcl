@@ -137,11 +137,11 @@ db_foreach tickets $sql {
     }
 
 
-    set row_html "<tr$bgcolor([expr $ctr % 2])>\n"
+    set row_html "<tr$bgcolor([expr {$ctr % 2}])>\n"
     append row_html "<td>$score_html</td>\n"
     append row_html "<td><a href=$ticket_url>$project_name</a></td>\n"
     append row_html "</tr>\n"
-    append row_html "<tr$bgcolor([expr $ctr % 2])>\n"
+    append row_html "<tr$bgcolor([expr {$ctr % 2}])>\n"
     append row_html "<td colspan=2>[string range $message 0 $max_message]</td>\n"
     append row_html "</tr>\n"
 

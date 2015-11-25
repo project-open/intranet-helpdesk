@@ -20,7 +20,7 @@ ad_page_contract {
 # Defaults & Security
 # ---------------------------------------------------------------
 
-set current_user_id [ad_maybe_redirect_for_registration]
+set current_user_id [auth::require_login]
 set ticket_ids [list]
 set page_title [lang::message::lookup "" intranet-helpdesk.Title_Change_Prio "Change Ticket Prio"]
 
@@ -51,5 +51,5 @@ append ticket_list_html "</ul>"
 
 set select_box [im_category_select_plain "Intranet Ticket Priority" "ticket_prio"]
 
-# set form_action "action-change-priority-2?[export_vars -url {tid return_url]}"
+# set form_action "[export_vars -base action-change-priority-2 {tid return_url]}"
 set form_action "action-change-priority-2"

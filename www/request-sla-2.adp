@@ -1,8 +1,8 @@
 <master>
-<property name="title">@page_title@</property>
+<property name="doc(title)">@page_title;literal@</property>
 <property name="context">#intranet-core.context#</property>
 <property name="main_navbar_label">helpdesk</property>
-<property name="sub_navbar">@ticket_navbar_html;noquote@</property>
+<property name="sub_navbar">@ticket_navbar_html;literal@</property>
 
 <h1>@page_title@</h1>
 

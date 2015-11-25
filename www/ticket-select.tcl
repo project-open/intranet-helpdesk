@@ -33,7 +33,7 @@ ad_page_contract {
 # Defaults & Security
 # ---------------------------------------------------------------
 
-set current_user_id [ad_maybe_redirect_for_registration]
+set current_user_id [auth::require_login]
 set page_title [lang::message::lookup "" intranet-helpdesk.Select_a_base_for_the_Duplicated_Ticket "Please Select a Base for the Duplicated Ticket"]
 set context_bar [im_context_bar $page_title]
 set page_focus "im_header_form.keywords"
@@ -52,10 +52,10 @@ if {"all" == $mine_p && !$view_tickets_all_p} {
     set mine_p "queue"
 }
 
-if { [empty_string_p $how_many] || $how_many < 1 } {
+if { $how_many eq "" || $how_many < 1 } {
     set how_many [im_parameter -package_id [im_package_core_id] NumberResultsPerPage  "" 50]
 }
-set end_idx [expr $start_idx + $how_many]
+set end_idx [expr {$start_idx + $how_many}]
 
 # ---------------------------------------------------------------
 # Defined Table Fields
@@ -112,7 +112,7 @@ db_foreach column_list_sql $column_sql {
 
 	if {!$user_is_admin_p} { set admin_link "" }
 	
-	if { [string compare $order_by $column_name] == 0} {
+	if { $order_by eq $column_name } {
 	    append table_header_html "<td class=rowtitle>$col_txt$admin_link</td>\n"
 	} else {
 	    append table_header_html "<td class=rowtitle><a href=\"$col_url\">$col_txt</a>$admin_link</td>\n"
@@ -123,7 +123,7 @@ append table_header_html "</tr>\n"
 
 
 # Set up colspan to be the number of headers + 1 for the # column
-set colspan [expr [llength $column_headers] + 1]
+set colspan [expr {[llength $column_headers] + 1}]
 
 # ---------------------------------------------------------------
 # Filter with Dynamic Fields
@@ -202,25 +202,25 @@ array set extra_sql_array [im_dynfield::search_sql_criteria_from_form \
 # ---------------------------------------------------------------
 
 set criteria [list]
-if { ![empty_string_p $ticket_status_id] && $ticket_status_id > 0 } {
+if { $ticket_status_id ne "" && $ticket_status_id > 0 } {
     lappend criteria "t.ticket_status_id in ([join [im_sub_categories $ticket_status_id] ","])"
 }
-if { ![empty_string_p $ticket_type_id] && $ticket_type_id != 0 } {
+if { $ticket_type_id ne "" && $ticket_type_id != 0 } {
     lappend criteria "t.ticket_type_id in ([join [im_sub_categories $ticket_type_id] ","])"
 }
-if { ![empty_string_p $ticket_queue_id] && $ticket_queue_id != 0 } {
+if { $ticket_queue_id ne "" && $ticket_queue_id != 0 } {
     lappend criteria "t.ticket_queue_id = :ticket_queue_id"
 }
 if {0 != $assignee_id && "" != $assignee_id} {
     lappend criteria "t.ticket_assignee_id = :assignee_id"
 }
-if { ![empty_string_p $customer_id] && $customer_id != 0 } {
+if { $customer_id ne "" && $customer_id != 0 } {
     lappend criteria "p.company_id = :customer_id"
 }
-if { ![empty_string_p $customer_contact_id] && $customer_contact_id != 0 } {
+if { $customer_contact_id ne "" && $customer_contact_id != 0 } {
     lappend criteria "t.ticket_customer_contact_id = :customer_contact_id"
 }
-if { ![empty_string_p $letter] && [string compare $letter "ALL"] != 0 && [string compare $letter "SCROLL"] != 0 } {
+if { $letter ne "" && $letter ne "ALL"  && $letter ne "SCROLL"  } {
     lappend criteria "im_first_letter_default_to_a(t.ticket_name)=:letter"
 }
 
@@ -298,10 +298,10 @@ set extra_select [join $extra_selects ",\n\t"]
 set extra_from [join $extra_froms ",\n\t"]
 set extra_where [join $extra_wheres "and\n\t"]
 
-if { ![empty_string_p $where_clause] } { set where_clause " and $where_clause" }
-if { ![empty_string_p $extra_select] } { set extra_select ",\n\t$extra_select" }
-if { ![empty_string_p $extra_from] } { set extra_from ",\n\t$extra_from" }
-if { ![empty_string_p $extra_where] } { set extra_where ",\n\t$extra_where" }
+if { $where_clause ne "" } { set where_clause " and $where_clause" }
+if { $extra_select ne "" } { set extra_select ",\n\t$extra_select" }
+if { $extra_from ne "" } { set extra_from ",\n\t$extra_from" }
+if { $extra_where ne "" } { set extra_where ",\n\t$extra_where" }
 
 
 # ---------------------------------------------------------------
@@ -386,7 +386,7 @@ set sql "
 # 5a. Limit the SQL query to MAX rows and provide << and >>
 # ---------------------------------------------------------------
 
-if {[string equal $letter "ALL"]} {
+if {$letter eq "ALL"} {
     # Set these limits to negative values to deactivate them
     set total_in_limited -1
     set how_many -1
@@ -414,7 +414,7 @@ set idx $start_idx
 db_foreach tickets_info_query $selection -bind $form_vars {
 
     # Append together a line of data based on the "column_vars" parameter list
-    set row_html "<tr$bgcolor([expr $ctr % 2])>\n"
+    set row_html "<tr$bgcolor([expr {$ctr % 2}])>\n"
     foreach column_var $column_vars {
 	append row_html "\t<td valign=top>"
 	set cmd "append row_html $column_var"
@@ -430,7 +430,7 @@ db_foreach tickets_info_query $selection -bind $form_vars {
 }
 
 # Show a reasonable message when there are no result rows:
-if { [empty_string_p $table_body_html] } {
+if { $table_body_html eq "" } {
     set table_body_html "
 	<tr><td colspan=$colspan><ul><li><b>
 	[lang::message::lookup "" intranet-core.lt_There_are_currently_n "There are currently no entries matching the selected criteria"]
@@ -441,7 +441,7 @@ if { [empty_string_p $table_body_html] } {
 if { $end_idx < $total_in_limited } {
     # This means that there are rows that we decided not to return
     # Include a link to go to the next page
-    set next_start_idx [expr $end_idx + 0]
+    set next_start_idx [expr {$end_idx + 0}]
     set next_page_url "index?start_idx=$next_start_idx&amp;[export_ns_set_vars url [list start_idx]]"
 } else {
     set next_page_url ""
@@ -450,7 +450,7 @@ if { $end_idx < $total_in_limited } {
 if { $start_idx > 0 } {
     # This means we didn't start with the first row - there is
     # at least 1 previous row. add a previous page link
-    set previous_start_idx [expr $start_idx - $how_many]
+    set previous_start_idx [expr {$start_idx - $how_many}]
     if { $previous_start_idx < 0 } { set previous_start_idx 0 }
     set previous_page_url "index?start_idx=$previous_start_idx&amp;[export_ns_set_vars url [list start_idx]]"
 } else {
@@ -466,7 +466,7 @@ if { $start_idx > 0 } {
 # => include a link to go to the next page
 #
 if {$total_in_limited > 0 && $end_idx < $total_in_limited} {
-    set next_start_idx [expr $end_idx + 0]
+    set next_start_idx [expr {$end_idx + 0}]
     set next_page "<a href=index?start_idx=$next_start_idx&amp;[export_ns_set_vars url [list start_idx]]>Next Page</a>"
 } else {
     set next_page ""
@@ -477,7 +477,7 @@ if {$total_in_limited > 0 && $end_idx < $total_in_limited} {
 # => add a previous page link
 #
 if { $start_idx > 0 } {
-    set previous_start_idx [expr $start_idx - $how_many]
+    set previous_start_idx [expr {$start_idx - $how_many}]
     if { $previous_start_idx < 0 } { set previous_start_idx 0 }
     set previous_page "<a href=index?start_idx=$previous_start_idx&amp;[export_ns_set_vars url [list start_idx]]>Previous Page</a>"
 } else {

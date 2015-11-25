@@ -37,7 +37,7 @@ ad_page_contract {
 # Defaults & Security
 # ---------------------------------------------------------------
 
-set current_user_id [ad_maybe_redirect_for_registration]
+set current_user_id [auth::require_login]
 set page_title [lang::message::lookup "" intranet-helpdesk.Tickets "Tickets"]
 set context_bar [im_context_bar $page_title]
 set page_focus "im_header_form.keywords"
@@ -56,10 +56,10 @@ if {"all" == $mine_p && !$view_tickets_all_p} {
     set mine_p "queue"
 }
 
-if { [empty_string_p $how_many] || $how_many < 1 } {
+if { $how_many eq "" || $how_many < 1 } {
     set how_many [im_parameter -package_id [im_package_core_id] NumberResultsPerPage  "" 50]
 }
-set end_idx [expr $start_idx + $how_many]
+set end_idx [expr {$start_idx + $how_many}]
 
 if {"" == $start_date} { set start_date [parameter::get_from_package_key -package_key "intranet-cost" -parameter DefaultStartDate -default "2000-01-01"] }
 if {"" == $end_date} { set end_date [parameter::get_from_package_key -package_key "intranet-cost" -parameter DefaultEndDate -default "2100-01-01"] }
@@ -152,7 +152,7 @@ db_foreach column_list_sql $column_sql {
 	if {!$user_is_admin_p} { set admin_link "" }
 	set checkbox_p [regexp {<input} $column_name match]
 	
-	if { [string compare $order_by $column_name] == 0 || $checkbox_p } {
+	if { $order_by eq $column_name  || $checkbox_p } {
 	    append table_header_html "<td class=rowtitle>$col_txt$admin_link</td>\n"
 	} else {
 	    append table_header_html "<td class=rowtitle><a href=\"$col_url\">$col_txt</a>$admin_link</td>\n"
@@ -169,7 +169,7 @@ set table_header_html "
 
 
 # Set up colspan to be the number of headers + 1 for the # column
-set colspan [expr [llength $column_headers] + 1]
+set colspan [expr {[llength $column_headers] + 1}]
 
 
 # ---------------------------------------------------------------
@@ -223,7 +223,7 @@ if {[llength $ticket_sla_options] < 2 && !$view_tickets_all_p} { set sla_exists_
 # If there's only one SLA (usually when user is customer) set default SLA
 if {[llength $ticket_sla_options] == 2 && !$view_tickets_all_p} { 
     set ticket_sla_options [im_helpdesk_ticket_sla_options -include_create_sla_p 1 -include_empty_p 0]
-    set ticket_sla_id [lindex [lindex $ticket_sla_options 0] 1]
+    set ticket_sla_id [lindex $ticket_sla_options 0 1]
 }
 
 set ticket_creator_options [list]
@@ -321,13 +321,13 @@ array set extra_sql_array [im_dynfield::search_sql_criteria_from_form \
 # ---------------------------------------------------------------
 
 set criteria [list]
-if {![empty_string_p $ticket_status_id] && $ticket_status_id > 0 } {
+if {$ticket_status_id ne "" && $ticket_status_id > 0 } {
     lappend criteria "t.ticket_status_id in (select * from im_sub_categories($ticket_status_id))"
 }
-if {![empty_string_p $ticket_type_id] && $ticket_type_id != 0 } {
+if {$ticket_type_id ne "" && $ticket_type_id != 0 } {
     lappend criteria "t.ticket_type_id in ([join [im_sub_categories $ticket_type_id] ","])"
 }
-if {![empty_string_p $ticket_queue_id] && $ticket_queue_id != 0 } {
+if {$ticket_queue_id ne "" && $ticket_queue_id != 0 } {
     if {"null" == $ticket_queue_id} {
 	lappend criteria "t.ticket_queue_id is null"
     } else {
@@ -335,11 +335,11 @@ if {![empty_string_p $ticket_queue_id] && $ticket_queue_id != 0 } {
     }
 }
 
-if {[empty_string_p $ticket_sla_id] == 0 && $ticket_sla_id != 0 } {
+if {$ticket_sla_id eq "" == 0 && $ticket_sla_id != 0 } {
     lappend criteria "p.parent_id = :ticket_sla_id"
 }
 
-if {[empty_string_p $ticket_creator_id] == 0 && $ticket_creator_id != 0 } {
+if {$ticket_creator_id eq "" == 0 && $ticket_creator_id != 0 } {
     lappend criteria "t.ticket_id in (select object_id from acs_objects where creation_user = :ticket_creator_id)"
 }
 
@@ -389,20 +389,20 @@ if {"" != $customer_contact_dept_code} {
 
 
 
-if {![empty_string_p $customer_id] && $customer_id != 0 } {
+if {$customer_id ne "" && $customer_id != 0 } {
     lappend criteria "p.company_id = :customer_id"
 }
-if {![empty_string_p $customer_contact_id] && $customer_contact_id != 0 } {
+if {$customer_contact_id ne "" && $customer_contact_id != 0 } {
     lappend criteria "t.ticket_customer_contact_id = :customer_contact_id"
 }
 
-if {![empty_string_p $start_date] && $start_date != "" } {
+if {$start_date ne "" && $start_date ne "" } {
     lappend criteria "o.creation_date >= :start_date::timestamptz"
 }
-if {![empty_string_p $end_date] && $end_date != "" } {
+if {$end_date ne "" && $end_date ne "" } {
     lappend criteria "o.creation_date < :end_date::timestamptz"
 }
-if {![empty_string_p $ticket_name] && $ticket_name != "" } {
+if {$ticket_name ne "" && $ticket_name ne "" } {
     if {0 && ![string isalphanum $ticket_name]} {
 	ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.Only_alphanum_allowed "
 		Only alphanumerical characters are allowed for searching for security reasons.
@@ -415,7 +415,7 @@ if {![empty_string_p $ticket_name] && $ticket_name != "" } {
 
 set letter [string toupper $letter]
 
-if {![empty_string_p $letter] && [string compare $letter "ALL"] != 0 && [string compare $letter "SCROLL"] != 0 } {
+if {$letter ne "" && $letter ne "ALL"  && $letter ne "SCROLL"  } {
     lappend criteria "im_first_letter_default_to_a(p.project_name) = upper(:letter)"
 }
 
@@ -548,10 +548,10 @@ set extra_select [join $extra_selects ",\n\t"]
 set extra_from [join $extra_froms ",\n\t"]
 set extra_where [join $extra_wheres "and\n\t"]
 
-if { ![empty_string_p $where_clause] } { set where_clause " and $where_clause" }
-if { ![empty_string_p $extra_select] } { set extra_select ",\n\t$extra_select" }
-if { ![empty_string_p $extra_from] } { set extra_from ",\n\t$extra_from" }
-if { ![empty_string_p $extra_where] } { set extra_where ",\n\t$extra_where" }
+if { $where_clause ne "" } { set where_clause " and $where_clause" }
+if { $extra_select ne "" } { set extra_select ",\n\t$extra_select" }
+if { $extra_from ne "" } { set extra_from ",\n\t$extra_from" }
+if { $extra_where ne "" } { set extra_where ",\n\t$extra_where" }
 
 
 # ---------------------------------------------------------------
@@ -649,7 +649,7 @@ eval "set sql \"$sql\""
 # ad_return_complaint 1 "<pre>$sql</pre>"
 
 
-if {[string equal $letter "ALL"]} {
+if {$letter eq "ALL"} {
     # Set these limits to negative values to deactivate them
     set total_in_limited -1
     set how_many -1
@@ -771,7 +771,7 @@ db_foreach tickets_info_query $selection -bind $form_vars {
     set ticket_status_l10n [lang::message::lookup "" intranet-core.$ticket_status_key $ticket_status]
 
     # Append together a line of data based on the "column_vars" parameter list
-    set row_html "<tr$bgcolor([expr $ctr % 2])>\n"
+    set row_html "<tr$bgcolor([expr {$ctr % 2}])>\n"
     foreach column_var $column_vars {
 	append row_html "\t<td valign=top>"
 	set cmd "append row_html $column_var"
@@ -789,7 +789,7 @@ db_foreach tickets_info_query $selection -bind $form_vars {
 }
 
 # Show a reasonable message when there are no result rows:
-if { [empty_string_p $table_body_html] } {
+if { $table_body_html eq "" } {
     set table_body_html "
 	<tr><td colspan=$colspan><ul><li><b>
 	[lang::message::lookup "" intranet-core.lt_There_are_currently_n "There are currently no entries matching the selected criteria"]
@@ -800,7 +800,7 @@ if { [empty_string_p $table_body_html] } {
 if { $end_idx < $total_in_limited } {
     # This means that there are rows that we decided not to return
     # Include a link to go to the next page
-    set next_start_idx [expr $end_idx + 0]
+    set next_start_idx [expr {$end_idx + 0}]
     set next_page_url "index?start_idx=$next_start_idx&amp;[export_ns_set_vars url [list start_idx]]"
 } else {
     set next_page_url ""
@@ -809,7 +809,7 @@ if { $end_idx < $total_in_limited } {
 if { $start_idx > 0 } {
     # This means we didn't start with the first row - there is
     # at least 1 previous row. add a previous page link
-    set previous_start_idx [expr $start_idx - $how_many]
+    set previous_start_idx [expr {$start_idx - $how_many}]
     if { $previous_start_idx < 0 } { set previous_start_idx 0 }
     set previous_page_url "index?start_idx=$previous_start_idx&amp;[export_ns_set_vars url [list start_idx]]"
 } else {
@@ -825,7 +825,7 @@ if { $start_idx > 0 } {
 # => include a link to go to the next page
 #
 if {$total_in_limited > 0 && $end_idx < $total_in_limited} {
-    set next_start_idx [expr $end_idx + 0]
+    set next_start_idx [expr {$end_idx + 0}]
     set next_page "<a href=index?start_idx=$next_start_idx&amp;[export_ns_set_vars url [list start_idx]]>Next Page</a>"
 } else {
     set next_page ""
@@ -836,7 +836,7 @@ if {$total_in_limited > 0 && $end_idx < $total_in_limited} {
 # => add a previous page link
 #
 if { $start_idx > 0 } {
-    set previous_start_idx [expr $start_idx - $how_many]
+    set previous_start_idx [expr {$start_idx - $how_many}]
     if { $previous_start_idx < 0 } { set previous_start_idx 0 }
     set previous_page "<a href=index?start_idx=$previous_start_idx&amp;[export_ns_set_vars url [list start_idx]]>Previous Page</a>"
 } else {
@@ -845,8 +845,8 @@ if { $start_idx > 0 } {
 
 
 # Showing "next page" and the number of tickets shown
-set start_idxpp [expr $start_idx+1]
-set end_idx [expr $start_idx + $how_many]
+set start_idxpp [expr {$start_idx+1}]
+set end_idx [expr {$start_idx + $how_many}]
 if {$end_idx > $total_in_limited} { set end_idx $total_in_limited }
 set viewing_msg [lang::message::lookup "" intranet-helpdesk.Viewing_start_end_from_total_in_limited "
 	    Viewing tickets %start_idxpp% to %end_idx% from %total_in_limited%"]
@@ -869,7 +869,7 @@ if {!$user_is_admin_p} { set ticket_action_customize_html "" }
 set table_submit_html "
   <tfoot>
 	<tr valign=top>
-	  <td align=left colspan=[expr $colspan-1] valign=top>
+	  <td align=left colspan=[expr {$colspan-1}] valign=top>
 <!--		[im_gif cleardot]	-->
 		<table cellspacing=1 cellpadding=1 border=0>
 		<tr valign=top>

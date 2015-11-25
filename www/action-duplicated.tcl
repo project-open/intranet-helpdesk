@@ -29,7 +29,7 @@ ad_page_contract {
 # Defaults & Security
 # ---------------------------------------------------------------
 
-set current_user_id [ad_maybe_redirect_for_registration]
+set current_user_id [auth::require_login]
 if { {} == $ticket_ids} {
     set ticket_ids $tid
 }

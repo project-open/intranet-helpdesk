@@ -71,7 +71,7 @@ if {![info exists task]} {
 # Default & Security
 # ------------------------------------------------------------------
 
-set current_user_id [ad_maybe_redirect_for_registration]
+set current_user_id [auth::require_login]
 set current_url [im_url_with_query]
 set action_url "/intranet-helpdesk/new"
 set focus "ticket.var_name"

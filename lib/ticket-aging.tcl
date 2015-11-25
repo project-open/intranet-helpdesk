@@ -75,6 +75,6 @@ set of_l10n [lang::message::lookup "" intranet-core.Ticket_Aging_of "of"]
 # ----------------------------------------------------
 
 # Create a random ID for the diagram
-set diagram_rand [expr round(rand() * 100000000.0)]
+set diagram_rand [expr {round(rand() * 100000000.0)}]
 set diagram_id "ticket_aging_$diagram_rand"
 

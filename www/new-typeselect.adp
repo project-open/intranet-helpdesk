@@ -1,5 +1,5 @@
 <master>
-<property name="title">@page_title@</property>
+<property name="doc(title)">@page_title;literal@</property>
 <property name="main_navbar_label"></property>
 
 <%= [im_box_header $page_title] %>
@@ -7,7 +7,7 @@
 <form action='@return_url;noquote@' method=POST>
 <%= [export_vars -form {return_url ticket_id ticket_nr ticket_name}] %>
 
-<table cellspacing=2 cellpadding=2>
+<table cellspacing="2" cellpadding="2">
 
 
 <!-- ticket sla -->
@@ -43,7 +43,7 @@
 
 <tr class=roweven>
     <td></td>
-    <td><input type=submit value='<%= [lang::message::lookup "" intranet-core.Continue "Continue"] %>'></td>
+    <td><input type="submit" value='<%= [lang::message::lookup "" intranet-core.Continue "Continue"] %>'></td>
 </tr>
 
 </table>

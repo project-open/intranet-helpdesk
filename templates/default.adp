@@ -7,12 +7,12 @@ Printer Friendly Template for Tickets
 <html>
 <head>
 <title><%=[lang::message::lookup "" intranet-helpdesk.Ticket "Ticket"]%></title>
-<link rel='stylesheet' href='/intranet/style/invoice.css' type='text/css'>
-<link rel=StyleSheet type=text/css href="/intranet/style/style.saltnpepper.css">
+<link rel="stylesheet" href="/intranet/style/invoice.css" type="text/css">
+<link rel=StyleSheet type="text/css" href="/intranet/style/style.saltnpepper.css">
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 </head>
 <body text="#000000">
-<p style='text-align:left'><%=[im_logo]%></p>
+<p style="text-align:left"><%=[im_logo]%></p>
 <br>
 <table width="650px" cellpadding="5" cellspacing="5">
   <tr>

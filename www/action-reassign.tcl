@@ -20,7 +20,7 @@ ad_page_contract {
 # Defaults & Security
 # ---------------------------------------------------------------
 
-set current_user_id [ad_maybe_redirect_for_registration]
+set current_user_id [auth::require_login]
 set ticket_ids [list]
 set page_title [lang::message::lookup "" intranet-helpdesk.Title_Reassign "Reassign Tickets"]
 if {1 == [llength $tid]} { set tid [lindex $tid 0] }
@@ -78,5 +78,5 @@ foreach assig $ticket_assignee_options {
 }
 append select_box "</select>\n"    
 
-# set form_action "action-reassign-2?[export_vars -url {tid return_url}]"
+# set form_action [export_vars -base action-reassign-2 {tid return_url}]
 set form_action "action-reassign-2"

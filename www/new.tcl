@@ -74,7 +74,7 @@ if {![info exists task]} {
 # Security
 # ------------------------------------------------------------------
 
-set current_user_id [ad_maybe_redirect_for_registration]
+set current_user_id [auth::require_login]
 set user_id $current_user_id
 set current_url [im_url_with_query]
 set action_url "/intranet-helpdesk/new"
@@ -180,7 +180,7 @@ if {0 != $escalate_from_ticket_id} {
 
 
 set page_title [lang::message::lookup "" intranet-helpdesk.New_Ticket "New Ticket"]
-if {[exists_and_not_null ticket_id]} {
+if {([info exists ticket_id] && $ticket_id ne "")} {
     set page_title [db_string title "select project_name from im_projects where project_id = :ticket_id" -default ""]
 }
 if {0 != $escalate_from_ticket_id} {
@@ -200,7 +200,7 @@ set context [list $page_title]
 # We need the ticket_type_id for page title, dynfields etc.
 # Check if we can deduce the ticket_type_id from ticket_id
 if {0 == $ticket_type_id || "" == $ticket_type_id} {
-    if {[exists_and_not_null ticket_id]} { 
+    if {([info exists ticket_id] && $ticket_id ne "")} { 
 	set ticket_type_id [db_string ttype_id "select ticket_type_id from im_tickets where ticket_id = :ticket_id" -default 0]
     }
 }
@@ -234,7 +234,7 @@ if {"edit" == $form_mode && ![info exists ticket_id]} {
 if {"edit" == $form_mode} { set show_components_p 0 }
 
 set ticket_exists_p 0
-if {[exists_and_not_null ticket_id]} {
+if {([info exists ticket_id] && $ticket_id ne "")} {
     # Check if the ticket exists
     set ticket_exists_p [db_string ticket_exists_p "select count(*) from im_tickets where ticket_id = :ticket_id"]
 
@@ -349,7 +349,7 @@ $ticket_action_customize_html
 if {"edit" == $form_mode} {
     set redirect_p 0
     # redirect if ticket_type_id is not defined
-    if {("" == $ticket_type_id || 0 == $ticket_type_id) && ![exists_and_not_null ticket_id]} {
+    if {("" == $ticket_type_id || 0 == $ticket_type_id) && (![info exists ticket_id] || $ticket_id eq "")} {
 	set all_same_p [im_dynfield::subtype_have_same_attributes_p -object_type "im_ticket"]
 	set all_same_p 0
 	if {!$all_same_p} { 
@@ -358,7 +358,7 @@ if {"edit" == $form_mode} {
     }
 
     # Redirect if the SLA hasn't been defined yet
-    if {("" == $ticket_sla_id || 0 == $ticket_sla_id) && ![exists_and_not_null ticket_id]} { 
+    if {("" == $ticket_sla_id || 0 == $ticket_sla_id) && (![info exists ticket_id] || $ticket_id eq "")} { 
 	set redirect_p 1 
     }
 
@@ -394,7 +394,7 @@ if {$ticket_exists_p} {
 
 # Check if we can get the ticket_customer_id.
 # We need this field in order to limit the customer contacts to show.
-if {![exists_and_not_null ticket_customer_id] && [exists_and_not_null ticket_sla_id] && "new" != $ticket_sla_id} {
+if {(![info exists ticket_customer_id] || $ticket_customer_id eq "") && ([info exists ticket_sla_id] && $ticket_sla_id ne "") && "new" != $ticket_sla_id} {
     set ticket_customer_id [db_string cid "select company_id from im_projects where project_id = :ticket_sla_id" -default ""]
 }
 
@@ -496,7 +496,7 @@ if {"new" == $ticket_customer_contact_id && $user_can_create_new_customer_contac
 # Form options
 # ------------------------------------------------------------------
 
-if {[exists_and_not_null ticket_customer_id]} {
+if {([info exists ticket_customer_id] && $ticket_customer_id ne "")} {
     set customer_sla_options [im_helpdesk_ticket_sla_options -customer_id $ticket_customer_id -include_create_sla_p $add_projects_p]
     set customer_contact_options [db_list_of_lists customer_contact_options "
 	select	im_name_from_user_id(u.user_id) as name,
@@ -691,7 +691,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
     set message ""
     if {[info exists ticket_note]} { append message $ticket_note } else { set ticket_note "" }
     if {[info exists ticket_description]} { append message $ticket_description } else { set ticket_description "" }
-    if {![exists_and_not_null project_name]} { set project_name $ticket_name}
+    if {(![info exists project_name] || $project_name eq "")} { set project_name $ticket_name}
 
     set ticket_id [im_ticket::new \
 	-ticket_sla_id $ticket_sla_id \
@@ -844,7 +844,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
     set ticket_nr [string trim [string tolower $ticket_nr]]
     if {"" == $ticket_nr} { set ticket_nr [im_ticket::next_ticket_nr] }
 
-    if {![exists_and_not_null project_name]} { set project_name $ticket_name }
+    if {(![info exists project_name] || $project_name eq "")} { set project_name $ticket_name }
     set start_date_sql [template::util::date get_property sql_date $start_date]
     set end_date_sql [template::util::date get_property sql_timestamp $end_date]
 
@@ -939,7 +939,7 @@ if {$show_components_p} {
 				     -object_id $notification_object_id \
 				     -user_id $user_id]
     
-    set notification_subscribed_p [expr ![empty_string_p $notification_request_id]]
+    set notification_subscribed_p [expr {$notification_request_id ne ""}] 
     
     if { $notification_subscribed_p } {
 	set notification_url [notification::display::unsubscribe_url -request_id $notification_request_id -url $notification_current_url]

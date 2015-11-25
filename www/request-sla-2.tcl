@@ -20,7 +20,7 @@ ad_page_contract {
 # Defaults & Security
 # ---------------------------------------------------------------
 
-set current_user_id [ad_maybe_redirect_for_registration]
+set current_user_id [auth::require_login]
 set page_title [lang::message::lookup "" intranet-helpdesk.Successfully_Requested_SLA "Successfully Requested a new SLA"]
 set context_bar [im_context_bar $page_title]
 set page_focus "im_header_form.keywords"

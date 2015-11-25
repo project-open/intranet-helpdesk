@@ -25,7 +25,7 @@ ad_page_contract {
 # Defaults & Security
 # ---------------------------------------------------------------
 
-set current_user_id [ad_maybe_redirect_for_registration]
+set current_user_id [auth::require_login]
 set page_title [lang::message::lookup "" intranet-helpdesk.Associate_Ticket_With_$target_object_type "Associate Ticket With $target_object_type"]
 set context_bar [im_context_bar $page_title]
 set page_focus "im_header_form.keywords"
@@ -101,7 +101,7 @@ switch $target_object_type {
 				:current_user_id,
 				'[ad_conn peeraddr]',
 				:release_status_id,
-	                        [expr $max_sort_order + 10]
+	                        [expr {$max_sort_order + 10}]
 			)
 		    "]
 		    
@@ -163,7 +163,7 @@ switch $target_object_type {
 				null,
 				:current_user_id,
 				'[ad_conn peeraddr]',
-	                        [expr $max_sort_order + 10]
+	                        [expr {$max_sort_order + 10}]
 			)
 		"
 		# Write the audit log

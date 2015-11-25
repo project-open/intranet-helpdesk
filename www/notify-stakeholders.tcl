@@ -24,16 +24,16 @@ ad_page_contract {
 # Defaults & Permission
 # --------------------------------------------------------
 
-set current_user_id [ad_maybe_redirect_for_registration]
+set current_user_id [auth::require_login]
 set page_title [lang::message::lookup "" intranet-helpdesk.Notify_Stakeholders "Notify Stakeholders"]
 set context_bar [im_context_bar $page_title]
 
 # Get the SystemUrl without trailing "/"
 set system_url [im_parameter -package_id [ad_acs_kernel_id] SystemURL ""]
 set sysurl_len [string length $system_url]
-set last_char [string range $system_url [expr $sysurl_len-1] $sysurl_len]
-if {[string equal "/" $last_char]} {
-    set system_url "[string range $system_url 0 [expr $sysurl_len-2]]"
+set last_char [string range $system_url $sysurl_len-1 $sysurl_len]
+if {"/" eq $last_char} {
+    set system_url "[string range $system_url 0 $sysurl_len-2]"
 }
 
 set action_name [im_category_from_id $action_id]

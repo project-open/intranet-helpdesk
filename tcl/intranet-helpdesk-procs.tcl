@@ -201,12 +201,12 @@ ad_proc -public im_ticket_permissions {
 	return 0
     }
 
-    set owner_p [expr $user_id == $creation_user_id]
-    set assignee_p [expr $user_id == $ticket_assignee_id]
-    set customer_p [expr $customer_member_p || $user_id == $ticket_customer_contact_id]
+    set owner_p [expr {$user_id == $creation_user_id}]
+    set assignee_p [expr {$user_id == $ticket_assignee_id}]
+    set customer_p [expr {$customer_member_p || $user_id == $ticket_customer_contact_id}]
 
-    set read [expr $admin_p || $owner_p || $assignee_p || $customer_p || $sla_member_p || $ticket_member_p || $holding_user_p || $case_assignee_p || $queue_member_p || $view_tickets_all_p || $edit_tickets_all_p]
-    set write [expr $admin_p || $edit_tickets_all_p || $ticket_admin_p]
+    set read [expr {$admin_p || $owner_p || $assignee_p || $customer_p || $sla_member_p || $ticket_member_p || $holding_user_p || $case_assignee_p || $queue_member_p || $view_tickets_all_p || $edit_tickets_all_p}]
+    set write [expr {$admin_p || $edit_tickets_all_p || $ticket_admin_p}]
 
     set view $read
     set admin $write
@@ -393,7 +393,7 @@ namespace eval im_ticket {
 		while {[db_string lv "select im_ticket_seq.last_value"] < $last_ticket_nr} {
 		    set ttt [db_string update "select nextval('im_ticket_seq')"]
 		}
-		return [expr $last_ticket_nr + 1]
+		return [expr {$last_ticket_nr + 1}]
 		
 	    }
 	}
@@ -461,7 +461,7 @@ namespace eval im_ticket {
 	# Update the item with additional variables from the vars array
 	set sql_list [list]
 	foreach var [array names vars] {
-	    if {$var == "ticket_id"} { continue }
+	    if {$var eq "ticket_id"} { continue }
 	    lappend sql_list "$var = :$var"
 	}
 	set sql "
@@ -1209,9 +1209,9 @@ ad_proc -public im_helpdesk_ticket_component {
     set extra_select [join $extra_selects ",\n\t"]
     set extra_from [join $extra_froms ",\n\t"]
     set extra_where [join $extra_wheres "and\n\t"]
-    if { ![empty_string_p $extra_select] } { set extra_select ",\n\t$extra_select" }
-    if { ![empty_string_p $extra_from] } { set extra_from ",\n\t$extra_from" }
-    if { ![empty_string_p $extra_where] } { set extra_where "and\n\t$extra_where" }
+    if { $extra_select ne "" } { set extra_select ",\n\t$extra_select" }
+    if { $extra_from ne "" } { set extra_from ",\n\t$extra_from" }
+    if { $extra_where ne "" } { set extra_where "and\n\t$extra_where" }
 
     if {0 == $ticket_status_id} { set ticket_status_id [im_ticket_status_open] }
 
@@ -1321,7 +1321,7 @@ ad_proc -public im_helpdesk_ticket_component {
     # Format the List Table Header
 
     # Set up colspan to be the number of headers + 1 for the # column
-    set colspan [expr [llength $column_headers] + 1]
+    set colspan [expr {[llength $column_headers] + 1}]
 
     set table_header_html "<tr>\n"
     foreach col $column_headers {
@@ -1342,14 +1342,14 @@ ad_proc -public im_helpdesk_ticket_component {
     db_foreach personal_ticket_query $personal_ticket_query {
 
 	set url [im_maybe_prepend_http $url]
-	if { [empty_string_p $url] } {
+	if { $url eq "" } {
 	    set url_string "&nbsp;"
 	} else {
 	    set url_string "<a href=\"$url\">$url</a>"
 	}
 	
 	# Append together a line of data based on the "column_vars" parameter list
-	set row_html "<tr$bgcolor([expr $ctr % 2])>\n"
+	set row_html "<tr$bgcolor([expr {$ctr % 2}])>\n"
 	foreach column_var $column_vars {
 	    append row_html "\t<td class=\"list\">"
 	    set cmd "append row_html $column_var"
@@ -1363,7 +1363,7 @@ ad_proc -public im_helpdesk_ticket_component {
     }
 
     # Show a reasonable message when there are no result rows:
-    if { [empty_string_p $table_body_html] } {
+    if { $table_body_html eq "" } {
 
 	# Let the component disappear if there are no tickets...
 	if {!$show_empty_ticket_list_p} { return "" }
@@ -1856,9 +1856,9 @@ No customer emails are lost, however the
 offending ticket may get duplicated.
 $err_msg
 "
-	if [catch {
+	if {[catch {
 	    ns_sendmail $email $sender_email $subject $message
-	} errmsg] {
+	} errmsg]} {
 	    ns_log Error "im_helpdesk_inbox_pop3_import_sweeper: Error sending to \"$email\": $errmsg"
 	}
 
