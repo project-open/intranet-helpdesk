@@ -1654,9 +1654,13 @@ ad_proc -public im_helpdesk_ticket_aging_diagram {
     {-diagram_tooltip_width ""}
     {-diagram_tooltip_height ""}
     {-diagram_legend_width ""}
+    {-diagram_ticket_sla_id ""}
 } {
     Returns a HTML component with a pie chart with top customer
 } {
+    # Compatibility
+    if {"" ne $diagram_ticket_sla_id} { set ticket_sla_id $diagram_ticket_sla_id }
+
     if {"" != $ticket_sla_id && 0 != $ticket_sla_id} {
 	if {[im_security_alert_check_integer -location "im_helpdesk_ticket_aging_diagram" -value $ticket_sla_id]} { return }
 	set project_type_id [util_memoize [list db_string project_type "select project_type_id from im_projects where project_id = $ticket_sla_id" -default 0]]
