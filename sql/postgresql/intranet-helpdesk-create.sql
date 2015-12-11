@@ -1571,8 +1571,7 @@ SELECT im_dynfield_attribute_new ('im_ticket', 'ticket_dept_id', 'Department', '
 -- Unused fields
 --
 
-	-- ticket_service_id                | integer                  |
--- ticket_hardware_id               | integer                  |
+-- ticket_service_id                | integer                  |
 -- ticket_application_id            | integer                  |
 -- ticket_queue_id                  | integer                  |
 -- ticket_alarm_date                | timestamp with time zone |

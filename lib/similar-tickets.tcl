@@ -67,7 +67,6 @@ set field_list {
 
 set ttt {
     ticket_application_id	{t 1.0 application "Application" }
-    ticket_hardware_id		{t 1.0 box "Hardware" }
     ticket_area_id		{t 1.0 group "Area" }
     ticket_service_type_id	{t 1.0 cog "Service Type" }
 }
