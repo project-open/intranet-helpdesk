@@ -400,82 +400,88 @@ namespace eval im_ticket {
     }
 
 
-    ad_proc -public new_from_hash {
-        { -var_hash "" }
-    } {
-        Create a new ticket. There are only few required field.
-	Primary key is ticket_nr which defaults to ticket_name.
-
-        @author frank.bergmann@project-open.com
-	@return The object_id of the new (or existing) ticket
-    } {
-	array set vars $var_hash
-	set ticket_new_sql "
-		SELECT im_ticket__new (
-			:ticket_id,		-- p_ticket_id
-			'im_ticket',		-- object_type
-			now(),			-- creation_date
-			0,			-- creation_user
-			'0.0.0.0',		-- creation_ip
-			null,			-- context_id	
-			:ticket_name,
-			:ticket_customer_id,
-			:ticket_type_id,
-			:ticket_status_id
-		)
-	"
-
-	# Set defaults.
-	set ticket_name $vars(ticket_name)
-	set ticket_nr $ticket_name
-	set ticket_parent_id ""
-	set ticket_status_id [im_ticket_status_active]
-	set ticket_type_id [im_ticket_type_hardware]
-	set ticket_version ""
-	set ticket_owner_id [ad_conn user_id]
-	set description ""
-	set note ""
-
-	# Override defaults
-	if {[info exists vars(ticket_nr)]} { set ticket_nr $vars(ticket_nr) }
-	if {[info exists vars(ticket_code)]} { set ticket_code $vars(ticket_nr) }
-	if {[info exists vars(ticket_parent_id)]} { set ticket_parent_id $vars(ticket_parent_id) }
-	if {[info exists vars(ticket_status_id)]} { set ticket_status_id $vars(ticket_status_id) }
-	if {[info exists vars(ticket_type_id)]} { set ticket_type_id $vars(ticket_type_id) }
-	if {[info exists vars(ticket_version)]} { set ticket_version $vars(ticket_version) }
-	if {[info exists vars(ticket_owner_id)]} { set ticket_owner_id $vars(ticket_owner_id) }
-	if {[info exists vars(description)]} { set description $vars(description) }
-	if {[info exists vars(note)]} { set note $vars(note) }
-
-	# Check if the item already exists
-        set ticket_id [db_string exists "
-		select	ticket_id
-		from	im_tickets
-		where	ticket_parent_id = :ticket_parent_id and
-			ticket_nr = :ticket_nr
-	" -default 0]
-
-	# Create a new item if necessary
-        if {!$ticket_id} { set ticket_id [db_string new $ticket_new_sql] }
-
-	# Update the item with additional variables from the vars array
-	set sql_list [list]
-	foreach var [array names vars] {
-	    if {$var eq "ticket_id"} { continue }
-	    lappend sql_list "$var = :$var"
-	}
-	set sql "
-		update im_tickets set
-		[join $sql_list ",\n"]
-		where ticket_id = :ticket_id
-	"
-        db_dml update_ticket $sql
-
-	# Write Audit Trail
-	im_project_audit -project_id $ticket_id -action after_create
-
-	return $ticket_id
-    }
+#    ad_proc -public new_from_hash {
+#        { -var_hash "" }
+#    } {
+#        Create a new ticket. There are only few required field.
+#	Primary key is ticket_nr which defaults to ticket_name.
+#
+#       This procedure does NOT include audit - please call audit
+#       after updating DynField and other operations after the
+#       creation of the ticket.
+#
+#        @author frank.bergmann@project-open.com
+#	@return The object_id of the new (or existing) ticket
+#    } {
+#	array set vars $var_hash
+#	set ticket_new_sql "
+#		SELECT im_ticket__new (
+#			:ticket_id,		-- p_ticket_id
+#			'im_ticket',		-- object_type
+#			now(),			-- creation_date
+#			0,			-- creation_user
+#			'0.0.0.0',		-- creation_ip
+#			null,			-- context_id	
+#			:ticket_name,
+#			:ticket_customer_id,
+#			:ticket_type_id,
+#			:ticket_status_id
+#		)
+#	"
+#
+#	# Set defaults.
+#	set ticket_name $vars(ticket_name)
+#	set ticket_nr $ticket_name
+#	set ticket_parent_id ""
+#	set ticket_status_id [im_ticket_status_active]
+#	set ticket_type_id [im_ticket_type_hardware]
+#	set ticket_version ""
+#	set ticket_owner_id [ad_conn user_id]
+#	set description ""
+#	set note ""
+#
+#	# Override defaults
+#	if {[info exists vars(ticket_nr)]} { set ticket_nr $vars(ticket_nr) }
+#	if {[info exists vars(ticket_code)]} { set ticket_code $vars(ticket_nr) }
+#	if {[info exists vars(ticket_parent_id)]} { set ticket_parent_id $vars(ticket_parent_id) }
+#	if {[info exists vars(ticket_status_id)]} { set ticket_status_id $vars(ticket_status_id) }
+#	if {[info exists vars(ticket_type_id)]} { set ticket_type_id $vars(ticket_type_id) }
+#	if {[info exists vars(ticket_version)]} { set ticket_version $vars(ticket_version) }
+#	if {[info exists vars(ticket_owner_id)]} { set ticket_owner_id $vars(ticket_owner_id) }
+#	if {[info exists vars(description)]} { set description $vars(description) }
+#	if {[info exists vars(note)]} { set note $vars(note) }
+#
+#	# Check if the item already exists
+#        set ticket_id [db_string exists "
+#		select	ticket_id
+#		from	im_tickets
+#		where	ticket_parent_id = :ticket_parent_id and
+#			ticket_nr = :ticket_nr
+#	" -default 0]
+#
+#	# Create a new item if necessary
+#        if {!$ticket_id} { set ticket_id [db_string new $ticket_new_sql] }
+#
+#	# Update the item with additional variables from the vars array
+#	set sql_list [list]
+#	foreach var [array names vars] {
+#	    if {$var eq "ticket_id"} { continue }
+#	    lappend sql_list "$var = :$var"
+#	}
+#	set sql "
+#		update im_tickets set
+#		[join $sql_list ",\n"]
+#		where ticket_id = :ticket_id
+#	"
+#        db_dml update_ticket $sql
+#
+#
+#	# Fraber 151215: No audit inside the ticket creation.
+#	# Write Audit Trail
+#	# im_project_audit -project_id $ticket_id -action after_create
+#
+#	return $ticket_id
+#    }
 
 
     ad_proc -public new {
@@ -496,6 +502,10 @@ namespace eval im_ticket {
 	Create a new ticket.
 	This procedure deals with the base ticket creation.
 	DynField values need to be stored extract.
+
+	This procedure does NOT include audit - please call audit
+	after updating DynField and other operations after the
+	creation of the ticket.
 
 	@author frank.bergmann@project-open.com
 	@return <code>ticket_id</code> of the newly created project or "" in case of an error.
@@ -545,8 +555,9 @@ namespace eval im_ticket {
 	    # Start a new workflow case
 	    im_workflow_start_wf -object_id $ticket_id -object_type_id $ticket_type_id -skip_first_transition_p 1
 
+	    # Fraber 151215: Audit doesn't work inside a transaction!
 	    # Write Audit Trail
-	    im_project_audit -project_id $ticket_id -action after_create
+	    # im_project_audit -project_id $ticket_id -action after_create
 
 	    # Create a new forum topic of type "Note"
 	    set topic_type_id [im_topic_type_id_discussion]
