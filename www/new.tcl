@@ -744,7 +744,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
     # Whenever a new ticket has been created, these employees get auto-assigned to the ticket. 
     # They can view/edit the ticket and appear in the notification dropdown of the ticket forum portlet.
     # For alternative handling simply set invisible parameter to 'false'
-    if { [parameter::get -package_id [apm_package_id_from_key intranet-helpdisk] -parameter "AutoAssignEmployeeMembersOfSLAToTicket" -default 0]  } {
+    if { [parameter::get -package_id [apm_package_id_from_key intranet-helpdesk] -parameter "AutoAssignEmployeeMembersOfSLAToTicket" -default 0]  } {
 	# Get all employee_id's from SLA 
 	set employee_group_id [im_employee_group_id] 
 	set sql "
@@ -774,7 +774,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
     }
 
     # Let's do the same for customer accounts related to the SLA
-    if {[parameter::get -package_id [apm_package_id_from_key intranet-helpdisk] -parameter "AutoAssignCustomerMembersOfSLAToTicket" -default 0]} {
+    if {[parameter::get -package_id [apm_package_id_from_key intranet-helpdesk] -parameter "AutoAssignCustomerMembersOfSLAToTicket" -default 0]} {
 	# Get all customer_id's from SLA
 	set customer_group_id [im_customer_group_id]
 	set sql "
