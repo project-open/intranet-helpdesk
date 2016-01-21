@@ -53,6 +53,7 @@ set ticket_types_sql "
 	where	ticket_status_id in (select * from im_sub_categories(30000))
 	order by ticket_type
 "
+set ticket_types_list {}
 db_foreach ticket_types $ticket_types_sql {
     lappend ticket_types_list "'$ticket_type'"
 }
