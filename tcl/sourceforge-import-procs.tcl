@@ -36,7 +36,7 @@ ad_proc -public im_helpdesk_sourceforge_tracker_import_sweeper { } {
     }
 
     if {"" == $ticket_sla_id} {
-	ns_log Error "im_helpdesk_sourceforge_tracker_import_sweeper: No SLA specified and no active SLA available, skipping."
+	ns_log Warning "im_helpdesk_sourceforge_tracker_import_sweeper: No SLA specified and no active SLA available, skipping."
 	return
     }
 
