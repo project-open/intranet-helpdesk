@@ -1,6 +1,6 @@
--- upgrade-4.1.0.1.6-5.0.0.0.0.sql
+-- upgrade-5.0.0.0.0-5.0.0.0.1.sql
 
-SELECT acs_log__debug('/packages/intranet-helpdesk/sql/postgresql/upgrade/upgrade-4.1.0.1.6-5.0.0.0.0.sql','');
+SELECT acs_log__debug('/packages/intranet-helpdesk/sql/postgresql/upgrade/upgrade-5.0.0.0.0-5.0.0.0.1.sql','');
 
 update im_dynfield_widgets set parameters = '
 SELECT im_dynfield_widget__new (
