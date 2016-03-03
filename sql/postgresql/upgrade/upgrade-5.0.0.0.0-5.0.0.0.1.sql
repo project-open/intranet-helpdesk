@@ -65,7 +65,55 @@ SELECT im_dynfield_widget__new (
         }
 }''
 );
-
-
 ' where widget_name = 'customer_contact_select_ajax';
+
+
+
+-----------------------------------------------------------
+-- Fix "Summary" tab
+--
+
+update im_menus
+set url = '/intranet-helpdesk/index'
+where label = 'helpdesk_summary';
+
+
+-----------------------------------------------------------
+-- "Dashboard" Tab below "Tickets"
+--
+
+SELECT im_menu__new (
+	null,				-- p_menu_id
+	'im_menu',			-- object_type
+	now(),				-- creation_date
+	null,				-- creation_user
+	null,				-- creation_ip
+	null,				-- context_id
+	'intranet-helpdesk',		-- package_name
+	'helpdesk_dashboard',		-- label
+	'Dashboard',			-- name
+	'/intranet-helpdesk/dashboard',	-- url
+	20,				-- sort_order
+	(select menu_id from im_menus where label = 'helpdesk'),
+	null				-- p_visible_tcl
+);
+
+SELECT acs_permission__grant_permission(
+	(select menu_id from im_menus where label = 'helpdesk_dashboard'),
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
+
+
+
+
+-----------------------------------------------------------
+-- Move portlets from Home to Helpdesk Dashboard page
+--
+
+update im_component_plugins
+set page_url = '/intranet-helpdesk/dashboard'
+where	page_url = '/intranet/index' and
+	package_name = 'intranet-helpdesk' and
+	plugin_name <> 'Home Ticket Component';
 
