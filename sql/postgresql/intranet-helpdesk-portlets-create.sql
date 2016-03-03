@@ -500,7 +500,7 @@ SELECT im_component_plugin__new (
 	'My Tickets Aging',			-- plugin_name - shown in menu
 	'intranet-helpdesk',			-- package_name
 	'right',				-- location
-	'/intranet/index',			-- page_url
+	'/intranet-helpdesk/dashboard',		-- page_url
 	null,					-- view_name
 	40,					-- sort_order
 	'im_helpdesk_ticket_aging_diagram -diagram_limit 600 -diagram_height 450 -ticket_customer_contact_id [ad_conn user_id]',	-- component_tcl

@@ -980,7 +980,7 @@ SELECT im_menu__new (
 	'intranet-helpdesk',		-- package_name
 	'helpdesk_summary',		-- label
 	'Summary',			-- name
-	'/intranet-helpdesk/new?form_mode=display',	-- url
+	'/intranet-helpdesk/index',	-- url
 	10,				-- sort_order
 	(select menu_id from im_menus where label = 'helpdesk'),
 	null				-- p_visible_tcl

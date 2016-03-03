@@ -311,7 +311,7 @@ ad_proc -public im_ticket_permission_read_sql {
 # ---------------------------------------------------------------------
 
 ad_proc -public im_ticket_navbar { 
-    {-navbar_menu_label "tickets"}
+    {-navbar_menu_label "helpdesk"}
     default_letter 
     base_url 
     next_page_url 

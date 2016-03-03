@@ -30,7 +30,7 @@ ad_page_contract {
     { letter:trim "" }
     { start_idx:integer 0 }
     { how_many "" }
-    { view_name "ticket_list" }
+    { view_name "" }
 }
 
 # ---------------------------------------------------------------
@@ -82,6 +82,7 @@ if { "" == $mine_p } {
 # Define the column headers and column contents that 
 # we want to show:
 #
+if {"" == $view_name || "standard" == $view_name} { set view_name "ticket_list" }
 set view_id [db_string get_view_id "select view_id from im_views where view_name=:view_name" -default 0]
 if {!$view_id } {
     ad_return_complaint 1 "<b>Unknown View Name</b>:<br> The view '$view_name' is not defined.<br> 
@@ -918,8 +919,8 @@ if {"" == $dashboard_column_html} {
 # Sub-Navbar
 # ---------------------------------------------------------------
 
-set menu_select_label ""
-set ticket_navbar_html [im_ticket_navbar $letter "/intranet-helpdesk/index" $next_page_url $previous_page_url [list start_idx order_by how_many view_name letter ticket_status_id] $menu_select_label]
+set menu_select_label "helpdesk_summary"
+set ticket_navbar_html [im_ticket_navbar -navbar_menu_label "helpdesk" $letter "/intranet-helpdesk/index" $next_page_url $previous_page_url [list start_idx order_by how_many view_name letter ticket_status_id] $menu_select_label]
 
 
 
