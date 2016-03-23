@@ -1839,8 +1839,7 @@ ad_proc -public im_helpdesk_inbox_pop3_import_sweeper { } {
     set pop3_host [parameter::get_from_package_key -package_key intranet-helpdesk -parameter InboxPOP3Host -default ""]
     if {"" == [string trim $pop3_host]} { return }
 
-    set pageroot [ns_info pageroot]
-    set serverroot [join [lrange [split $pageroot "/"] 0 end-1] "/"]
+    set serverroot [acs_root_dir]
     set cmd "$serverroot/packages/intranet-helpdesk/perl/import-pop3.perl"
     ns_log Notice "im_helpdesk_inbox_pop3_import_sweeper: cmd=$cmd"
 
