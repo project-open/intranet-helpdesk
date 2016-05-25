@@ -52,7 +52,7 @@ set ticket_id [im_ticket::new \
 ]
 
 # Write Audit Trail
-im_project_audit -project_id $ticket_id -action after_create
+im_audit -object_id $ticket_id -action after_create
 
 # ---------------------------------------------------------------
 # Show a message that the SLS has been created successfully

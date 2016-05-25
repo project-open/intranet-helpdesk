@@ -58,7 +58,7 @@ if {"" == $ticket_id_from_search} {
 foreach ticket_id $tid {
     
     # Write Audit Trail
-    im_project_audit -project_id $ticket_id -action before_update
+    im_audit -object_id $ticket_id -action before_update
 
     db_transaction {
 	# Close the ticket
@@ -75,7 +75,7 @@ foreach ticket_id $tid {
     }
 
     # Write Audit Trail
-    im_project_audit -project_id $ticket_id -action after_update
+    im_audit -object_id $ticket_id -action after_update
 
 }
 

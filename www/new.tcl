@@ -239,7 +239,7 @@ if {([info exists ticket_id] && $ticket_id ne "")} {
     set ticket_exists_p [db_string ticket_exists_p "select count(*) from im_tickets where ticket_id = :ticket_id"]
 
     # Write Audit Trail
-    im_project_audit -project_id $ticket_id -action before_update
+    im_audit -object_id $ticket_id -action before_update
 
 }
 
@@ -820,7 +820,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
     }
 
     # Write Audit Trail
-    im_project_audit -project_id $ticket_id -action after_create
+    im_audit -object_id $ticket_id -action after_create
 
     # Using this page to create new tickets for HTML5 apps
     if {"json" == $format} { 
@@ -870,7 +870,7 @@ ad_form -extend -name helpdesk_ticket -on_request {
     }
     
     # Write Audit Trail
-    im_project_audit -project_id $ticket_id -action after_update
+    im_audit -object_id $ticket_id -action after_update
 
 } -after_submit {
 
