@@ -1011,6 +1011,7 @@ ad_proc -public im_helpdesk_ticket_sla_options {
     {-customer_id 0}
     {-include_empty_p 1}
     {-include_create_sla_p 0}
+    {-include_internal_sla_p 0}
 } {
     Returns a list of SLA tuples suitable for ad_form
 } {
@@ -1058,9 +1059,11 @@ ad_proc -public im_helpdesk_ticket_sla_options {
 
     # "Internal SLA" Logic - Remove the Internal SLA from the list
     # if there is an SLA specific to the user.
-    set count [db_string sla_count "select count(*) from ($sql) t"]
-    if {$count > 1} {
-	append sql "\t\tand p.project_nr != 'internal_sla'"
+    if {!$include_internal_sla_p} {
+	set count [db_string sla_count "select count(*) from ($sql) t"]
+	if {$count > 1} {
+	    append sql "\t\tand p.project_nr != 'internal_sla'"
+	}
     }
 
     append sql "\t\torder by sla_name"
