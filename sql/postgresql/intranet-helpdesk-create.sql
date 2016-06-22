@@ -182,7 +182,7 @@ select im_priv_create('add_tickets_for_customers', 'Employees');
 
 
 create or replace function im_ticket__name(integer)
-returns varchar as '
+returns varchar as $$
 DECLARE
 	p_ticket_id		alias for $1;
 	v_name			varchar;
@@ -191,13 +191,13 @@ BEGIN
 	where	project_id = p_ticket_id;
 
 	return v_name;
-end;' language 'plpgsql';
+end;$$ language 'plpgsql';
 
 
 create or replace function im_ticket__new (
 	integer, varchar, timestamptz, integer, varchar, integer,
 	varchar, varchar, integer, integer, integer 
-) returns integer as '
+) returns integer as $$
 DECLARE
 	p_ticket_id		alias for $1;		-- ticket_id default null
 	p_object_type		alias for $2;		-- object_type default im_ticket
@@ -239,14 +239,14 @@ BEGIN
 	);
 
 	return v_ticket_id;
-END;' language 'plpgsql';
+END;$$ language 'plpgsql';
 
 
 
 create or replace function im_ticket__new (
 	integer, varchar, timestamptz, integer, varchar, integer,
 	varchar, integer, integer, integer 
-) returns integer as '
+) returns integer as $$
 DECLARE
 	p_ticket_id		alias for $1;		-- ticket_id default null
 	p_object_type		alias for $2;		-- object_type default im_ticket
@@ -260,7 +260,7 @@ DECLARE
 	p_ticket_status_id	alias for $10;
 	v_ticket_nr		varchar;
 BEGIN
-	select nextval(''im_ticket_seq'')::varchar into v_ticket_nr;
+	select nextval('im_ticket_seq')::varchar into v_ticket_nr;
 
 	return im_ticket__new (
 		p_ticket_id,
@@ -276,13 +276,13 @@ BEGIN
 		p_ticket_status_id	
 	);
 
-END;' language 'plpgsql';
+END;$$ language 'plpgsql';
 
 
 
 
 create or replace function im_ticket__delete(integer)
-returns integer as '
+returns integer as $$
 DECLARE
 	p_ticket_id	alias for $1;
 BEGIN
@@ -294,7 +294,7 @@ BEGIN
 	PERFORM im_project__delete(p_ticket_id);
 
 	return 0;
-end;' language 'plpgsql';
+end;$$ language 'plpgsql';
 
 
 
@@ -306,27 +306,27 @@ end;' language 'plpgsql';
 insert into im_search_object_types values (8,'im_ticket',0.7);
 
 create or replace function im_tickets_tsearch ()
-returns trigger as '
+returns trigger as $$
 declare
 	v_string	varchar;
 begin
-	select  coalesce(p.project_name, '''') || '' '' ||
-		coalesce(p.project_nr, '''') || '' '' ||
-		coalesce(p.project_path, '''') || '' '' ||
-		coalesce(p.description, '''') || '' '' ||
-		coalesce(p.note, '''') || '' '' ||
-		coalesce(t.ticket_note, '''') || '' '' ||
-		coalesce(t.ticket_description, '''')
+	select  coalesce(p.project_name, '') || ' ' ||
+		coalesce(p.project_nr, '') || ' ' ||
+		coalesce(p.project_path, '') || ' ' ||
+		coalesce(p.description, '') || ' ' ||
+		coalesce(p.note, '') || ' ' ||
+		coalesce(t.ticket_note, '') || ' ' ||
+		coalesce(t.ticket_description, '')
 	into    v_string
 	from    im_tickets t,
 		im_projects p
 	where   p.project_id = new.ticket_id and
 		t.ticket_id = p.project_id;
 
-	perform im_search_update(new.ticket_id, ''im_ticket'', new.ticket_id, v_string);
+	perform im_search_update(new.ticket_id, 'im_ticket', new.ticket_id, v_string);
 
 	return new;
-end;' language 'plpgsql';
+end;$$ language 'plpgsql';
 
 
 CREATE TRIGGER im_tickets_tsearch_tr
@@ -374,7 +374,7 @@ select acs_rel_type__create_type (
 
 create or replace function im_ticket_ticket_rel__new (
 integer, varchar, integer, integer, integer, integer, varchar, integer)
-returns integer as '
+returns integer as $$
 DECLARE
 	p_rel_id		alias for $1;	-- null
 	p_rel_type		alias for $2;	-- im_ticket_ticket_rel
@@ -406,11 +406,11 @@ BEGIN
 	);
 
 	return v_rel_id;
-end;' language 'plpgsql';
+end;$$ language 'plpgsql';
 
 
 create or replace function im_ticket_ticket_rel__delete (integer)
-returns integer as '
+returns integer as $$
 DECLARE
 	p_rel_id	alias for $1;
 BEGIN
@@ -419,11 +419,11 @@ BEGIN
 
 	PERFORM acs_rel__delete(p_rel_id);
 	return 0;
-end;' language 'plpgsql';
+end;$$ language 'plpgsql';
 
 
 create or replace function im_ticket_ticket_rel__delete (integer, integer)
-returns integer as '
+returns integer as $$
 DECLARE
         p_ticket_id_one		alias for $1;
 	p_ticket_id_two		alias for $2;
@@ -437,7 +437,7 @@ BEGIN
 
 	PERFORM im_ticket_ticket_rel__delete(v_rel_id);
 	return 0;
-end;' language 'plpgsql';
+end;$$ language 'plpgsql';
 
 
 
@@ -499,7 +499,7 @@ create table im_ticket_queue_ext (
 select define_function_args('im_ticket_queue__new','GROUP_ID,GROUP_NAME,EMAIL,URL,LAST_MODIFIED;now(),MODIFYING_IP,OBJECT_TYPE;im_ticket_queue,CONTEXT_ID,CREATION_USER,CREATION_DATE;now(),CREATION_IP,JOIN_POLICY');
 
 create or replace function im_ticket_queue__new(INT4,VARCHAR,VARCHAR,VARCHAR,TIMESTAMPTZ,VARCHAR,VARCHAR,INT4,INT4,TIMESTAMPTZ,VARCHAR,VARCHAR)
-returns INT4 as '
+returns INT4 as $$
 declare
 	p_GROUP_ID		alias for $1;
 	p_GROUP_NAME		alias for $2;
@@ -530,36 +530,36 @@ begin
 	PERFORM composition_rel__new(-2, v_GROUP_ID);
 
 	return v_GROUP_ID;
-end;' language 'plpgsql';
+end;$$ language 'plpgsql';
 
 create function im_ticket_queue__delete (INT4)
-returns integer as '
+returns integer as $$
 declare
 	p_GROUP_ID	alias for $1;
 begin
 	perform acs_group__delete( p_GROUP_ID );
 	return 1;
-end;' language 'plpgsql';
+end;$$ language 'plpgsql';
 
 
 -- Create a first group
 --
 create or replace function inline_0 ()
-returns integer as '
+returns integer as $$
 declare
 	v_count			integer;
 BEGIN
 	select count(*) into v_count from groups
-	where group_name = ''Linux Admins'';
+	where group_name = 'Linux Admins';
 	IF v_count > 0 THEN return 0; END IF;
 
 	PERFORM im_ticket_queue__new(
-		null, ''Linux Admins'', NULL, NULL, now(), NULL, 
-		''im_ticket_queue'', null, 0, now(), ''0.0.0.0'', 
+		null, 'Linux Admins', NULL, NULL, now(), NULL, 
+		'im_ticket_queue', null, 0, now(), '0.0.0.0', 
 		NULL
 	);
 	return 0;
-end;' language 'plpgsql';
+end;$$ language 'plpgsql';
 select inline_0();
 drop function inline_0();
 
@@ -902,7 +902,7 @@ where	category_type = 'Intranet Ticket Type'
 
 
 create or replace function inline_0 ()
-returns integer as '
+returns integer as $$
 declare
 	-- Menu IDs
 	v_menu			integer;
@@ -919,49 +919,49 @@ declare
 	v_reg_users		integer;
 BEGIN
 	-- Get some group IDs
-	select group_id into v_admins from groups where group_name = ''P/O Admins'';
-	select group_id into v_senman from groups where group_name = ''Senior Managers'';
-	select group_id into v_proman from groups where group_name = ''Project Managers'';
-	select group_id into v_accounting from groups where group_name = ''Accounting'';
-	select group_id into v_employees from groups where group_name = ''Employees'';
-	select group_id into v_companies from groups where group_name = ''Customers'';
-	select group_id into v_freelancers from groups where group_name = ''Freelancers'';
-	select group_id into v_reg_users from groups where group_name = ''Registered Users'';
+	select group_id into v_admins from groups where group_name = 'P/O Admins';
+	select group_id into v_senman from groups where group_name = 'Senior Managers';
+	select group_id into v_proman from groups where group_name = 'Project Managers';
+	select group_id into v_accounting from groups where group_name = 'Accounting';
+	select group_id into v_employees from groups where group_name = 'Employees';
+	select group_id into v_companies from groups where group_name = 'Customers';
+	select group_id into v_freelancers from groups where group_name = 'Freelancers';
+	select group_id into v_reg_users from groups where group_name = 'Registered Users';
 
 	-- Determine the main menu. "Label" is used to
 	-- identify menus.
 	select menu_id into v_main_menu
-	from im_menus where label=''main'';
+	from im_menus where label='main';
 
 	-- Create the menu.
 	v_menu := im_menu__new (
 		null,			-- p_menu_id
-		''im_menu'',		-- object_type
+		'im_menu',		-- object_type
 		now(),			-- creation_date
 		null,			-- creation_user
 		null,			-- creation_ip
 		null,			-- context_id
-		''intranet-helpdesk'',	-- package_name
-		''helpdesk'',		-- label
-		''Tickets'',		-- name
-		''/intranet-helpdesk/'',	-- url
+		'intranet-helpdesk',	-- package_name
+		'helpdesk',		-- label
+		'Tickets',		-- name
+		'/intranet-helpdesk/',	-- url
 		75,			-- sort_order
 		v_main_menu,		-- parent_menu_id
 		null			-- p_visible_tcl
 	);
 
 	-- Grant read permissions to most of the system
-	PERFORM acs_permission__grant_permission(v_menu, v_admins, ''read'');
-	PERFORM acs_permission__grant_permission(v_menu, v_senman, ''read'');
-	PERFORM acs_permission__grant_permission(v_menu, v_proman, ''read'');
-	PERFORM acs_permission__grant_permission(v_menu, v_accounting, ''read'');
-	PERFORM acs_permission__grant_permission(v_menu, v_employees, ''read'');
-	PERFORM acs_permission__grant_permission(v_menu, v_companies, ''read'');
-	PERFORM acs_permission__grant_permission(v_menu, v_freelancers, ''read'');
-	PERFORM acs_permission__grant_permission(v_menu, v_reg_users, ''read'');
+	PERFORM acs_permission__grant_permission(v_menu, v_admins, 'read');
+	PERFORM acs_permission__grant_permission(v_menu, v_senman, 'read');
+	PERFORM acs_permission__grant_permission(v_menu, v_proman, 'read');
+	PERFORM acs_permission__grant_permission(v_menu, v_accounting, 'read');
+	PERFORM acs_permission__grant_permission(v_menu, v_employees, 'read');
+	PERFORM acs_permission__grant_permission(v_menu, v_companies, 'read');
+	PERFORM acs_permission__grant_permission(v_menu, v_freelancers, 'read');
+	PERFORM acs_permission__grant_permission(v_menu, v_reg_users, 'read');
 
 	return 0;
-end;' language 'plpgsql';
+end;$$ language 'plpgsql';
 select inline_0 ();
 drop function inline_0 ();
 
