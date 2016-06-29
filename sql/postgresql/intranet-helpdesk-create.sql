@@ -568,7 +568,7 @@ drop function inline_0();
 -- New "SLA" Project Type
 --
 
-SELECT im_category_new (2502, 'Service Level Agreement', 'Intranet Project Type');
+SELECT im_category_new (2502, 'Ticket Container', 'Intranet Project Type');
 
 
 -----------------------------------------------------------
@@ -607,6 +607,9 @@ SELECT im_category_new (2502, 'Service Level Agreement', 'Intranet Project Type'
 SELECT im_category_new(30150, 'Incident Ticket', 'Intranet Ticket Type');
 SELECT im_category_new(30152, 'Problem Ticket', 'Intranet Ticket Type');
 SELECT im_category_new(30154, 'Change Ticket', 'Intranet Ticket Type');
+SELECT im_category_new(30156, 'Project Change Request', 'Intranet Ticket Type');
+SELECT im_category_new(30158, 'User Story', 'Intranet Ticket Type');
+
 
 -- Disable meta-categories for normal use
 update im_categories set
@@ -1399,7 +1402,7 @@ order by
 
 SELECT im_dynfield_widget__new (
 	null, 'im_dynfield_widget', now(), 0, '0.0.0.0', null,
-	'service_level_agreements', 'Service Level Agreements', 'Service Level Agreements',
+	'service_level_agreements', 'Ticket Containers', 'Ticket Containers',
 	10007, 'integer', 'generic_sql', 'integer',
 	'{custom {sql {
 		select	
@@ -1535,7 +1538,7 @@ SELECT im_dynfield_attribute_new (
 	'im_ticket', 'project_name', 'Name', 'textbox_medium', 'string', 'f', 0, 't', 'im_projects'
 );
 SELECT im_dynfield_attribute_new (
-	'im_ticket', 'parent_id', 'Service Level Agreement', 'service_level_agreements', 
+	'im_ticket', 'parent_id', 'Ticket Container', 'service_level_agreements', 
 	'integer', 'f', 10, 't', 'im_projects'
 );
 SELECT im_dynfield_attribute_new (

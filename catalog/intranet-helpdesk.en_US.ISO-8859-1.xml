@@ -88,8 +88,8 @@
   <msg key="New_Problem Ticket_Ticket">New Problem Ticket</msg>
   <msg key="New_SLA">New SLA</msg>
   <msg key="New_Ticket">New Ticket</msg>
-  <msg key="No_SLA_associated_with_you">No Service Level Agreement (SLA) for you</msg>
-  <msg key="No_SLAs_for_customer">No Service Level Agreement (SLA) for customer</msg>
+  <msg key="No_SLA_associated_with_you">No Ticket Container for you</msg>
+  <msg key="No_SLAs_for_customer">No Ticket Container for customer</msg>
   <msg key="No_Ticket_Found">No Ticket Found</msg>
   <msg key="Nr">Num</msg>
   <msg key="Nuke">Nuke</msg>

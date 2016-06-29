@@ -73,8 +73,8 @@
   <msg key="New_Problem Ticket_Ticket">Neues Problem Ticket</msg>
   <msg key="New_SLA">Neues SLA</msg>
   <msg key="New_Ticket">Neue Anfrage</msg>
-  <msg key="No_SLA_associated_with_you">Keine Service Level Agreement (SLA) gefunden</msg>
-  <msg key="No_SLAs_for_customer">Keine Service Level Agreement (SLA) für Kunde</msg>
+  <msg key="No_SLA_associated_with_you">Kein Ticket Container gefunden</msg>
+  <msg key="No_SLAs_for_customer">Keine Ticket Container für Kunde</msg>
   <msg key="No_Ticket_Found">Keine Tickets gefunden</msg>
   <msg key="Nr">Nr</msg>
   <msg key="Nuke">Löschen</msg>

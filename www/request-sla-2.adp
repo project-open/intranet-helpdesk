@@ -7,7 +7,7 @@
 <h1>@page_title@</h1>
 
 <p>
-<%= [lang::message::lookup "" intranet-helpdesk.Successfully_requested "You have successfully requested a new Service Level Agreement (SLA)."] %>
+<%= [lang::message::lookup "" intranet-helpdesk.Successfully_requested "You have successfully requested a new Ticket Container."] %>
 </p>
 <p>&nbsp;</p>
 <p>

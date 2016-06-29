@@ -71,6 +71,6 @@ if { "" != $err } {
 }
 
 
-set fb_msg [lang::message::lookup "" intranet-helpdesk.PrioChanged "Priority has been changed, a notification had been sent to the owner of the Service Level Agreement project this ticket is assigned to."]
+set fb_msg [lang::message::lookup "" intranet-helpdesk.PrioChanged "Priority has been changed, a notification had been sent to the owner of the Ticket Container project this ticket is assigned to."]
 # KH: -message does currently not work, OpenACS bug?  
 ad_returnredirect -message $fb_msg $return_url

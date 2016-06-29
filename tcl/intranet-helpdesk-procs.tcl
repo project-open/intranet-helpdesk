@@ -50,6 +50,8 @@ ad_proc -public im_ticket_type_generic_problem_ticket {} { return 30130 }
 ad_proc -public im_ticket_type_incident_ticket {} { return 30150 }
 ad_proc -public im_ticket_type_problem_ticket {} { return 30152 }
 ad_proc -public im_ticket_type_change_ticket {} { return 30154 }
+ad_proc -public im_ticket_type_project_change_request {} { return 30156 }
+ad_proc -public im_ticket_type_user_story {} { return 30158 }
 
 ad_proc -public im_ticket_type_idea {} { return 30180 }
 
@@ -638,18 +640,17 @@ namespace eval im_ticket {
 
 	if {"" == $sla_id} {
 	    ad_return_complaint 1 "<b>Didn't find the 'Internal SLA'</b>:<br>
-		We didn't find the 'internal' Service Level Agreement (SLA)
-		in the system. <br>
-		This SLA is used for service requests from
-		users such as creating a new SLA.<br>
-		Please Contact your System Administrator to setup this SLA.
+		We didn't find the 'internal' ticket container in the system. <br>
+		This ticket container is used for requests from
+		users such as creating a new ticket container.<br>
+		Please Contact your System Administrator to setup this ticket container.
 		It needs to fulfill <br>
 		the following conditions:<p>&nbsp;</p>
 		<ul>
 		<li>Customer: the 'Internal Company'<br>
 		    (the company with the path 'internal' that represents
 		    the organization running this system)</li>
-		<li>Project Type: 'Service Level Agreement'</li>
+		<li>Project Type: 'Ticket Container'</li>
 		<li>Project Nr: 'internal_sla' (in lower case)
 		</ul>
 	    "
@@ -1149,7 +1150,7 @@ ad_proc -public im_helpdesk_project_component {
     Returns a HTML table with the list of tickets for the current
     project.
 } {
-    if {![im_project_has_type $project_id "Service Level Agreement"]} { return "" }
+    if {![im_project_has_type $project_id [im_project_type_ticket_container]]} { return "" }
     set view_name "ticket_project_list"
 
     return [im_helpdesk_ticket_component \

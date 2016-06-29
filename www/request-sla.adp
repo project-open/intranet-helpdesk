@@ -7,8 +7,8 @@
 <h1>@page_title@</h1>
 
 <p>
-<%= [lang::message::lookup "" intranet-helpdesk.No_SLA_associated_with_you "It seems that there is currently no 'Service Level Agreement' (SLA) associated with your account. <br>"] %>
-<%= [lang::message::lookup "" intranet-helpdesk.A_SLA_is_required "A SLA is required in order to associate the cost of your service requests to your company."] %>
+<%= [lang::message::lookup "" intranet-helpdesk.No_SLA_associated_with_you "It seems that there is currently no 'Ticket Container' (SLA) associated with your account. <br>"] %>
+<%= [lang::message::lookup "" intranet-helpdesk.A_SLA_is_required "A SLA is required in order to associate the cost of your requests to your company."] %>
 
 </p>
 <p>&nbsp;</p>
