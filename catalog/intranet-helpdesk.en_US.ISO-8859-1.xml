@@ -16,7 +16,7 @@
   <msg key="Associate">Associate</msg>
   <msg key="Bug_Request">Bug Request</msg>
   <msg key="Canceled">Canceled</msg>
-  <msg key="Cant_reproduce">Can't Reproduce</msg>
+  <msg key="Cant_reproduce">Can&#39;t Reproduce</msg>
   <msg key="Change Ticket_Management">Change Ticket Management</msg>
   <msg key="Change_Priority">Change Priority</msg>
   <msg key="Change_Ticket">Change Ticket</msg>
@@ -45,6 +45,7 @@
   <msg key="Customer_Contact">Customer Contact</msg>
   <msg key="Customer_Info">Customer Info</msg>
   <msg key="Customer_review">Customer Review</msg>
+  <msg key="Dashboard">Dashboard</msg>
   <msg key="Date">Date</msg>
   <msg key="Delete">Delete</msg>
   <msg key="Delete_Association">Delete Association</msg>
@@ -62,6 +63,7 @@
   <msg key="Feature_Request">Feature Request</msg>
   <msg key="Filter_Tickets">Filter Tickets</msg>
   <msg key="Home_Ticket_Component">Home Ticket Component</msg>
+  <msg key="Idea">Idea</msg>
   <msg key="In_review">In Review</msg>
   <msg key="Incident Ticket_Management">Incident Ticket Management</msg>
   <msg key="Incident_Ticket">Incident Ticket</msg>
@@ -73,6 +75,7 @@
   <msg key="lt_Mark_tickets_as_dupli">Mark tickets as duplicates</msg>
   <msg key="lt_Problem_Ticket_Close_">Problem Ticket: Close associated incidents</msg>
   <msg key="lt_Problem_Ticket_Create">Problem Ticket: Create from Incident</msg>
+  <msg key="lt_Project_Change_Reques">Project Change Request</msg>
   <msg key="lt_Set_status_Closed__no">Set status: Closed and notify</msg>
   <msg key="lt_Set_status_Open__noti">Set status: Open and notify</msg>
   <msg key="lt_Workplace_Move_Reques">Workplace Move Request</msg>
@@ -81,6 +84,8 @@
   <msg key="Modifying">Modifying</msg>
   <msg key="My_group">My Group</msg>
   <msg key="My_queues">My Queues</msg>
+  <msg key="My_Ticket_Execution">My Ticket Execution</msg>
+  <msg key="My_Tickets_Aging">My Tickets Aging</msg>
   <msg key="Nagios_Alert">Nagios Alert</msg>
   <msg key="Name">Name</msg>
   <msg key="New_Change Ticket_Ticket">New Change Ticket</msg>
@@ -88,13 +93,14 @@
   <msg key="New_Problem Ticket_Ticket">New Problem Ticket</msg>
   <msg key="New_SLA">New SLA</msg>
   <msg key="New_Ticket">New Ticket</msg>
-  <msg key="No_SLA_associated_with_you">No Ticket Container for you</msg>
-  <msg key="No_SLAs_for_customer">No Ticket Container for customer</msg>
+  <msg key="No_SLA_associated_with_you">No Service Level Agreement (SLA) for you</msg>
+  <msg key="No_SLAs_for_customer">No Service Level Agreement (SLA) for customer</msg>
   <msg key="No_Ticket_Found">No Ticket Found</msg>
   <msg key="Nr">Num</msg>
   <msg key="Nuke">Nuke</msg>
   <msg key="Object_Name">Object Name</msg>
   <msg key="Object_Type">Object Type</msg>
+  <msg key="OK">OK</msg>
   <msg key="Open">Open</msg>
   <msg key="Outdated">Outdated</msg>
   <msg key="Permission_Request">Permission Request</msg>
@@ -138,6 +144,7 @@
   <msg key="SLA_Request">SLA Request</msg>
   <msg key="Status">Status</msg>
   <msg key="Submit">Submit</msg>
+  <msg key="Summary">Summary</msg>
   <msg key="Telephony_Request">Telephony Request</msg>
   <msg key="Ticket">Ticket</msg>
   <msg key="Ticket_Creation_Date">Ticket Creation Date</msg>
@@ -171,14 +178,18 @@
   <msg key="Ticket_Workflow">Ticket Workflow</msg>
   <msg key="Ticket_Workflow_Actions">Ticket Workflow Actions</msg>
   <msg key="Tickets">Tickets</msg>
+  <msg key="Tickets_Created_by_my_Department">Tickets Created by my Department</msg>
+  <msg key="Tickets_Executed_by_my_Department">Tickets Executed by my Department</msg>
   <msg key="Time">Time</msg>
   <msg key="Title_Help">Help</msg>
   <msg key="Training_Request">Training Request</msg>
   <msg key="Type">Type</msg>
   <msg key="Update_Tickets">Update Tickets</msg>
+  <msg key="User_Story">User Story</msg>
+  <msg key="Viewing_start_end_from_total_in_limited">Viewing tickets %start_idxpp% to %end_idx% from %total_in_limited%</msg>
   <msg key="Waiting_for_Other">Waiting for Other</msg>
   <msg key="With_Member">With Member</msg>
-  <msg key="Wont_fix">Won't Fix</msg>
+  <msg key="Wont_fix">Won&#39;t Fix</msg>
   <msg key="Workflow_Finished">Workflow Finished</msg>
   <msg key="Your_Company">Your Company</msg>
 </message_catalog>
