@@ -62,7 +62,7 @@
   <msg key="Executing">Executing</msg>
   <msg key="Feature_Request">Feature Request</msg>
   <msg key="Filter_Tickets">Filter Tickets</msg>
-  <msg key="Home_Ticket_Component">Home Ticket Component</msg>
+  <msg key="Home_Ticket_Component">Home Ticket Portlet</msg>
   <msg key="Idea">Idea</msg>
   <msg key="In_review">In Review</msg>
   <msg key="Incident Ticket_Management">Incident Ticket Management</msg>
@@ -142,6 +142,7 @@
   <msg key="SLA_long">SLA Long</msg>
   <msg key="SLA_Management">SLA Management</msg>
   <msg key="SLA_Request">SLA Request</msg>
+  <msg key="SLA_Ticket_Aging">SLA Ticket Aging</msg>
   <msg key="Status">Status</msg>
   <msg key="Submit">Submit</msg>
   <msg key="Summary">Summary</msg>
@@ -162,16 +163,20 @@
   <msg key="Ticket_type_Bug_Request">Bug Request</msg>
   <msg key="Ticket_type_Change_Ticket">Change Ticket</msg>
   <msg key="Ticket_type_Feature_Request">Feature Request</msg>
+  <msg key="Ticket_type_Generic_Problem_Ticket">Generic Problem Ticket</msg>
+  <msg key="Ticket_type_Idea">Idea</msg>
   <msg key="Ticket_type_Incident_Ticket">Incident Ticket</msg>
   <msg key="Ticket_type_Nagios_Alert">Nagios Alert</msg>
   <msg key="Ticket_type_Permission_Request">Permission Request</msg>
   <msg key="Ticket_type_Problem_Ticket">Problem Ticket</msg>
+  <msg key="Ticket_type_Project_Change_Request">Project Change Request</msg>
   <msg key="Ticket_type_Project_Request">Project Request</msg>
   <msg key="Ticket_type_Purchasing_Request">Purchasing Request</msg>
   <msg key="Ticket_type_Report_Request">Report Request</msg>
   <msg key="Ticket_type_SLA_Request">SLA Request</msg>
   <msg key="Ticket_type_Telephony_Request">Telephony Request</msg>
   <msg key="Ticket_type_Training_Request">Training Request</msg>
+  <msg key="Ticket_type_User_Story">User Story</msg>
   <msg key="Ticket_type_Workplace_Move_Request">Workplace Move Request</msg>
   <msg key="Ticket_type_Workplace_move_Request">Workplace Move Request</msg>
   <msg key="Ticket_Types">Ticket Types</msg>
