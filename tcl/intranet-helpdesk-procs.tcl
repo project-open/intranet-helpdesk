@@ -1626,7 +1626,7 @@ ad_proc -public im_menu_tickets_admin_links {
                         and w.object_type = 'im_ticket'
         "
 	    db_foreach wfs $wf_sql {
-		set new_from_wf_url [export_vars -base "/intranet/tickets/new" {workflow_key}]
+		set new_from_wf_url [export_vars -base "/intranet-helpdesk/new" {workflow_key}]
 		lappend result_list [list [lang::message::lookup "" intranet-helpdesk.New_workflow "New %wf_name%"] "$new_from_wf_url"]
 	    }
 	}
