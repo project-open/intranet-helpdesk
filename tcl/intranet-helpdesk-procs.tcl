@@ -1613,7 +1613,7 @@ ad_proc -public im_menu_tickets_admin_links {
     }
 
     if {[im_permission $current_user_id "add_tickets"]} {
-        lappend result_list [list [lang::message::lookup "" intranet-helpdesk.Add_a_new_ticket "New Ticket"] "[export_vars -base "/intranet-helpdesk/new" {ticket_sla_id return_url}]"]
+#        lappend result_list [list [lang::message::lookup "" intranet-helpdesk.Add_a_new_ticket "New Ticket"] "[export_vars -base "/intranet-helpdesk/new" {ticket_sla_id return_url}]"]
 
 	set wf_oid_col_exists_p [im_column_exists wf_workflows object_type]
 	if {$wf_oid_col_exists_p} {
