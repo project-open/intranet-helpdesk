@@ -1050,11 +1050,20 @@ ad_proc -public im_helpdesk_ticket_sla_options {
 
     set sql "
 	select	$sla_name_sql as sla_name,
-		p.project_id
+		project_id
+	from	(
+	select	p.*,
+		c.*
 	from	im_projects p,
-		im_companies c
+		im_companies c,
+		im_projects main_p
 	where	p.company_id = c.company_id and
-		p.project_type_id = [im_project_type_sla]
+		main_p.tree_sortkey = tree_root_key(p.tree_sortkey) and
+		p.project_status_id not in ([join [im_sub_categories [im_project_status_closed]] ","]) and
+		p.project_type_id = [im_project_type_sla] and
+		main_p.project_status_id not in ([join [im_sub_categories [im_project_status_closed]] ","])
+		) p
+	where	1=1
 		$permission_sql
     "
 
