@@ -224,7 +224,8 @@ if {[llength $ticket_sla_options] < 2 && !$view_tickets_all_p} { set sla_exists_
 # If there's only one SLA (usually when user is customer) set default SLA
 if {[llength $ticket_sla_options] == 2 && !$view_tickets_all_p} { 
     set ticket_sla_options [im_helpdesk_ticket_sla_options -include_create_sla_p 1 -include_empty_p 0]
-    set ticket_sla_id [lindex $ticket_sla_options 0 1]
+    set ticket_sla_id_candidate [lindex $ticket_sla_options 0 1]
+    if {"new" ne $ticket_sla_id_candidate} { set ticket_sla_id $ticket_sla_id_candidate }
 }
 
 set ticket_creator_options [list]
