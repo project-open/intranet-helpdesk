@@ -2,15 +2,11 @@
 <property name="doc(title)">@page_title;literal@</property>
 <property name="main_navbar_label"></property>
 
-<%= [im_box_header $page_title] %>
+<%= [im_box_header $page_title "<a href='/intranet/admin/categories/index?select_category_type=Intranet+Ticket+Type'>[im_gif wrench ""]</a>"] %>
 
 <form action='@return_url;noquote@' method=POST>
 <%= [export_vars -form {return_url ticket_id ticket_nr ticket_name}] %>
-
 <table cellspacing="2" cellpadding="2">
-
-
-<!-- ticket sla -->
 
 <if "" eq @ticket_sla_id@>
 	<tr class=roweven>
@@ -24,8 +20,6 @@
 	<%= [export_vars -form {ticket_sla_id}] %>
 </else>
 
-
-<!-- ticket type -->
 
 <if "" eq @ticket_type_id@>
 		<tr class=rowodd>
@@ -50,3 +44,9 @@
 </form>
 <%= [im_box_footer] %>
 
+<if @user_admin_p@ gt 0>
+<ul>
+<li><a href="/intranet/admin/categories/index?select_category_type=Intranet+Ticket+Type"><%= [im_gif wrench ""] %>Admin ticket types</a></li>
+</ul>
+
+</if>
