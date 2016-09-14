@@ -964,10 +964,9 @@ if {$sla_exists_p} {
     append left_navbar_html "
 	    <div class=\"filter-block\">
 		<div class=\"filter-title\">
-		    [lang::message::lookup "" intranet-helpdesk.Admin_Filters "Admin Filters"]
+		    [lang::message::lookup "" intranet-helpdesk.Admin_Tickets "Admin Tickets"]
 		</div>
 		$admin_html
 	    </div>
-	    <hr/>
 "
 
