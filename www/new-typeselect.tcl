@@ -80,7 +80,9 @@ set sql "
 			select	*
 			from	im_category_hierarchy
 			where	child_id = c.category_id
-		)
+		) and
+		-- Exclude Nagios alerts (only to be created from Nagios) and SLA requests
+		c.category_id not in ([im_ticket_type_nagios_alert], [im_ticket_type_sla_request])
 	order by
 		parent_id,
 		category
