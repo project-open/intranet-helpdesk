@@ -1015,6 +1015,7 @@ ad_proc -public im_helpdesk_ticket_sla_options {
     {-include_internal_sla_p 0}
 } {
     Returns a list of SLA tuples suitable for ad_form
+    on which the current_user_id can add tickets
 } {
     if {0 == $user_id} { set user_id [ad_conn user_id] }
     set sla_name_sql [parameter::get_from_package_key -package_key "intranet-helpdesk" -parameter "RenderSlaNameSql" -default "project_name"]
@@ -1043,7 +1044,7 @@ ad_proc -public im_helpdesk_ticket_sla_options {
 
     # Can the user see all projects?
     set permission_sql "and p.project_id in (
-		select object_id_one from acs_rels where object_id_two = :user_id UNION 
+		select object_id_one from acs_rels where object_id_two in ([join $user_parties ","]) UNION 
 		select project_id from im_projects where company_id = :customer_id
 		$customer_member_sla_sql
     )"
