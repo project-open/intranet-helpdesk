@@ -242,7 +242,6 @@ set ticket_creator_options [linsert $ticket_creator_options 0 [list "" ""]]
 # No SLA defined for this user?
 # Allow the user to request a new SLA
 if {!$sla_exists_p} {
-
     # Check if there is already an SLA request
     set sla_requested_p [db_string sla_requested_p "
 	select	count(*)
@@ -256,7 +255,7 @@ if {!$sla_exists_p} {
 
     # Allow the user to request a new SLA if there isn't any yet.
     if {!$sla_requested_p} {
-	ad_returnredirect request-sla
+	ad_returnredirect "request-sla"
     }
 }
 
