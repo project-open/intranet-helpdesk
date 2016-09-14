@@ -2,7 +2,7 @@
 <property name="doc(title)">@page_title;literal@</property>
 <property name="main_navbar_label"></property>
 
-<%= [im_box_header $page_title "<a href='/intranet/admin/categories/index?select_category_type=Intranet+Ticket+Type'>[im_gif wrench ""]</a>"] %>
+<%= [im_box_header $page_title $icon_html] %>
 
 <form action='@return_url;noquote@' method=POST>
 <%= [export_vars -form {return_url ticket_id ticket_nr ticket_name}] %>

@@ -120,3 +120,9 @@ db_foreach cats $sql {
     "
 
 }
+
+
+set icon_html ""
+if {$user_admin_p} {
+    set icon_html "<a href='/intranet/admin/categories/index?select_category_type=Intranet+Ticket+Type'>[im_gif wrench ""]</a>"
+}
