@@ -25,6 +25,7 @@ set current_user_id [auth::require_login]
 set page_title [lang::message::lookup "" intranet-helpdesk.Please_Select_Ticket_Properties "Please select ticket properties"]
 set context_bar [im_context_bar $page_title]
 set add_tickets_p [im_permission $current_user_id "add_tickets"]
+set user_admin_p [im_is_user_site_wide_or_intranet_admin $current_user_id]
 
 set ticket_sla_options [im_select_flatten_list [im_helpdesk_ticket_sla_options -customer_id $ticket_customer_id -include_create_sla_p 1 -include_empty_p 0]]
 set len_ticket_sla_options [expr {[llength $ticket_sla_options] / 2}]
