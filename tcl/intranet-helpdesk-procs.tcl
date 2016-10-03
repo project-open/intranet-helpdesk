@@ -203,12 +203,12 @@ ad_proc -public im_ticket_permissions {
 	return 0
     }
 
-    set owner_p [expr {$user_id == $creation_user_id}]
-    set assignee_p [expr {$user_id == $ticket_assignee_id}]
-    set customer_p [expr {$customer_member_p || $user_id == $ticket_customer_contact_id}]
+    set owner_p [expr $user_id == $creation_user_id]
+    set assignee_p [expr $user_id == $ticket_assignee_id]
+    set customer_p [expr $customer_member_p || $user_id == $ticket_customer_contact_id]
 
-    set read [expr {$admin_p || $owner_p || $assignee_p || $customer_p || $sla_member_p || $ticket_member_p || $holding_user_p || $case_assignee_p || $queue_member_p || $view_tickets_all_p || $edit_tickets_all_p}]
-    set write [expr {$admin_p || $edit_tickets_all_p || $ticket_admin_p}]
+    set read [expr $admin_p || $owner_p || $assignee_p || $customer_p || $sla_member_p || $ticket_member_p || $holding_user_p || $case_assignee_p || $queue_member_p || $view_tickets_all_p || $edit_tickets_all_p]
+    set write [expr $admin_p || $edit_tickets_all_p || $ticket_admin_p]
 
     set view $read
     set admin $write
