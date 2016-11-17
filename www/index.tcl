@@ -203,16 +203,17 @@ if {[im_table_exists im_sql_selectors]} {
     }
 }
 
-
+# Pretty slow query, can take 500ms in large installations
 set ticket_member_options [util_memoize [list db_list_of_lists ticket_members "
-	select  distinct
-		im_name_from_user_id(object_id_two) as user_name,
-		object_id_two as user_id
-	from    acs_rels r,
-		im_tickets p
-	where   r.object_id_one = p.ticket_id
-	order by user_name
-"] 300]
+        select  im_name_from_user_id(object_id_two) as user_name,
+                object_id_two as user_id
+        from    (select distinct object_id_two
+                from    acs_rels r,
+                        im_tickets p
+                where   r.object_id_one = p.ticket_id
+                ) t
+        order by user_name
+"] 1000]
 set ticket_member_options [linsert $ticket_member_options 0 [list $all_l10n ""]]
 
 set ticket_queue_options [im_helpdesk_ticket_queue_options]
