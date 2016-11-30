@@ -229,15 +229,16 @@ if {[llength $ticket_sla_options] == 2 && !$view_tickets_all_p} {
     if {"new" ne $ticket_sla_id_candidate} { set ticket_sla_id $ticket_sla_id_candidate }
 }
 
-set ticket_creator_options [list]
-set ticket_creator_options [db_list_of_lists ticket_creators "
-	select	distinct
-		im_name_from_user_id(creation_user) as creator_name,
-		creation_user as creator_id
-	from	acs_objects
-	where	object_type = 'im_ticket'
-	order by creator_name
-"]
+set ticket_creator_options [util_memoize [list db_list_of_lists ticket_creators "
+select	creation_user as creator_id,
+	im_name_from_user_id(creation_user) as creator_name
+from 	(
+		select	distinct creation_user
+		from	acs_objects
+		where	object_type = 'im_ticket'
+	) t
+order by creator_name
+"] 1000]
 set ticket_creator_options [linsert $ticket_creator_options 0 [list "" ""]]
 
 # No SLA defined for this user?
