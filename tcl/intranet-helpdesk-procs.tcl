@@ -1426,7 +1426,7 @@ ad_proc -public im_navbar_tree_helpdesk {
     set html "
 	<li><a href=\"/intranet-helpdesk/index\">[lang::message::lookup "" intranet-helpdesk.Service_Mgmt "IT Service Management"]</a>
 	<ul>
-	<li><a href=\"$wiki/module_itsm\">[lang::message::lookup "" intranet-core.ITSM_Help "ITSM Help"]</a>
+	<li><a href=\"$wiki/module-itsm\">[lang::message::lookup "" intranet-core.ITSM_Help "ITSM Help"]</a>
     "
 
     # --------------------------------------------------------------
