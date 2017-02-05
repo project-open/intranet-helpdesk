@@ -92,6 +92,8 @@ create table im_tickets (
 					constraint im_ticket_conf_item_fk
 					references im_conf_items,
 	ticket_component_id		integer,
+					constraint im_ticket_component_fk
+					references im_conf_items,
 	ticket_queue_id			integer
 					constraint im_ticket_queue_fk
 					references groups,
@@ -837,6 +839,12 @@ delete from im_categories where category_type = 'Intranet Ticket Action';
 SELECT im_category_new(30500, 'Close', 'Intranet Ticket Action');
 SELECT im_category_new(30510, 'Close &amp; notify', 'Intranet Ticket Action');
 -- SELECT im_category_new(30515, 'Freeze', 'Intranet Ticket Action');
+SELECT im_category_new(30540, 'Associate', 'Intranet Ticket Action');
+SELECT im_category_new(30545, 'Change Prio', 'Intranet Ticket Action');
+SELECT im_category_new(30550, 'Escalate', 'Intranet Ticket Action');
+SELECT im_category_new(30552, 'Close Escalated Tickets', 'Intranet Ticket Action');
+SELECT im_category_new(30560, 'Resolved', 'Intranet Ticket Action');
+
 
 
 -- Custom screen for duplicate action to select base
@@ -1209,25 +1217,128 @@ values (273, 'ticket_project_list', 'view_tickets', 1400);
 
 insert into im_view_columns (column_id, view_id, sort_order, column_name, column_render_tcl) values
 (27300,273,00, 'Prio','"$ticket_prio"');
-
 insert into im_view_columns (column_id, view_id, sort_order, column_name, column_render_tcl) values
 (27310,273,10, 'Nr','"<a href=/intranet-helpdesk/new?form_mode=display&ticket_id=$ticket_id>$project_nr</a>"');
-
 insert into im_view_columns (column_id, view_id, sort_order, column_name, column_render_tcl) values
 (27320,273,20,'Name','"<a href=/intranet-helpdesk/new?form_mode=display&ticket_id=$ticket_id>$project_name</A>"');
-
 insert into im_view_columns (column_id, view_id, sort_order, column_name, column_render_tcl) values
 (27330,273,30,'Contact','"<a href=/intranet/users/view?user_id=$ticket_customer_contact_id>$ticket_customer_contact_name</A>"');
-
 insert into im_view_columns (column_id, view_id, sort_order, column_name, column_render_tcl) values
 (27340,273,40,'Assignee','"<a href=/intranet/users/view?user_id=$ticket_assignee_id>$ticket_assignee_name</A>"');
-
 insert into im_view_columns (column_id, view_id, sort_order, column_name, column_render_tcl) values
 (27380,273,80,'Type','$ticket_type');
-
 insert into im_view_columns (column_id, view_id, sort_order, column_name, column_render_tcl) values
 (27390,273,90,'Status','$ticket_status');
 
+
+
+
+-----------------------------------------------------------
+--
+
+
+SELECT im_component_plugin__new (
+	null,				-- plugin_id
+	'im_component_plugin',		-- object_type
+	now(),				-- creation_date
+	null,				-- creation_user
+	null,				-- creation_ip
+	null,				-- context_id
+	'Project Ticket Component',	-- plugin_name - shown in menu
+	'intranet-helpdesk',		-- package_name
+	'left',				-- location
+	'/intranet/projects/view',	-- page_url
+	null,				-- view_name
+	20,				-- sort_order
+	'im_helpdesk_project_component -project_id $project_id'	-- component_tcl
+);
+
+SELECT acs_permission__grant_permission(
+	(select plugin_id from im_component_plugins where plugin_name = 'Project Ticket Component' and package_name = 'intranet-helpdesk'), 
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
+
+
+
+
+
+SELECT im_component_plugin__new (
+	null,				-- plugin_id
+	'im_component_plugin',		-- object_type
+	now(),				-- creation_date
+	null,				-- creation_user
+	null,				-- creation_ip
+	null,				-- context_id
+	'Customer Information AJAX',	-- plugin_name - shown in menu
+	'intranet-helpdesk',		-- package_name
+	'new_right',			-- location
+	'/intranet-helpdesk/new',	-- page_url
+	null,				-- view_name
+	10,				-- sort_order
+	'set a "<div id=customer_contact_div></div>"'	-- component_tcl
+);
+
+SELECT acs_permission__grant_permission(
+	(select plugin_id from im_component_plugins where plugin_name = 'Customer Information AJAX' and package_name = 'intranet-helpdesk'), 
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
+
+
+
+
+
+-- Ticket Status Change Matrix
+--
+
+SELECT im_component_plugin__new (
+	null,					-- plugin_id
+	'im_component_plugin',			-- object_type
+	now(),					-- creation_date
+	null,					-- creation_user
+	null,					-- creation_ip
+	null,					-- context_id
+	'24h Status Changes',			-- plugin_name
+	'intranet-helpdesk',			-- package_name
+	'right',				-- location
+	'/intranet-helpdesk/index',		-- page_url
+	null,					-- view_name
+	180,					-- sort_order
+	'im_dashboard_status_matrix -max_category_len 3 -sql "
+		select	count(*) as cnt,
+			old_status_id,
+			new_status_id
+		from	(	select	tic.ticket_id,
+					pro.project_nr,
+					tic.ticket_status_id as new_status_id,
+					coalesce(max_audit_a.audit_object_status_id, 0) as old_status_id
+				from	im_projects pro,
+					im_tickets tic
+					LEFT OUTER JOIN (
+						select	t.ticket_id,
+							max(a.audit_date) as max_audit_date
+						from	im_tickets t,
+							im_projects p
+							LEFT OUTER JOIN im_audits a ON (p.project_id = a.audit_object_id and a.audit_date < now() - ''24 hours''::interval)
+						where	t.ticket_id = p.project_id
+						group by t.ticket_id
+					) max_audit_date ON (tic.ticket_id = max_audit_date.ticket_id)
+					LEFT OUTER JOIN im_audits max_audit_a ON (max_audit_a.audit_object_id = tic.ticket_id and max_audit_a.audit_date = max_audit_date.max_audit_date)
+				where	tic.ticket_id = pro.project_id
+			) t
+		group by old_status_id, new_status_id
+	" -description "Shows how many tickets have changed their status in the last 24h hours.
+	" -status_list [db_list status_list "select distinct ticket_status_id from im_tickets order by ticket_status_id"]',
+	'lang::message::lookup "" intranet-reporting-dashboard.Daily_Ticket_Status_Change "Daily Ticket Status Change"'
+);
+
+
+SELECT acs_permission__grant_permission(
+	(select plugin_id from im_component_plugins where plugin_name = '24h Status Changes' and package_name = 'intranet-helpdesk'), 
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
 
 
 
@@ -1595,3 +1706,7 @@ SELECT im_dynfield_attribute_new ('im_ticket', 'ticket_dept_id', 'Department', '
 \i intranet-helpdesk-notifications-create.sql
 \i workflow-feature_request_wf-create.sql
 \i workflow-ticket_generic_wf-create.sql
+
+
+
+
