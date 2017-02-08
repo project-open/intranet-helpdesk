@@ -305,6 +305,10 @@ end;$$ language 'plpgsql';
 -----------------------------------------------------------
 
 
+
+-----------------------------------------------------------
+-- Tickets
+
 insert into im_search_object_types values (8,'im_ticket',0.7);
 
 create or replace function im_tickets_tsearch ()
@@ -332,12 +336,8 @@ end;$$ language 'plpgsql';
 
 
 CREATE TRIGGER im_tickets_tsearch_tr
-AFTER INSERT or UPDATE
-ON im_tickets
-FOR EACH ROW
-EXECUTE PROCEDURE im_tickets_tsearch();
-
-
+AFTER INSERT or UPDATE ON im_tickets
+FOR EACH ROW EXECUTE PROCEDURE im_tickets_tsearch();
 
 
 -----------------------------------------------------------
@@ -1706,6 +1706,18 @@ SELECT im_dynfield_attribute_new ('im_ticket', 'ticket_dept_id', 'Department', '
 \i intranet-helpdesk-notifications-create.sql
 \i workflow-feature_request_wf-create.sql
 \i workflow-ticket_generic_wf-create.sql
+
+
+
+
+
+
+
+
+-- Ticket Portlets
+update im_component_plugins 
+set page_url = '/intranet-helpdesk/dashboard', location = 'left'
+where page_url = '/intranet-helpdesk/index';
 
 
 
