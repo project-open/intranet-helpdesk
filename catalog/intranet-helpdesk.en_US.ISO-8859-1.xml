@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <message_catalog package_key="intranet-helpdesk" locale="en_US" charset="ISO-8859-1">
 
-  <msg key="A_SLA_is_required">A SLA is required</msg>
+  <msg key="A_SLA_is_required">A SLA is required.</msg>
   <msg key="Action">Action</msg>
   <msg key="Action_Forbidden">Action Forbidden</msg>
   <msg key="Add_a_new_ticket">New Ticket</msg>
@@ -93,7 +93,7 @@
   <msg key="New_Problem Ticket_Ticket">New Problem Ticket</msg>
   <msg key="New_SLA">New SLA</msg>
   <msg key="New_Ticket">New Ticket</msg>
-  <msg key="No_SLA_associated_with_you">No Service Level Agreement (SLA) for you</msg>
+  <msg key="No_SLA_associated_with_you">No Service Level Agreement (SLA) for you. </msg>
   <msg key="No_SLAs_for_customer">No Service Level Agreement (SLA) for customer</msg>
   <msg key="No_Ticket_Found">No Ticket Found</msg>
   <msg key="Nr">Num</msg>
@@ -137,7 +137,7 @@
   <msg key="Show_in_printer_friendly_format">Show in printer friendly format</msg>
   <msg key="Sign-off">Sign-off</msg>
   <msg key="Signoff_date">Sign-Off date</msg>
-  <msg key="SLA">SLA</msg>
+  <msg key="SLA">Container</msg>
   <msg key="SLA_List">SLA List</msg>
   <msg key="SLA_long">SLA Long</msg>
   <msg key="SLA_Management">SLA Management</msg>
@@ -184,9 +184,12 @@
   <msg key="Ticket_Workflow_Actions">Ticket Workflow Actions</msg>
   <msg key="Tickets">Tickets</msg>
   <msg key="Tickets_Created_by_my_Department">Tickets Created by my Department</msg>
+  <msg key="Tickets_Dashboard">Tickets Dashboard</msg>
   <msg key="Tickets_Executed_by_my_Department">Tickets Executed by my Department</msg>
+  <msg key="Tickets_List">Tickets List</msg>
   <msg key="Time">Time</msg>
   <msg key="Title_Help">Help</msg>
+  <msg key="To_request_a_new_SLA">To request a new SLA please let us know about your company and how to contact you:</msg>
   <msg key="Training_Request">Training Request</msg>
   <msg key="Type">Type</msg>
   <msg key="Update_Tickets">Update Tickets</msg>

@@ -62,7 +62,7 @@
   <msg key="Executing">In Arbeit</msg>
   <msg key="Feature_Request">Erweiterungsanfrage</msg>
   <msg key="Filter_Tickets">Anfragen filtern</msg>
-  <msg key="Home_Ticket_Component">Home Anfragen</msg>
+  <msg key="Home_Ticket_Component">Anfragen</msg>
   <msg key="Idea">Idee</msg>
   <msg key="In_review">Wird geprüft</msg>
   <msg key="Incident Ticket_Management">Vorfallmanagement</msg>
