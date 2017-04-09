@@ -1865,7 +1865,7 @@ ad_proc -public im_helpdesk_inbox_pop3_import_sweeper { } {
     }
     set result ""
     if {[catch {
-	set result [exec bash -c $cmd]
+	set result [im_exec bash -c $cmd]
 	ns_log Notice "im_helpdesk_inbox_pop3_import_sweeper: Result: $result"	
     } err_msg]} {
 
