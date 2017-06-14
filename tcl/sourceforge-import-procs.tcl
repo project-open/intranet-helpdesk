@@ -47,7 +47,7 @@ ad_proc -public im_helpdesk_sourceforge_tracker_import_sweeper { } {
 
 	set url "http://sourceforge.net/api/artifact/index/tracker-id/$tracker_id/rss"
 	if { [catch {
-            set xml [ns_httpget $url]
+            set xml [im_httpget $url]
         } err_msg] } {
             ns_log Error "im_helpdesk_sourceforge_tracker_import_sweeper: Error retreiving file: $err_msg"
             db_string log "select acs_log__debug('im_helpdesk_sourceforge_tracker_import_sweeper', 'Error retreiving rss: [ns_quotehtml $err_msg].')"
