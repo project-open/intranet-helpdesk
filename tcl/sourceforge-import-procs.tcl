@@ -40,13 +40,13 @@ ad_proc -public im_helpdesk_sourceforge_tracker_import_sweeper { } {
 	return
     }
 
-
-    set tracker_ids [parameter::get_from_package_key -package_key intranet-helpdesk -parameter SourceForgeTrackerIDs -default 579555]
+    set tracker_ids [parameter::get_from_package_key -package_key intranet-helpdesk -parameter SourceForgeTrackerIDs -default ""]
     set tracker_ids [string trim $tracker_ids]
     foreach tracker_id $tracker_ids {
 
 	set url "http://sourceforge.net/api/artifact/index/tracker-id/$tracker_id/rss"
 	if { [catch {
+	    ns_log Notice "im_helpdesk_sourceforge_tracker_import_sweeper: About to retreive URL: $url"
             set xml [im_httpget $url]
         } err_msg] } {
             ns_log Error "im_helpdesk_sourceforge_tracker_import_sweeper: Error retreiving file: $err_msg"
