@@ -230,8 +230,9 @@ if {[llength $ticket_sla_options] == 2 && !$view_tickets_all_p} {
 }
 
 set ticket_creator_options [util_memoize [list db_list_of_lists ticket_creators "
-select	creation_user as creator_id,
-	im_name_from_user_id(creation_user) as creator_name
+select	
+	im_name_from_user_id(creation_user) as creator_name,
+	creation_user as creator_id
 from 	(
 		select	distinct creation_user
 		from	acs_objects
