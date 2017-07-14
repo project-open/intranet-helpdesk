@@ -117,7 +117,6 @@ if {[info exists ticket_id]} {
     }
 }
 
-
 # Decisions taken:
 #
 # - Read the current ticket? - read_p
@@ -212,15 +211,15 @@ if {"edit" == [template::form::get_action helpdesk_action]} { set form_mode "edi
 if {![info exists ticket_id]} { set form_mode "edit" }
 if {![info exists form_mode]} { set form_mode "display" }
 
-
-
 if {[info exists ticket_id]} {
     if {!$read_p} {
 	ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.No_right_to_read_ticket "You don't have the permission to see this ticket."]
 	ad_script_abort
     }
+    if {!$write_p} {
+	set form_mode "display"
+    }
 }
-
 
 # Check if the user is allowed to create a new ticket
 if {"edit" == $form_mode && ![info exists ticket_id]} {
