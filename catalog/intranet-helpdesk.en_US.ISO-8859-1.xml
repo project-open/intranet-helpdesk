@@ -62,6 +62,8 @@
   <msg key="Executing">Executing</msg>
   <msg key="Feature_Request">Feature Request</msg>
   <msg key="Filter_Tickets">Filter Tickets</msg>
+  <msg key="Helpdesk_All_Tickets_Raw_Data_Without_Discussions">Helpdesk - All Ticket Raw Data Without Discussions</msg>
+  <msg key="Helpdesk_Tickets_Closed_Per_Day">Helpdesk - Tickets Closed Per Day</msg>
   <msg key="Home_Ticket_Component">Home Ticket Portlet</msg>
   <msg key="Idea">Idea</msg>
   <msg key="In_review">In Review</msg>
@@ -82,7 +84,7 @@
   <msg key="lt_Workplace_move_Reques">Workplace Move Request</msg>
   <msg key="Mine">Mine</msg>
   <msg key="Modifying">Modifying</msg>
-  <msg key="My_group">My Group</msg>
+  <msg key="My_group">My group</msg>
   <msg key="My_queues">My Queues</msg>
   <msg key="My_Ticket_Execution">My Ticket Execution</msg>
   <msg key="My_Tickets_Aging">My Tickets Aging</msg>
@@ -155,7 +157,7 @@
   <msg key="Ticket_Members">Ticket Members</msg>
   <msg key="Ticket_Name">Ticket Name</msg>
   <msg key="Ticket_Nr">Ticket Num</msg>
-  <msg key="Ticket_Related_Objects">Ticket Related Objects</msg>
+  <msg key="Ticket_Related_Objects">Related objects</msg>
   <msg key="Ticket_Similar_Tickets">Similar Tickets</msg>
   <msg key="Ticket_Timeline">Ticket Timeline</msg>
   <msg key="Ticket_Timesheet">Ticket Timesheet</msg>
@@ -163,8 +165,8 @@
   <msg key="Ticket_type_Bug_Request">Bug Request</msg>
   <msg key="Ticket_type_Change_Ticket">Change Ticket</msg>
   <msg key="Ticket_type_Feature_Request">Feature Request</msg>
-  <msg key="Ticket_type_Generic_Problem_Ticket">Generic Problem Ticket</msg>
-  <msg key="Ticket_type_Idea">Idea</msg>
+  <msg key="Ticket_type_Generic_Problem_Ticket">Generic Problem Tickets</msg>
+  <msg key="Ticket_type_Idea">Ideas</msg>
   <msg key="Ticket_type_Incident_Ticket">Incident Ticket</msg>
   <msg key="Ticket_type_Nagios_Alert">Nagios Alert</msg>
   <msg key="Ticket_type_Permission_Request">Permission Request</msg>
@@ -189,7 +191,7 @@
   <msg key="Tickets_List">Tickets List</msg>
   <msg key="Time">Time</msg>
   <msg key="Title_Help">Help</msg>
-  <msg key="To_request_a_new_SLA">To request a new SLA please let us know about your company and how to contact you:</msg>
+  <msg key="To_request_a_new_SLA">To request a new SLA please let us know about your company and how to contact you</msg>
   <msg key="Training_Request">Training Request</msg>
   <msg key="Type">Type</msg>
   <msg key="Update_Tickets">Update Tickets</msg>
