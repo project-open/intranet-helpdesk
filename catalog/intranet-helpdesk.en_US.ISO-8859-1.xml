@@ -39,6 +39,7 @@
   <msg key="Confirmation_date">Confirmation date</msg>
   <msg key="Contact">Contact</msg>
   <msg key="Contact_Email_Tel">Contact Email Tel</msg>
+  <msg key="Cost_Center_Details">Cost Center Details</msg>
   <msg key="Creation_date">Creation date</msg>
   <msg key="Creator">Creator</msg>
   <msg key="Customer">Customer</msg>
@@ -62,6 +63,7 @@
   <msg key="Executing">Executing</msg>
   <msg key="Feature_Request">Feature Request</msg>
   <msg key="Filter_Tickets">Filter Tickets</msg>
+  <msg key="group_key">Group Key</msg>
   <msg key="Helpdesk_All_Tickets_Raw_Data_Without_Discussions">Helpdesk - All Ticket Raw Data Without Discussions</msg>
   <msg key="Helpdesk_Tickets_Closed_Per_Day">Helpdesk - Tickets Closed Per Day</msg>
   <msg key="Home_Ticket_Component">Home Ticket Portlet</msg>
@@ -83,6 +85,7 @@
   <msg key="lt_Set_status_Open__noti">Set status: Open and notify</msg>
   <msg key="lt_Workplace_Move_Reques">Workplace Move Request</msg>
   <msg key="lt_Workplace_move_Reques">Workplace Move Request</msg>
+  <msg key="Members_of_Cost_Center_and_Sub_Cost_Centers">Members of this Cost Center and below</msg>
   <msg key="Mine">Mine</msg>
   <msg key="Modifying">Modifying</msg>
   <msg key="My_group">My group</msg>
