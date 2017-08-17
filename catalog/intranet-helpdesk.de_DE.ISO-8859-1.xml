@@ -39,6 +39,7 @@
   <msg key="Confirmation_date">Datum Bestätigung</msg>
   <msg key="Contact">Kontakt</msg>
   <msg key="Contact_Email_Tel">Kontakt Email</msg>
+  <msg key="Cost_Center_Details">Kostenstelle Details</msg>
   <msg key="Creation_date">Datum Anlage</msg>
   <msg key="Creator">Ersteller</msg>
   <msg key="Customer">Kunden</msg>
@@ -61,7 +62,8 @@
   <msg key="Event">Event</msg>
   <msg key="Executing">In Arbeit</msg>
   <msg key="Feature_Request">Erweiterungsanfrage</msg>
-  <msg key="Filter_Tickets">Anfragen filtern</msg>
+  <msg key="Filter_Tickets">Tickets filtern</msg>
+  <msg key="group_key">Gruppen Schlüssel</msg>
   <msg key="Helpdesk_All_Tickets_Raw_Data_Without_Discussions">Helpdesk - Alle Ticket Rohdaten</msg>
   <msg key="Helpdesk_Tickets_Closed_Per_Day">Helpdesk - Geschlossene Tickets pro Tag</msg>
   <msg key="Home_Ticket_Component">Tickets</msg>
@@ -83,6 +85,7 @@
   <msg key="lt_Set_status_Open__noti">Status: Offen und benachrichtigen</msg>
   <msg key="lt_Workplace_Move_Reques">Umzugsanfrage</msg>
   <msg key="lt_Workplace_move_Reques">Umzugsanfrage</msg>
+  <msg key="Members_of_Cost_Center_and_Sub_Cost_Centers">Mitglieder in dieser Kostenstelle und darunter</msg>
   <msg key="Mine">Meine</msg>
   <msg key="Modifying">In Bearbeitung</msg>
   <msg key="My_group">Meine Gruppe</msg>
