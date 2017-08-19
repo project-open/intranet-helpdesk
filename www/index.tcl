@@ -756,9 +756,9 @@ set idx $start_idx
 db_foreach tickets_info_query $selection -bind $form_vars {
 
     # Moved from SQL to there for performance reasons
-    set ticket_type [im_category_from_id $ticket_type_id]
-    set ticket_status [im_category_from_id $ticket_status_id]
-    set ticket_prio [im_category_from_id $ticket_prio_id]
+    set ticket_type [im_category_from_id -translate_p 1 $ticket_type_id]
+    set ticket_status [im_category_from_id -translate_p 1 $ticket_status_id]
+    set ticket_prio [im_category_from_id -translate_p 1 $ticket_prio_id]
 
     set ticket_customer_contact [im_name_from_user_id $ticket_customer_contact_id]
     set ticket_assignee [im_name_from_user_id $ticket_assignee_id]
@@ -767,12 +767,6 @@ db_foreach tickets_info_query $selection -bind $form_vars {
 
     # Bulk Action Checkbox
     set action_checkbox "<input type=checkbox name=tid value=$ticket_id id=ticket,$ticket_id>\n"
-
-    # L10n
-    regsub -all {[^0-9a-zA-Z]} $ticket_type "_" ticket_type_key
-    set ticket_type_l10n [lang::message::lookup "" intranet-core.$ticket_type_key $ticket_type]
-    regsub -all {[^0-9a-zA-Z]} $ticket_status "_" ticket_status_key
-    set ticket_status_l10n [lang::message::lookup "" intranet-core.$ticket_status_key $ticket_status]
 
     # Append together a line of data based on the "column_vars" parameter list
     set row_html "<tr$bgcolor([expr {$ctr % 2}])>\n"
