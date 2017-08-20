@@ -31,7 +31,7 @@ set current_user_id $user_id
 set page_title  [lang::message::lookup "" intranet-helpdesk.Ticket_Dashboard "Ticket Dashboard"]
 set page_focus "im_header_form.keywords"
 set current_url [ns_conn url]
-set return_url "/intranet/"
+set return_url "/intranet-helpdesk/dashboard"
 set header_stuff ""
 
 set user_admin_p [im_is_user_site_wide_or_intranet_admin $current_user_id]
@@ -47,7 +47,14 @@ set letter ""
 set menu_select_label "helpdesk_dashboard"
 set next_page_url ""
 set previous_page_url ""
-set ticket_navbar_html [im_ticket_navbar -navbar_menu_label "helpdesk" $letter "/intranet-helpdesk/index" $next_page_url $previous_page_url [list start_idx order_by how_many letter ticket_status_id] $menu_select_label]
-
+set ticket_navbar_html [im_ticket_navbar \
+			    -current_plugin_id $plugin_id \
+			    -plugin_url "/intranet-helpdesk/dashboard" \
+			    -navbar_menu_label "helpdesk" \
+			    $letter \
+			    "/intranet-helpdesk/index" \
+			    $next_page_url $previous_page_url \
+			    [list start_idx order_by how_many letter ticket_status_id] \
+			    $menu_select_label \
+]
 set left_navbar_html ""
-

@@ -313,6 +313,8 @@ ad_proc -public im_ticket_permission_read_sql {
 # ---------------------------------------------------------------------
 
 ad_proc -public im_ticket_navbar { 
+    {-current_plugin_id "" }
+    {-plugin_url "" }
     {-navbar_menu_label "helpdesk"}
     default_letter 
     base_url 
@@ -355,7 +357,16 @@ ad_proc -public im_ticket_navbar {
     ns_set put $bind_vars letter $default_letter
     ns_set delkey $bind_vars project_status_id
 
-    set navbar [im_sub_navbar $parent_menu_id $bind_vars $alpha_bar "tabnotsel" $select_label]
+    set navbar [im_sub_navbar \
+		    -components \
+		    -current_plugin_id $current_plugin_id \
+		    -plugin_url $plugin_url \
+		    $parent_menu_id \
+		    $bind_vars \
+		    $alpha_bar \
+		    "tabnotsel" \
+		    $select_label \
+    ]
 
     return $navbar
 }
