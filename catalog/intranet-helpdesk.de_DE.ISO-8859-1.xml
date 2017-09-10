@@ -6,9 +6,9 @@
   <msg key="Action_Forbidden">Verbotene Aktion</msg>
   <msg key="Add_a_new_ticket">Neues Ticket</msg>
   <msg key="Admin_Filters">Admin Filter</msg>
-  <msg key="Admin_Helpdesk">Admin Helpdesk</msg>
-  <msg key="Admin_Helpdesk_Queues">Admin Schlangen</msg>
-  <msg key="Admin_Tickets">Admin Tickets</msg>
+  <msg key="Admin_Helpdesk">Admin-Helpdesk</msg>
+  <msg key="Admin_Helpdesk_Queues">Admin-Warteschlangen</msg>
+  <msg key="Admin_Tickets">Admin - Tickets</msg>
   <msg key="All">Alle</msg>
   <msg key="Assigned">Zugewiesen</msg>
   <msg key="Assigning">Zuweisen</msg>
@@ -25,7 +25,7 @@
   <msg key="Close_amp_notify">Schließen &amp; Benachrichtigen</msg>
   <msg key="Closed">Geschlossen</msg>
   <msg key="Comment">Kommentar</msg>
-  <msg key="Conf_Item">Konf Element</msg>
+  <msg key="Conf_Item">Konfigurationselement</msg>
   <msg key="Conf_Item_type_Hardware">Hardware</msg>
   <msg key="Conf_Item_type_License">Lizenz</msg>
   <msg key="Conf_Item_type_Netmap">Netmap</msg>
@@ -63,11 +63,11 @@
   <msg key="Executing">In Arbeit</msg>
   <msg key="Feature_Request">Erweiterungsanfrage</msg>
   <msg key="Filter_Tickets">Tickets filtern</msg>
-  <msg key="group_key">Gruppen Schlüssel</msg>
-  <msg key="Helpdesk_All_Tickets_Raw_Data_Without_Discussions">Helpdesk - Alle Ticket Rohdaten</msg>
+  <msg key="group_key">Gruppenschlüssel</msg>
+  <msg key="Helpdesk_All_Tickets_Raw_Data_Without_Discussions">Helpdesk - Alle Ticket-Rohdaten</msg>
   <msg key="Helpdesk_Tickets_Closed_Per_Day">Helpdesk - Geschlossene Tickets pro Tag</msg>
   <msg key="Home_Ticket_Component">Tickets</msg>
-  <msg key="Home_Tickets">Übersicht Tickets</msg>
+  <msg key="Home_Tickets">Übersicht - Tickets</msg>
   <msg key="Idea">Idee</msg>
   <msg key="In_review">Wird geprüft</msg>
   <msg key="Incident Ticket_Management">Vorfallmanagement</msg>
@@ -79,7 +79,7 @@
   <msg key="lt_Generic_Problem_Ticke">Generisches Problem Ticket</msg>
   <msg key="lt_Mark_tickets_as_dupli">Tickets als doppelt markieren</msg>
   <msg key="lt_Problem_Ticket_Close_">Problem Ticket: Assoziierte Vorfälle schließen</msg>
-  <msg key="lt_Problem_Ticket_Create">Problem Ticket: Neu auf Bases eines Vorfalls</msg>
+  <msg key="lt_Problem_Ticket_Create">Problem Ticket: Neu auf Basis eines Vorfalls</msg>
   <msg key="lt_Project_Change_Reques">Projekt Änderungsantrag</msg>
   <msg key="lt_Set_status_Closed__no">Status: Geschlossen und benachrichtigen</msg>
   <msg key="lt_Set_status_Open__noti">Status: Offen und benachrichtigen</msg>
@@ -89,7 +89,7 @@
   <msg key="Mine">Meine</msg>
   <msg key="Modifying">In Bearbeitung</msg>
   <msg key="My_group">Meine Gruppe</msg>
-  <msg key="My_queues">Meine Schlangen</msg>
+  <msg key="My_queues">Meine Warteschlangen</msg>
   <msg key="My_Ticket_Execution">Meine Tickets - Ausführung</msg>
   <msg key="My_Tickets_Aging">Meine Tickets - Nach Alter</msg>
   <msg key="Nagios_Alert">Nagios Alert</msg>
@@ -102,7 +102,7 @@
   <msg key="No_SLA_associated_with_you">Kein Ticket Container gefunden</msg>
   <msg key="No_SLAs_for_customer">Kein Ticket Container für Kunde</msg>
   <msg key="No_Ticket_Found">Kein Ticket gefunden</msg>
-  <msg key="Nr">Nr</msg>
+  <msg key="Nr">Nr.</msg>
   <msg key="Nuke">Löschen</msg>
   <msg key="Object_Name">Objektname</msg>
   <msg key="Object_Type">Objekttyp</msg>
@@ -117,7 +117,7 @@
   <msg key="Problem_ticket_type">Problemanfrage</msg>
   <msg key="Project_Request">Projektanfrage</msg>
   <msg key="Purchasing_Request">Beschaffungsanfrage</msg>
-  <msg key="Queue">Schlange</msg>
+  <msg key="Queue">Warteschlange</msg>
   <msg key="Quote_Sign-off">Angebot abschließen</msg>
   <msg key="Quoting">Angebot wird erstellt</msg>
   <msg key="Re-Open">Wieder öffnen</msg>
@@ -192,9 +192,9 @@
   <msg key="Ticket_Workflow_Actions">Workflow Aktionen</msg>
   <msg key="Tickets">Tickets</msg>
   <msg key="Tickets_Created_by_my_Department">Von meiner Abteilung angelegte Tickets</msg>
-  <msg key="Tickets_Dashboard">Tickets Dashboard</msg>
+  <msg key="Tickets_Dashboard">Ticket-Dashboard</msg>
   <msg key="Tickets_Executed_by_my_Department">Tickets für meine Abteilung</msg>
-  <msg key="Tickets_List">Tickets Liste</msg>
+  <msg key="Tickets_List">Ticket-Liste</msg>
   <msg key="Time">Zeit</msg>
   <msg key="Title_Help">Hilfe</msg>
   <msg key="To_request_a_new_SLA">Geben Sie bitte Firmen- und Kontaktdaten ein, um einen neuen Ticket Container anzufragen.</msg>
