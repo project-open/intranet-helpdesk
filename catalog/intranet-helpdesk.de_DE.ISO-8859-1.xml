@@ -9,11 +9,22 @@
   <msg key="Admin_Helpdesk">Admin-Helpdesk</msg>
   <msg key="Admin_Helpdesk_Queues">Admin-Warteschlangen</msg>
   <msg key="Admin_Tickets">Admin - Tickets</msg>
+  <msg key="Age">Alter</msg>
   <msg key="All">Alle</msg>
   <msg key="Assigned">Zugewiesen</msg>
   <msg key="Assigning">Zuweisen</msg>
   <msg key="Assoc_to_new_incident_ticket">Mit neuem Incident Report assoziieren</msg>
   <msg key="Associate">Assoziieren</msg>
+  <msg key="Associate_As">als</msg>
+  <msg key="Associate_Assoc_Action">Assoziieren</msg>
+  <msg key="Associate_Msg_Conf_Item">Ticket mit Konfigurationselement assoziieren&lt;br/&gt;
+Eine Konfigurationselement ist ein Hard- oder Software Element, das von Ihren Tickets betroffen ist.</msg>
+  <msg key="Associate_Msg_Release_Project">Tickets als &#39;Release Items&#39; zu einem &#39;Release Projekt&#39; hinzufügen.</msg>
+  <msg key="Associate_Msg_Ticket">Ticket mit anderem Ticket assoziieren.</msg>
+  <msg key="Associate_Msg_User">Neuen Benutzer zu dem Ticket hinzufügen.</msg>
+  <msg key="Associate_Ticket_With_Other_Object">Tickets mit anderen Objekten assoziieren</msg>
+  <msg key="Associate_Tickets_Msg">Diese Seite erlaubt es, Tickets mit anderen Objekten zu assoziieren.</msg>
+  <msg key="Associate_With">Assoziieren mit</msg>
   <msg key="Bug_Request">Fehler Bericht</msg>
   <msg key="Canceled">Abgebrochen</msg>
   <msg key="Cant_reproduce">Kann nicht reproduziert werden.</msg>
@@ -48,11 +59,14 @@
   <msg key="Customer_review">Kundenbewertung</msg>
   <msg key="Dashboard">Dashboard</msg>
   <msg key="Date">Datum</msg>
+  <msg key="day_age">Alter (Tage)</msg>
+  <msg key="days_age">Alter (Tage)</msg>
   <msg key="Delete">Löschen</msg>
   <msg key="Delete_Association">Beziehung löschen</msg>
   <msg key="Delete_Rel">Rel löschen</msg>
   <msg key="Deleted">Gelöscht</msg>
   <msg key="Deleted_by_user">Gelöscht von Benutzer</msg>
+  <msg key="Dept">Abt.</msg>
   <msg key="Dir">Dir</msg>
   <msg key="Direction">Richtung</msg>
   <msg key="Done_date">Datum Erledigt</msg>
@@ -102,10 +116,17 @@
   <msg key="No_SLA_associated_with_you">Kein Ticket Container gefunden</msg>
   <msg key="No_SLAs_for_customer">Kein Ticket Container für Kunde</msg>
   <msg key="No_Ticket_Found">Kein Ticket gefunden</msg>
+  <msg key="Not_assigned">Nicht zugewiesen</msg>
   <msg key="Nr">Nr.</msg>
   <msg key="Nuke">Löschen</msg>
+  <msg key="Number">Nummer</msg>
+  <msg key="Object">Obekt</msg>
   <msg key="Object_Name">Objektname</msg>
   <msg key="Object_Type">Objekttyp</msg>
+  <msg key="Object_Type_Configuration_Item">Konfigurationselement</msg>
+  <msg key="Object_Type_Release_Project">Release Project</msg>
+  <msg key="Object_Type_Ticket">Ticket</msg>
+  <msg key="Object_Type_User">Benutzer</msg>
   <msg key="OK">OK</msg>
   <msg key="Open">Offen</msg>
   <msg key="Outdated">Veraltet</msg>
@@ -134,7 +155,7 @@
   <msg key="Report_Request">Berichtsanfrage</msg>
   <msg key="Request_SLA">Ticket Container</msg>
   <msg key="Resolved">Gelöst</msg>
-  <msg key="REST_Open_Ticket_Age_per_Queue_and_Type">REST Open Ticket Age per Queue and Type</msg>
+  <msg key="REST_Open_Ticket_Age_per_Queue_and_Type">REST - Alter offener Tickets nach Schlange und Typ</msg>
   <msg key="REST_Ticket_Aging_Histogram">REST Ticket Aging Histogram</msg>
   <msg key="Service_Mgmt">IT Service Mgmt</msg>
   <msg key="Set_status_Closed">Status: Geschlossen</msg>
@@ -143,6 +164,8 @@
   <msg key="Set_status_Resolved">Status: Erledigt</msg>
   <msg key="Shared_with_this_ticket">Zusammen mit diesem Ticket</msg>
   <msg key="Show_in_printer_friendly_format">Anzeigen mit Formatierung für Drucker</msg>
+  <msg key="Show_or_hide_help_window">Fenster zeigen oder schließen</msg>
+  <msg key="Show_or_hide_legend">Legende zeigen oder schließen</msg>
   <msg key="Sign-off">Abgezeichnet (vom Kunden)</msg>
   <msg key="Signoff_date">Datum Abzeichnung</msg>
   <msg key="SLA">SLA</msg>
@@ -156,7 +179,15 @@
   <msg key="Summary">Zusammenfassung</msg>
   <msg key="Telephony_Request">Telephony Request</msg>
   <msg key="Ticket">Ticket</msg>
+  <msg key="Ticket_Age_per_Queue">Ticket Alter nach Schlange</msg>
+  <msg key="Ticket_Aging">Alterung Tickets</msg>
+  <msg key="Ticket_Aging_of">Alterung Tickets von </msg>
+  <msg key="Ticket_Aging_Prio1">Ticket Alterung Prio 1</msg>
+  <msg key="Ticket_Aging_Prio7">Ticket Alterung Prio 7</msg>
+  <msg key="Ticket_Aging_Prio23">Ticket Alterung Prio 2-3</msg>
+  <msg key="Ticket_Aging_Prio46">Ticket Alterung Prio 4-6</msg>
   <msg key="Ticket_Creation_Date">Datum Anlage</msg>
+  <msg key="Ticket_Dashboard">Ticket-Dashboard</msg>
   <msg key="Ticket_Details">Details</msg>
   <msg key="Ticket_Filestorage">Dateiablage</msg>
   <msg key="Ticket_Journal">Journal</msg>
@@ -207,5 +238,6 @@
   <msg key="With_Member">Mit Mitglied</msg>
   <msg key="Wont_fix">Kann nicht gelöst werden</msg>
   <msg key="Workflow_Finished">Workflow beendet</msg>
+  <msg key="Workflow_Finished_msg">Der Workflow ist beendet und es gibt keine weiteren Aktionen.</msg>
   <msg key="Your_Company">Ihre Firma</msg>
 </message_catalog>
