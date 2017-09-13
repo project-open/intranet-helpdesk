@@ -46,7 +46,7 @@
 
 <if @user_admin_p@ gt 0>
 <ul>
-<li><a href="/intranet/admin/categories/index?select_category_type=Intranet+Ticket+Type"><%= [im_gif wrench ""] %>Admin ticket types</a></li>
+<li><a href="/intranet/admin/categories/index?select_category_type=Intranet+Ticket+Type"><%= [im_gif wrench ""] %><%= [_ intranet-helpdesk.Admin_ticket_types] %></a></li>
 </ul>
 
 </if>
