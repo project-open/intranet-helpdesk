@@ -1024,6 +1024,7 @@ ad_proc -public im_helpdesk_ticket_sla_options {
     {-include_empty_p 1}
     {-include_create_sla_p 0}
     {-include_internal_sla_p 0}
+    {-include_default_option 0}
 } {
     Returns a list of SLA tuples suitable for ad_form
     on which the current_user_id can add tickets
@@ -1061,19 +1062,25 @@ ad_proc -public im_helpdesk_ticket_sla_options {
     )"
 
     set sql "
-	select	$sla_name_sql as sla_name,
+	select distinct
+		$sla_name_sql as sla_name,
 		project_id
 	from	(
-	select	p.*,
-		c.*
-	from	im_projects p,
-		im_companies c,
-		im_projects main_p
-	where	p.company_id = c.company_id and
-		main_p.tree_sortkey = tree_root_key(p.tree_sortkey) and
-		p.project_status_id not in ([join [im_sub_categories [im_project_status_closed]] ","]) and
-		p.project_type_id = [im_project_type_sla] and
-		main_p.project_status_id not in ([join [im_sub_categories [im_project_status_closed]] ","])
+		select	p.*, c.*
+		from	im_projects p,
+			im_companies c,
+			im_projects main_p
+		where	p.company_id = c.company_id and
+			main_p.tree_sortkey = tree_root_key(p.tree_sortkey) and
+			p.project_status_id not in ([join [im_sub_categories [im_project_status_closed]] ","]) and
+			p.project_type_id = [im_project_type_sla] and
+			main_p.project_status_id not in ([join [im_sub_categories [im_project_status_closed]] ","])
+	UNION
+		select	p.*, c.*
+		from	im_projects p,
+			im_companies c
+		where	p.company_id = c.company_id and
+			p.project_id = :include_default_option
 		) p
 	where	1=1
 		$permission_sql

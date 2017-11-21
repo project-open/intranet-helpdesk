@@ -495,7 +495,7 @@ if {"new" == $ticket_customer_contact_id && $user_can_create_new_customer_contac
 # ------------------------------------------------------------------
 
 if {([info exists ticket_customer_id] && $ticket_customer_id ne "")} {
-    set customer_sla_options [im_helpdesk_ticket_sla_options -customer_id $ticket_customer_id -include_create_sla_p $add_projects_p -include_internal_sla_p 1]
+    set customer_sla_options [im_helpdesk_ticket_sla_options -customer_id $ticket_customer_id -include_create_sla_p $add_projects_p -include_internal_sla_p 1 -include_default_option $ticket_sla_id]
     set customer_contact_options [db_list_of_lists customer_contact_options "
 	select	im_name_from_user_id(u.user_id) as name,
 		u.user_id
