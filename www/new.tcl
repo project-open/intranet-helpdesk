@@ -93,7 +93,7 @@ set view_tickets_all_p [im_permission $current_user_id "view_tickets_all"]
 set edit_tickets_all_p [im_permission $current_user_id "edit_tickets_all"]
 set edit_ticket_status_p [im_permission $current_user_id edit_ticket_status]
 
-# Can the currrent user create new helpdesk customers?
+# Can the current user create new helpdesk customers?
 # The list of user groups that can be managed by the current user
 set user_can_create_new_customer_contact_p 0
 set managable_profiles [im_profile::profile_options_managable_for_user $current_user_id]

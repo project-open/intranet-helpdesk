@@ -78,7 +78,7 @@ set focus "ticket.var_name"
 
 if {[info exists ticket_id] && "" == $ticket_id} { unset ticket_id }
 
-# Can the currrent user create new helpdesk customers?
+# Can the current user create new helpdesk customers?
 set user_can_create_new_customer_p 1
 set user_can_create_new_customer_sla_p 1
 set user_can_create_new_customer_contact_p 1
