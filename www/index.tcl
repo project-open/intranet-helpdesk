@@ -407,7 +407,10 @@ if {$end_date ne "" && $end_date ne "" } {
     lappend criteria "o.creation_date < :end_date::timestamptz"
 }
 if {$ticket_name ne "" && $ticket_name ne "" } {
-    if {0 && ![string isalphanum $ticket_name]} {
+    if {![string is alnum $ticket_name]} {
+	if {[regexp {[\'\"\$\[\]\<\>]} $ticket_name match]} {
+	    im_security_alert -location "Helpdesk list page" -message "Intrusion attempt" -value $ticket_name -severity "Serious"
+	}
 	ad_return_complaint 1 [lang::message::lookup "" intranet-helpdesk.Only_alphanum_allowed "
 		Only alphanumerical characters are allowed for searching for security reasons.
 	"]
