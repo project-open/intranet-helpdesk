@@ -643,9 +643,12 @@ SELECT im_category_hierarchy_new(30120, 30150);
 SELECT im_category_new(30122, 'Nagios Alert', 'Intranet Ticket Type');
 SELECT im_category_hierarchy_new(30122, 30150);
 
-
 SELECT im_category_new(30130, 'Generic Problem Ticket', 'Intranet Ticket Type');
 SELECT im_category_hierarchy_new(30130, 30152);
+
+-- Commenting on some objects
+SELECT im_category_new(30140, 'Comment Request', 'Intranet Ticket Type');
+
 
 
 

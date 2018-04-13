@@ -46,6 +46,7 @@ ad_proc -public im_ticket_type_nagios_alert {} { return 30122 }
 
 ad_proc -public im_ticket_type_generic_problem_ticket {} { return 30130 }
 
+ad_proc -public im_ticket_type_comment_request {} { return 30140 }
 
 ad_proc -public im_ticket_type_incident_ticket {} { return 30150 }
 ad_proc -public im_ticket_type_problem_ticket {} { return 30152 }
