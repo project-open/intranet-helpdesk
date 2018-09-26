@@ -996,12 +996,14 @@ if {[im_table_exists im_sql_selectors]} {
 }
 
 set ticket_member_options [util_memoize [list db_list_of_lists ticket_members "
-	select  distinct
-		im_name_from_user_id(object_id_two) as user_name,
-		object_id_two as user_id
-	from    acs_rels r,
-		im_tickets p
-	where   r.object_id_one = p.ticket_id
+	select	im_name_from_user_id(user_id) as user_name,
+		t.user_id
+	from	(select  distinct
+			object_id_two as user_id
+		from    acs_rels r,
+			im_tickets p
+		where   r.object_id_one = p.ticket_id
+		) t
 	order by user_name
 "] 300]
 set ticket_member_options [linsert $ticket_member_options 0 [list [_ intranet-core.All] ""]]
