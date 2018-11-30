@@ -11,7 +11,7 @@
 -- Set the queue for the given ticket
 --
 create or replace function im_ticket__set_queue (integer,text,text)
-returns integer as '
+returns integer as $body$
 declare
 	p_case_id		alias for $1;
 	p_transition_key	alias for $2;
@@ -35,11 +35,11 @@ begin
 
 	v_journal_id := journal_entry__new(
 		null, v_case_id,
-		v_transition_key || '' set_queue '' || p_custom_arg,
-		v_transition_key || '' set_queue '' || p_custom_arg,
+		v_transition_key || ' set_queue ' || p_custom_arg,
+		v_transition_key || ' set_queue ' || p_custom_arg,
 		now(), v_creation_user, v_creation_ip,
-		''Setting ticket queue of "'' || acs_object__name(v_object_id) || ''" to "'' || 
-		p_custom_arg || ''".''
+		'Setting ticket queue of "' || acs_object__name(v_object_id) || '" to "' || 
+		p_custom_arg || '".'
 	);
 	
 	select group_id into v_queue_id
@@ -47,7 +47,7 @@ begin
 
 	IF v_queue_id is null THEN
 		select group_id into v_queue_id
-		from groups where group_name = ''Helpdesk'';
+		from groups where group_name = 'Helpdesk';
 	END IF;
 	
 	update im_tickets
@@ -55,7 +55,7 @@ begin
 	where ticket_id = v_object_id;
 	
 	return 0;
-end;' language 'plpgsql';
+end;$body$ language 'plpgsql';
 
 
 
@@ -71,7 +71,7 @@ end;' language 'plpgsql';
 -- to implement customers default ticket behaviour
 --
 create or replace function im_ticket__classify (integer,text,text)
-returns integer as '
+returns integer as $body$
 declare
 	p_case_id		alias for $1;
 	p_transition_key	alias for $2;
@@ -143,25 +143,25 @@ begin
 			-- Protocol the decision to assign the ticket to that group.
 			v_journal_id := journal_entry__new(
 				null, v_case_id,
-				v_transition_key || '' set_queue '' || p_custom_arg,
-				v_transition_key || '' set_queue '' || p_custom_arg,
+				v_transition_key || ' set_queue ' || p_custom_arg,
+				v_transition_key || ' set_queue ' || p_custom_arg,
 				now(), v_creation_user, v_creation_ip,
-				''Ticket classify: Setting ticket queue to '' || 
-				v_ticket_queue || '' based on Category '' || 
-				im_category_from_id(v_ticket_type_id) || ''".''
+				'Ticket classify: Setting ticket queue to ' || 
+				v_ticket_queue || ' based on Category ' || 
+				im_category_from_id(v_ticket_type_id) || '".'
 			);
 
 		END IF;
 	END IF;
 	
 	return 0;
-end;' language 'plpgsql';
+end;$body$ language 'plpgsql';
 
 
 -- Unassigned callback that assigns the transition to the group in the custom_arg
 --
 create or replace function im_workflow__assign_to_customer (integer,text)
-returns integer as '
+returns integer as $body$
 declare
 	p_task_id		alias for $1;
 	p_custom_arg		alias for $2;
@@ -189,6 +189,6 @@ begin
 	select error from im_error;
 
 	return 0;
-end;' language 'plpgsql';
+end;$body$ language 'plpgsql';
 
 
