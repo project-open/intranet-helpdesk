@@ -847,6 +847,8 @@ SELECT im_category_new(30545, 'Change Prio', 'Intranet Ticket Action');
 SELECT im_category_new(30550, 'Escalate', 'Intranet Ticket Action');
 SELECT im_category_new(30552, 'Close Escalated Tickets', 'Intranet Ticket Action');
 SELECT im_category_new(30560, 'Resolved', 'Intranet Ticket Action');
+SELECT im_category_new(30565, 'Confirm Ticket', 'Intranet Ticket Action');
+SELECT im_category_new(30570, 'Sign-Off Ticket', 'Intranet Ticket Action');
 
 
 
@@ -861,8 +863,9 @@ SELECT im_category_new(30552, 'Close Escalated Tickets', 'Intranet Ticket Action
 SELECT im_category_new(30560, 'Resolved', 'Intranet Ticket Action');
 SELECT im_category_new(30590, 'Delete', 'Intranet Ticket Action');
 SELECT im_category_new(30599, 'Nuke', 'Intranet Ticket Action');
-update im_categories set aux_string1 = '/intranet-helpdesk/action-duplicated' 
-where category_id = 30520;
+update im_categories set aux_string1 = '/intranet-helpdesk/action-duplicated' where category_id = 30520;
+update im_categories set aux_string1 = '/intranet-helpdesk/action-confirmed' where category_id = 30565;
+update im_categories set aux_string1 = '/intranet-helpdesk/action-signoff' where category_id = 30570;
 
 
 update im_categories set category = 'Set status: Closed'			where category_id = 30500;	-- Close
