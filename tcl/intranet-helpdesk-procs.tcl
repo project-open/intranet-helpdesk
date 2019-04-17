@@ -1424,7 +1424,8 @@ ad_proc -public im_helpdesk_ticket_component {
     # Building link to create new ticket
     set line_create_ticket ""
     if { [im_permission [ad_conn user_id] add_tickets] } {
-	set url_create_ticket [export_vars -base "/intranet-helpdesk/new" {{form_mode edit} {form_id ticket_new} ticket_sla_id}]
+	# set url_create_ticket [export_vars -base "/intranet-helpdesk/new" {{form_mode edit} {form_id ticket_new} ticket_sla_id}]
+	set url_create_ticket [export_vars -base "/intranet-helpdesk/new" ]
 	set link_create_ticket "<a href='$url_create_ticket'> [lang::message::lookup "" intranet-helpdesk.Add_a_new_ticket "New ticket"]</a>"
 	set line_create_ticket "<tr><td colspan='99'align='left'><ul><li>$link_create_ticket</li></ul></td></tr>"
     }
