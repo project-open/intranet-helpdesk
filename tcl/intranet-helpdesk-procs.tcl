@@ -16,7 +16,7 @@ ad_library {
 
 ad_proc -public im_ticket_status_open {} { return 30000 }
 ad_proc -public im_ticket_status_closed {} { return 30001 }
-
+ad_proc -public im_ticket_status_accepted {} { return 30008 }
 ad_proc -public im_ticket_status_internal_review {} { return 30010 }
 ad_proc -public im_ticket_status_assigned {} { return 30011 }
 ad_proc -public im_ticket_status_customer_review {} { return 30012 }
@@ -208,6 +208,8 @@ ad_proc -public im_ticket_permissions {
     set assignee_p [expr $user_id == $ticket_assignee_id]
     set customer_p [expr $customer_member_p || $user_id == $ticket_customer_contact_id]
 
+    # Customer contacts from the same company as the customer_contact_id should have
+    # read permission on the ticket of their colleague, but not have write permission
     set read [expr $admin_p || $owner_p || $assignee_p || $customer_p || $sla_member_p || $ticket_member_p || $holding_user_p || $case_assignee_p || $queue_member_p || $view_tickets_all_p || $edit_tickets_all_p]
     set write [expr $admin_p || $edit_tickets_all_p || $ticket_admin_p]
 

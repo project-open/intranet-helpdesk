@@ -718,6 +718,9 @@ SELECT im_category_new(30001, 'Closed', 'Intranet Ticket Status');
 --
 -- Open States
 --
+SELECT im_category_new(30008, 'Accepted', 'Intranet Ticket Status');
+SELECT im_category_hierarchy_new(30008, 30000);
+
 SELECT im_category_new(30009, 'Modifying', 'Intranet Ticket Status');
 SELECT im_category_hierarchy_new(30009, 30000);
 
@@ -839,50 +842,27 @@ SELECT im_category_new(30209, '9', 'Intranet Ticket Priority');
 
 -- 30500-30599 - Intranet Ticket Action
 delete from im_categories where category_type = 'Intranet Ticket Action';
-SELECT im_category_new(30500, 'Close', 'Intranet Ticket Action');
-SELECT im_category_new(30510, 'Close &amp; notify', 'Intranet Ticket Action');
+SELECT im_category_new(30500, 'Set status: Closed', 'Intranet Ticket Action');
+SELECT im_category_new(30510, 'Set status: Closed & notify', 'Intranet Ticket Action');
 -- SELECT im_category_new(30515, 'Freeze', 'Intranet Ticket Action');
-SELECT im_category_new(30540, 'Associate', 'Intranet Ticket Action');
-SELECT im_category_new(30545, 'Change Prio', 'Intranet Ticket Action');
-SELECT im_category_new(30550, 'Escalate', 'Intranet Ticket Action');
-SELECT im_category_new(30552, 'Close Escalated Tickets', 'Intranet Ticket Action');
-SELECT im_category_new(30560, 'Resolved', 'Intranet Ticket Action');
-SELECT im_category_new(30565, 'Confirm Ticket', 'Intranet Ticket Action');
-SELECT im_category_new(30570, 'Sign-Off Ticket', 'Intranet Ticket Action');
-
-
-
--- Custom screen for duplicate action to select base
-SELECT im_category_new(30520, 'Group to duplicate', 'Intranet Ticket Action');
-SELECT im_category_new(30530, 'Re-Open', 'Intranet Ticket Action');
-SELECT im_category_new(30532, 'Re-Open &amp; notify', 'Intranet Ticket Action');
-SELECT im_category_new(30534, 'Re-Assign', 'Intranet Ticket Action');
-SELECT im_category_new(30540, 'Associate', 'Intranet Ticket Action');
-SELECT im_category_new(30550, 'Group to problem ticket', 'Intranet Ticket Action');
-SELECT im_category_new(30552, 'Close Escalated Tickets', 'Intranet Ticket Action');
-SELECT im_category_new(30560, 'Resolved', 'Intranet Ticket Action');
-SELECT im_category_new(30590, 'Delete', 'Intranet Ticket Action');
-SELECT im_category_new(30599, 'Nuke', 'Intranet Ticket Action');
+SELECT im_category_new(30515, 'Set status: Accepted', 'Intranet Ticket Action');
+update im_categories set aux_string1 = '/intranet-helpdesk/action-accepted' where category_id = 30515;
+SELECT im_category_new(30520, 'Mark tickets as duplicates', 'Intranet Ticket Action');
 update im_categories set aux_string1 = '/intranet-helpdesk/action-duplicated' where category_id = 30520;
+SELECT im_category_new(30530, 'Set status: Open', 'Intranet Ticket Action');
+SELECT im_category_new(30532, 'Set status: Open & notify', 'Intranet Ticket Action');
+SELECT im_category_new(30534, 'Reassign', 'Intranet Ticket Action');
+SELECT im_category_new(30540, 'Associate ticket with other objects', 'Intranet Ticket Action');
+SELECT im_category_new(30545, 'Change Priority', 'Intranet Ticket Action');
+SELECT im_category_new(30550, 'Problem Ticket: Create from incident', 'Intranet Ticket Action');
+SELECT im_category_new(30552, 'Problem Ticket: Close associated incidents', 'Intranet Ticket Action');
+SELECT im_category_new(30560, 'Set status: Resolved', 'Intranet Ticket Action');
+SELECT im_category_new(30565, 'Confirm Ticket', 'Intranet Ticket Action');
 update im_categories set aux_string1 = '/intranet-helpdesk/action-confirmed' where category_id = 30565;
+SELECT im_category_new(30570, 'Sign-Off Ticket', 'Intranet Ticket Action');
 update im_categories set aux_string1 = '/intranet-helpdesk/action-signoff' where category_id = 30570;
-
-
-update im_categories set category = 'Set status: Closed'			where category_id = 30500;	-- Close
-update im_categories set category = 'Set status: Closed & notify'		where category_id = 30510;	-- Close & notify
-update im_categories set category = 'Mark tickets as duplicates'		where category_id = 30520;	-- Duplicate
-update im_categories set category = 'Set status: Open' 				where category_id = 30530;	-- Re-open
-update im_categories set category = 'Set status: Open & notify'			where category_id = 30532;	-- Re-open & notify
-update im_categories set category = 'Reassign'	       				where category_id = 30534;	-- Re-assign
-update im_categories set category = 'Associate ticket with other objects'	where category_id = 30540;	-- Associate
-update im_categories set category = 'Change Priority' 	   	 		where category_id = 30545;	-- Change Prio
-update im_categories set category = 'Problem Ticket: Create from incident'	where category_id = 30550;	-- "Escalate"
-update im_categories set category = 'Problem Ticket: Close associated incidents' where category_id = 30552;	-- Close escalated
-update im_categories set category = 'Set status: Resolved'	      		where category_id = 30560;	-- Resolved
-update im_categories set category = 'Set status: Deleted'			where category_id = 30590;	-- Delete
-update im_categories set category = 'Nuke'					where category_id = 30499;	-- Nuke
-
-
+SELECT im_category_new(30590, 'Set status: Deleted', 'Intranet Ticket Action');
+SELECT im_category_new(30599, 'Nuke', 'Intranet Ticket Action');
 
 
 -----------------------------------------------------------

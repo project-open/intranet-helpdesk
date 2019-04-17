@@ -339,6 +339,9 @@ $ticket_action_customize_html
 </form>
 "
 
+# No write permissions - no actions...
+if {!$write_p} { set ticket_action_html "" }
+
 
 # ------------------------------------------------------------------
 # Redirect if ticket_type_id or ticket_sla_id are missing
