@@ -462,15 +462,22 @@ if {"new" == $ticket_customer_contact_id && $user_can_create_new_customer_contac
     template::form::get_values helpdesk_ticket
 
     # Get the list of all variables in the form
-    set form_vars [template::form::get_elements helpdesk_ticket]
+    set form_vars_raw [template::form::get_elements helpdesk_ticket]
+    set url_set [ns_conn form]
+    if {"" == $url_set} { set url_set [ns_set create] }
+    set url_vars_raw [ad_ns_set_keys $url_set]
 
-    # Remove the "ticket_id" field, because we want ad_form in edit mode.
-    set ticket_id_pos [lsearch $form_vars "ticket_id"]
-    set form_vars [lreplace $form_vars $ticket_id_pos $ticket_id_pos]
-
-    # Remove the "ticket_customer_contact_id" field to allow the user to select the new customer_contact.
-    set ticket_customer_contact_id_pos [lsearch $form_vars "ticket_customer_contact_id"]
-    set form_vars [lreplace $form_vars $ticket_customer_contact_id_pos $ticket_customer_contact_id_pos]
+    array set form_vars_hash {}
+    foreach var [concat $form_vars_raw $url_vars_raw] {
+	# Remove "ticket_id" field because we want ad_form in edit mode, and ticket_customer_contact_id for the new user
+	if {$var in {"ticket_id" "ticket_customer_contact_id" "object_type"}} { continue }
+	if {[regexp {^__} $var match]} { continue }		;# Exclude __* system form vars
+	if {[regexp {[\:\.]} $var match]} { continue }		;# Exclude vars with ":", "." ...
+	set val [im_opt_val $var]
+	if {"" eq $val} { continue }
+	set form_vars_hash($var) $var
+    }
+    set form_vars [array names form_vars_hash]
 
     # calculate the vars for _this_ form
     set export_vars_varlist [list]
@@ -490,6 +497,7 @@ if {"new" == $ticket_customer_contact_id && $user_can_create_new_customer_contac
 	{return_url $current_url}
 	{also_add_to_biz_object {$ticket_customer_id 1300}}
     }]
+
     ad_returnredirect $new_customer_contact_url
 }
 
