@@ -462,7 +462,7 @@ if {"new" == $ticket_customer_contact_id && $user_can_create_new_customer_contac
     template::form::get_values helpdesk_ticket
 
     # Get the list of all variables in the form
-    set form_vars [template::form::get_elements ticket]
+    set form_vars [template::form::get_elements helpdesk_ticket]
 
     # Remove the "ticket_id" field, because we want ad_form in edit mode.
     set ticket_id_pos [lsearch $form_vars "ticket_id"]
