@@ -25,11 +25,11 @@ set org_ticket_id $ticket_id
 # Get everything about the ticket
 db_1row ticket_info {
 	select	*,
-		trunc(extract(epoch from (now() - t.ticket_creation_date))/60) as ticket_creation_minutes,
-		trunc(extract(epoch from (t.ticket_reaction_date - t.ticket_creation_date))/60) as ticket_reaction_minutes,
-		trunc(extract(epoch from (t.ticket_confirmation_date - t.ticket_creation_date))/60) as ticket_confirmation_minutes,
-		trunc(extract(epoch from (t.ticket_done_date - t.ticket_creation_date))/60) as ticket_done_minutes,
-		trunc(extract(epoch from (t.ticket_signoff_date - t.ticket_creation_date))/60) as ticket_signoff_minutes
+		coalesce(trunc(extract(epoch from (now() - t.ticket_creation_date))/60.0), 0.0) as ticket_creation_minutes,
+		coalesce(trunc(extract(epoch from (t.ticket_reaction_date - t.ticket_creation_date))/60.0), 0.0) as ticket_reaction_minutes,
+		coalesce(trunc(extract(epoch from (t.ticket_confirmation_date - t.ticket_creation_date))/60.0), 0.0) as ticket_confirmation_minutes,
+		coalesce(trunc(extract(epoch from (t.ticket_done_date - t.ticket_creation_date))/60.0), 0.0) as ticket_done_minutes,
+		coalesce(trunc(extract(epoch from (t.ticket_signoff_date - t.ticket_creation_date))/60.0), 0.0) as ticket_signoff_minutes
 	from	im_tickets t,
 		im_projects p,
 		acs_objects o
