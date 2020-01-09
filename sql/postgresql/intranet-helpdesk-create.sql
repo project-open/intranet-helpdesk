@@ -852,6 +852,10 @@ update im_categories set aux_string1 = '/intranet-helpdesk/action-duplicated' wh
 SELECT im_category_new(30530, 'Set status: Open', 'Intranet Ticket Action');
 SELECT im_category_new(30532, 'Set status: Open & notify', 'Intranet Ticket Action');
 SELECT im_category_new(30534, 'Reassign', 'Intranet Ticket Action');
+
+SELECT im_category_new(30536, 'Move to other container', 'Intranet Ticket Action');
+update im_categories set aux_string1 = '/intranet-helpdesk/action-move' where category_id = 30536;
+
 SELECT im_category_new(30540, 'Associate ticket with other objects', 'Intranet Ticket Action');
 SELECT im_category_new(30545, 'Change Priority', 'Intranet Ticket Action');
 SELECT im_category_new(30550, 'Problem Ticket: Create from incident', 'Intranet Ticket Action');
