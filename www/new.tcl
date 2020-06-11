@@ -407,7 +407,7 @@ if {(![info exists ticket_customer_id] || $ticket_customer_id eq "") && ([info e
 # Fetch variable values from the HTTP session and write to local variables
 set url_vars_set [ns_conn form]
 foreach var_from_url $vars_from_url {
-    ad_set_element_value -element $var_from_url [im_opt_val $var_from_url]
+    ad_set_element_value -element $var_from_url [im_opt_val -limit_to nohtml $var_from_url]
 }
 
 if {"new" == $ticket_sla_id && $add_projects_p} {
@@ -431,7 +431,7 @@ if {"new" == $ticket_sla_id && $add_projects_p} {
     # calculate the vars for _this_ form
     set export_vars_varlist [list]
     foreach form_var $form_vars {
-	lappend export_vars_varlist [list $form_var [im_opt_val $form_var]]
+	lappend export_vars_varlist [list $form_var [im_opt_val -limit_to nohtml $form_var]]
     }
 
     # Add the "vars_from_url" to tell this form to set from values for these vars when we're back again.
@@ -473,7 +473,7 @@ if {"new" == $ticket_customer_contact_id && $user_can_create_new_customer_contac
 	if {$var in {"ticket_id" "ticket_customer_contact_id" "object_type"}} { continue }
 	if {[regexp {^__} $var match]} { continue }		;# Exclude __* system form vars
 	if {[regexp {[\:\.]} $var match]} { continue }		;# Exclude vars with ":", "." ...
-	set val [im_opt_val $var]
+	set val [im_opt_val -limit_to nohtml $var]
 	if {"" eq $val} { continue }
 	set form_vars_hash($var) $var
     }
@@ -482,7 +482,7 @@ if {"new" == $ticket_customer_contact_id && $user_can_create_new_customer_contac
     # calculate the vars for _this_ form
     set export_vars_varlist [list]
     foreach form_var $form_vars {
-	lappend export_vars_varlist [list $form_var [im_opt_val $form_var]]
+	lappend export_vars_varlist [list $form_var [im_opt_val -limit_to nohtml $form_var]]
     }
 
     # Add the "vars_from_url" to tell this form to set from values for these vars when we're back again.
@@ -1061,9 +1061,9 @@ if {$view_tickets_all_p} {
 	{ticket_sla_id:text(select),optional {label "[lang::message::lookup {} intranet-helpdesk.SLA SLA]"} {options $ticket_sla_options}}
     }
 
-    template::element::set_value $form_id ticket_status_id [im_opt_val ticket_status_id]
-    template::element::set_value $form_id ticket_type_id [im_opt_val ticket_type_id]
-    template::element::set_value $form_id ticket_queue_id [im_opt_val ticket_queue_id]
+    template::element::set_value $form_id ticket_status_id [im_opt_val -limit_to integer ticket_status_id]
+    template::element::set_value $form_id ticket_type_id [im_opt_val -limit_to integer ticket_type_id]
+    template::element::set_value $form_id ticket_queue_id [im_opt_val -limit_to integer ticket_queue_id]
 }
 
 template::element::set_value $form_id mine_p $mine_p

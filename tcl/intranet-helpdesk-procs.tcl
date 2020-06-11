@@ -1842,13 +1842,10 @@ ad_proc im_helpdesk_member_add_queue_component {
 
     set passthrough {object_id return_url also_add_to_object_id limit_to_users_in_group_id}
     foreach var $passthrough {
-	if {![info exists $var]} { set $var [im_opt_val $var] }
+	if {![info exists $var]} { set $var [im_opt_val -limit_to nohtml $var] }
     }
 
     set role_id [im_biz_object_role_full_member]
-
-    # !!!
-
     set result "
 	<form method=GET action=/intranet/member-add-2>
 	[export_vars -form {passthrough {notify_asignee 0}}]

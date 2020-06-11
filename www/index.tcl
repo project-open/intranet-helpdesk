@@ -142,7 +142,7 @@ db_foreach column_list_sql $column_sql {
 		UNION select 'end_date'
 	"
 	db_foreach pass_through_vars $dynfield_sql {
-	    set value [im_opt_val $attribute_name]
+	    set value [im_opt_val -limit_to nohtml $attribute_name]
 	    if {"" != $value} {
 		append col_url "&$attribute_name=$value"
 	    }
@@ -741,7 +741,7 @@ ad_form \
     -form $ticket_elements
 
 template::element::set_value $form_id ticket_nr [im_ticket::next_ticket_nr]
-template::element::set_value $form_id ticket_sla_id [im_opt_val ticket_sla_id]
+template::element::set_value $form_id ticket_sla_id [im_opt_val -limit_to integer ticket_sla_id]
 
 if {$edit_ticket_status_p} {
     template::element::set_value $form_id ticket_status_id [im_ticket_status_open]
