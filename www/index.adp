@@ -5,7 +5,15 @@
 <property name="sub_navbar">@ticket_navbar_html;literal@</property>
 <property name="left_navbar">@left_navbar_html;literal@</property>
 
-<SCRIPT Language=JavaScript src=/resources/diagram/diagram/diagram.js></SCRIPT>
+<!-- Show calendar on start- and end-date -->
+<script type="text/javascript" <if @::__csp_nonce@ not nil>nonce="@::__csp_nonce;literal@"</if>>
+window.addEventListener('load', function() { 
+     document.getElementById('start_date_calendar').addEventListener('click', function() { showCalendar('start_date', 'y-m-d'); });
+     document.getElementById('end_date_calendar').addEventListener('click', function() { showCalendar('end_date', 'y-m-d'); });
+
+     document.getElementById('list_check_all').addEventListener('click', function() { acs_ListCheckAll('ticket', this.checked) });
+});
+</script>
 
 <table cellspacing="0" cellpadding="0" border="0" width="100%">
 <form action=/intranet-helpdesk/action method=POST>

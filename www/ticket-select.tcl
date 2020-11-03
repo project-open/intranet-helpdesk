@@ -522,10 +522,7 @@ list::create \
     -actions [list ] \
     -elements {
 	ticket_chk {
-	    label "<input type=\"checkbox\" 
-                          name=\"_dummy\" 
-                          onclick=\"acs_ListCheckAll('ticket_list', this.checked)\" 
-                          title=\"Check/uncheck all rows\"
+	    label "<input id=list_check_all type=\"checkbox\" name=\"_dummy\" title=\"Check/uncheck all rows\"
 			  checked
 	    >"
 	    display_template {

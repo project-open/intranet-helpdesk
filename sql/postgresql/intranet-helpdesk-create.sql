@@ -1079,7 +1079,7 @@ insert into im_view_columns (
         visible_for
 ) values (
         27099,270,-1,
-        '<input type=checkbox name=_dummy onclick="acs_ListCheckAll(''ticket'',this.checked)">',
+        '<input id=list_check_all type=checkbox name=_dummy>',
         '$action_checkbox',
         ''
 );
@@ -1409,7 +1409,7 @@ SELECT im_dynfield_widget__new (
 		order by name
 	}}
 	after_html {
-		<script type="text/javascript">
+		<script type="text/javascript" nonce="[im_csp_nonce]">
 		function customerContactSelectOnChange() {
 		    var xmlHttp1;
 		    try { xmlHttp1=new XMLHttpRequest();	// Firefox, Opera 8.0+, Safari

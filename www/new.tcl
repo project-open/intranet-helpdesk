@@ -266,7 +266,7 @@ if {"edit" == $form_mode && [info exists ticket_id]} {
 	    
 	    set msg [lang::message::lookup "" intranet-helpdesk.Ticket_Recently_Edited "This ticket was locked by %lock_user_name% %lock_minutes% minutes and %lock_seconds% seconds ago."]
 	    set message_html "
-		<script type=\"text/javascript\">
+		<script type=\"text/javascript\" nonce=\"[im_csp_nonce]\">
 			alert('$msg');
 		</script>
 	    "

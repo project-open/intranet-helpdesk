@@ -3,6 +3,14 @@
 <property name="context">#intranet-core.context#</property>
 <property name="main_navbar_label">helpdesk</property>
 
+<!-- Show calendar on start- and end-date -->
+<script type="text/javascript" <if @::__csp_nonce@ not nil>nonce="@::__csp_nonce;literal@"</if>>
+window.addEventListener('load', function() { 
+     document.getElementById('list_check_all').addEventListener('click', function() { acs_ListCheckAll('alerts', this.checked) });
+});
+</script>
+
+
 <h1>@page_title@</h1>
 
 <form action="/intranet/member-notify" method=GET>
@@ -17,7 +25,7 @@
 	<table>
 	<tr class=rowtitle>
 	<th align="center">
-	<input type="checkbox" name="_dummy" onclick="acs_ListCheckAll('alerts', this.checked)" title="<%= [lang::message::lookup "" intranet-helpdesk.Check_Uncheck_all_rows "Check/Uncheck all rows"] %>" checked>
+	<input id=list_check_all type="checkbox" name="_dummy" title="<%= [lang::message::lookup "" intranet-helpdesk.Check_Uncheck_all_rows "Check/Uncheck all rows"] %>" checked>
 	</th>
 	<th><%= [lang::message::lookup "" intranet-helpdesk.Name Name] %></th>
 	<th><%= [lang::message::lookup "" intranet-helpdesk.Email Email] %></th>
