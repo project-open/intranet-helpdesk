@@ -973,12 +973,7 @@ drop function inline_0 ();
 --
 
 SELECT im_menu__new (
-	null,				-- p_menu_id
-	'im_menu',			-- object_type
-	now(),				-- creation_date
-	null,				-- creation_user
-	null,				-- creation_ip
-	null,				-- context_id
+	null, 'im_menu', now(), null, null, null,
 	'intranet-helpdesk',		-- package_name
 	'helpdesk_summary',		-- label
 	'Summary',			-- name
@@ -995,6 +990,28 @@ SELECT acs_permission__grant_permission(
 );
 
 
+-----------------------------------------------------------
+-- "New Ticket" menu
+--
+
+SELECT im_menu__new (
+	null, 'im_menu', now(), null, null, null,
+	'intranet-helpdesk',		-- package_name
+	'helpdesk_new_ticket',		-- label
+	'New Ticket',			-- name
+	'/intranet-helpdesk/new',	-- url
+	20,				-- sort_order
+	(select menu_id from im_menus where label = 'helpdesk'),
+	null				-- p_visible_tcl
+);
+
+SELECT acs_permission__grant_permission(
+	(select menu_id from im_menus where label = 'helpdesk_new_ticket'),
+	(select group_id from groups where group_name = 'Employees'),
+	'read'
+);
+
+
 
 
 -----------------------------------------------------------
@@ -1002,12 +1019,7 @@ SELECT acs_permission__grant_permission(
 --
 
 SELECT im_menu__new (
-	null,				-- p_menu_id
-	'im_menu',			-- object_type
-	now(),				-- creation_date
-	null,				-- creation_user
-	null,				-- creation_ip
-	null,				-- context_id
+	null, 'im_menu', now(), null, null, null,
 	'intranet-helpdesk',		-- package_name
 	'reporting-tickets',		-- label
 	'Tickets',			-- name
