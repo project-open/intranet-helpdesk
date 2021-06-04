@@ -1,7 +1,8 @@
 <master>
 <property name="doc(title)">@page_title;literal@</property>
 <property name="context">#intranet-core.context#</property>
-<property name="main_navbar_label">helpdesk</property>
+<!-- <property name="main_navbar_label">helpdesk</property> -->
+<property name="main_navbar_label">admin</property>
 
 
 <h1>@page_title@</h1>
