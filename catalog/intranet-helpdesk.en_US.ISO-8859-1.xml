@@ -121,7 +121,7 @@ Users can be added either as &#39;members&#39; or &#39;administrators&#39;.</msg
   <msg key="No_SLAs_for_customer">No Service Level Agreement (SLA) for customer</msg>
   <msg key="No_Ticket_Found">No Ticket Found</msg>
   <msg key="Not_assigned">Not assignet</msg>
-  <msg key="Nr">Num</msg>
+  <msg key="Nr">No</msg>
   <msg key="Nuke">Nuke</msg>
   <msg key="Number">Number</msg>
   <msg key="Object">Object</msg>
@@ -200,7 +200,7 @@ Users can be added either as &#39;members&#39; or &#39;administrators&#39;.</msg
   <msg key="Ticket_Journal">Ticket Journal</msg>
   <msg key="Ticket_Members">Ticket Members</msg>
   <msg key="Ticket_Name">Ticket Name</msg>
-  <msg key="Ticket_Nr">Ticket Num</msg>
+  <msg key="Ticket_Nr">Ticket No</msg>
   <msg key="Ticket_Reaction_Date">Reaction Date</msg>
   <msg key="Ticket_Related_Objects">Related objects</msg>
   <msg key="Ticket_Signoff_Date">Sign-Off Date</msg>
