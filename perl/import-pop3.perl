@@ -25,7 +25,7 @@ use Data::Dumper;
 
 # --------------------------------------------------------
 # Debug? 0=no output, 10=very verbose
-$debug = 3;
+$debug = 9;
 MIME::Tools->debugging(0);
 
 # --------------------------------------------------------
@@ -45,12 +45,13 @@ $ticket_file_storage = "/web/$instance/filestorage/tickets"; # Default filename 
 # Default POP3 Mail Account
 # Enter specific values in order to overwrite parameter values set in ]po[.
 #
-$pop3_host = "";					# "mail.your-server.com" - POP3 server of the mailbox
+my $pop3_host = "";					# "mail.your-server.com" - POP3 server of the mailbox
 $pop3_user = "";					# "mailbox\@your-server.com" - you need to quote the at-sign
 $pop3_pwd = "";						# "secret" - POP3 password
 $pop3_limit = 0;					# 0=no limit, otherwise limit to N messages
 $pop3_no_create = 0;					# 0=normal operations, 1=don't create tickets
 $pop3_ticket_status_id = "30000";			# 30000 for ticket status "Open"
+$pop3_ssl = 1;						# should we use SSL? That's standard now...
 
 # --------------------------------------------------------
 # Check for command line options
@@ -76,20 +77,17 @@ my @attypes= qw(application
 		text
 );
 
-
 # --------------------------------------------------------
 # Define the date format for debugging messages
 $date = `/bin/date +"%Y%m%d.%H%M"` || 
     die "common_constants: Unable to get date.\n";
 chomp($date);
 
-
 # --------------------------------------------------------
 # Establish the database connection
 # The parameters are defined in common_constants.pm
 $dbh = DBI->connect($db_datasource, $db_username, $db_pwd, {pg_enable_utf8 => 1, PrintWarn => 0, PrintError => 1}) ||
     die "import-pop3: Unable to connect to database.\n";
-
 
 # --------------------------------------------------------
 # Get parameters from database
@@ -126,10 +124,15 @@ if (defined $value) {
 
 
 
-print "import-pop3: host=$pop3_host, user=$pop3_user, pwd=$pop3_pwd\n" if ($debug > 9);
-die "import-pop3.perl: You need to define a pop3_host" if ("" eq $pop3_host);
-die "import-pop3.perl: You need to define a pop3_user" if ("" eq $pop3_user);
-die "import-pop3.perl: You need to define a pop3_pwd" if ("" eq $pop3_pwd);
+print "import-pop3: host='$pop3_host', user='$pop3_user', pwd='$pop3_pwd'\n" if ($debug >= 9);
+
+die "import-pop3: Parameter intranet-helpdesk.InboxPOP3Host is undefined or empty.\n"
+    if (!defined($pop3_host) || "" eq $pop3_host);
+die "import-pop3: Parameter intranet-helpdesk.InboxPOP3User is undefined or empty.\n"
+    if (!defined($pop3_user) || "" eq $pop3_user);
+die "import-pop3: Parameter intranet-helpdesk.InboxPOP3Pwd is undefined or empty.\n"
+    if (!defined($pop3_pwd) || "" eq $pop3_pwd);
+
 
 
 # --------------------------------------------------------
@@ -727,11 +730,13 @@ if ("" ne $message_file) {
 
 } else {
 
+    print "import-pop3: connecting: host='$pop3_host', user='$pop3_user', pwd='$pop3_pwd'\n" if ($debug >= 9);
+
     # Establish a connection to the POP3 server
-    $pop3_conn = Net::POP3->new($pop3_host, Timeout => 60) 
+    $pop3_conn = Net::POP3->new($pop3_host, Timeout => 60, SSL => $pop3_ssl) 
 	|| die "import-pop3: Unable to connect to POP3 server $pop3_host: Timeout\n";
 
-    $n = $pop3_conn->login($pop3_user,$pop3_pwd) 
+    $n = $pop3_conn->login($pop3_user, $pop3_pwd) 
 	|| die "import-pop3: Unable to connect to POP3 server $pop3_host: Bad Password\n"; 
     
     if (0 == $n) {
