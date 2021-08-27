@@ -1684,6 +1684,11 @@ SELECT im_dynfield_attribute_new ('im_ticket', 'ticket_customer_contact_id', 'Cu
 SELECT im_dynfield_attribute_new ('im_ticket', 'ticket_dept_id', 'Department', 'cost_centers', 'integer', 'f');
 
 
+-- New ticket_container_email_selector !!!
+SELECT im_dynfield_attribute_new ('im_project', 'ticket_container_email_selector', 'Email Selector RegExp', 'textarea_small', 'string', 'f');
+alter table im_projects add column ticket_container_email_selector text;
+
+
 -----------------------------------------------------------
 -- Unused fields
 --
