@@ -5,7 +5,7 @@
 # import-pop3
 #
 # ]project-open[ ERP/Project Management System
-# (c) 2008 - 2010 ]project-open[
+# (c) 2008 - 2020 ]project-open[
 # frank.bergmann@project-open.com
 #
 # --------------------------------------------------------
@@ -330,14 +330,78 @@ sub decode_subject_line {
 
 sub process_message {
     my ($message) = @_;
-
-    print "import-pop3: process_message: message=", $message, "\n" if ($debug >= 7);
-
+    
     # Parse the MIME email
     my $mime_entity = $mime_parser->parse_data($message);
     my $error = ($@ || $mime_parser->last_error);
     print "import-pop3: error: $error\n" if ("" ne $error);
     my $header = $mime_entity->head();
+
+    # Remove any internal new lines. That's important when using
+    # RegExp as selectors, as To:.*xxx only works within a single
+    # line.
+    $header->unfold; 
+
+    # Delete MS-Project related header fields
+    $header->delete("ARC-Authentication-Results");
+    $header->delete("ARC-Authentication-Results");
+    $header->delete("ARC-Message-Signature");
+    $header->delete("ARC-Seal");
+    $header->delete("ARC-Seal");
+    $header->delete("Authentication-Results");
+    $header->delete("Authentication-Results-Original");
+    $header->delete("Received");
+    $header->delete("Received-SPF");
+    $header->delete("Thread-Index");
+    $header->delete("Thread-Topic");
+    $header->delete("X-Auto-Response-Suppress");
+    $header->delete("X-EOPAttributedMessage");
+    $header->delete("X-EOPTenantAttributedMessage");
+    $header->delete("X-Forefront-Antispam-Report");
+    $header->delete("X-Forefront-Antispam-Report-Untrusted");
+    $header->delete("X-MS-Exchange-AntiSpam-MessageData-Original-0");
+    $header->delete("X-MS-Exchange-AntiSpam-MessageData-Original-ChunkCount");
+    $header->delete("X-MS-Exchange-CrossTenant-AuthAs");
+    $header->delete("X-MS-Exchange-CrossTenant-AuthSource");
+    $header->delete("X-MS-Exchange-CrossTenant-FromEntityHeader");
+    $header->delete("X-MS-Exchange-CrossTenant-Id");
+    $header->delete("X-MS-Exchange-CrossTenant-Network-Message-Id");
+    $header->delete("X-MS-Exchange-CrossTenant-OriginalArrivalTime");
+    $header->delete("X-MS-Exchange-Organization-AuthAs");
+    $header->delete("X-MS-Exchange-Organization-AuthSource");
+    $header->delete("X-MS-Exchange-Organization-ExpirationInterval");
+    $header->delete("X-MS-Exchange-Organization-ExpirationIntervalReason");
+    $header->delete("X-MS-Exchange-Organization-ExpirationStartTime");
+    $header->delete("X-MS-Exchange-Organization-ExpirationStartTimeReason");
+    $header->delete("X-MS-Exchange-Organization-MessageDirectionality");
+    $header->delete("X-MS-Exchange-Organization-Network-Message-Id");
+    $header->delete("X-MS-Exchange-Organization-SCL");
+    $header->delete("X-MS-Exchange-Processed-By-BccFoldering");
+    $header->delete("X-MS-Exchange-Transport-CrossTenantHeadersStamped");
+    $header->delete("X-MS-Exchange-Transport-CrossTenantHeadersStripped");
+    $header->delete("X-MS-Exchange-Transport-EndToEndLatency");
+    $header->delete("X-MS-Has-Attach");
+    $header->delete("X-MS-Office365-Filtering-Correlation-Id");
+    $header->delete("X-MS-Office365-Filtering-Correlation-Id-Prvs");
+    $header->delete("X-MS-TNEF-Correlator");
+    $header->delete("X-Microsoft-Antispam");
+    $header->delete("X-Microsoft-Antispam-Mailbox-Delivery");
+    $header->delete("X-Microsoft-Antispam-Message-Info");
+    $header->delete("X-Microsoft-Antispam-Message-Info-Original");
+    $header->delete("X-Microsoft-Antispam-Untrusted");
+    $header->delete("X-Proofpoint-GUID");
+    $header->delete("X-Proofpoint-ORIG-GUID");
+    $header->delete("X-Proofpoint-Spam-Details");
+    $header->delete("X-Proofpoint-Virus-Version");
+    $header->delete("x-microsoft-antispam-prvs");
+    $header->delete("x-ms-exchange-antispam-relay");
+    $header->delete("x-ms-exchange-messagesentrepresentingtype");
+    $header->delete("x-ms-exchange-senderadcheck");
+    $header->delete("x-ms-exchange-sharedmailbox-routingagent-processed");
+    $header->delete("x-ms-exchange-transport-forked");
+    $header->delete("x-ms-oob-tlc-oobclassifiers");
+    $header->delete("x-ms-publictraffictype");
+    $header->delete("x-ms-traffictypediagnostic");
 
     my $to = $header->get('To');
     my $from = $header->get('From');
@@ -389,8 +453,6 @@ sub process_message {
     # Parse the email
     my $body = process_parts($mime_entity, "main");
     print "import-pop3: body=$body\n" if ($debug >= 1);
-    print "import-pop3: hex(body)=", unpack("H*", $body), "\n" if ($debug >= 7);
-
     my $body_q = $dbh->quote($body);
 
     # --------------------------------------------------------
@@ -402,7 +464,7 @@ sub process_message {
     my $duplicate_ticket_id = $row->{duplicate_ticket_id};
 
     if (defined $duplicate_ticket_id) {
-	# We have found a ticket with the same mail-id!!!
+	# We have found a ticket with the same mail-id
 	print "import-pop3: error: Found an email with a duplicate Message-Id\n";
 	print "import-pop3: error: Duplicate Message-ID: $email_id\n";
 	print "import-pop3: error: Duplicate From: $from\n";
@@ -432,26 +494,32 @@ sub process_message {
     $row = $sth->fetchrow_hashref;
     my $ticket_customer_id = $row->{company_id};
 
-    # SLA: Just get the first open SLA for the customer as an example.
-    # Customers may want to use more complex logic and assign the
-    # ticket to different SLAs depending on the sender domain etc.
-    $sth = $dbh->prepare("SELECT min(project_id) as sla_id from im_projects where company_id = '$ticket_customer_id' and project_type_id = 2502 and project_status_id in (select im_sub_categories(76))");
-    my $rv = $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
+    # SLA: Check for the regex_selector or ticket containers and
+    # match them agains the header.
     my $ticket_sla_id = "NULL";
-    if ($rv >= 0) {
-	$row = $sth->fetchrow_hashref;
-	my $ticket_sla_id = $row->{sla_id};
-    }
-    if ("NULL" eq $ticket_sla_id) {
-	# Didn't find an open SLA, so let's just take the first one in any state
-	$sth = $dbh->prepare("SELECT min(project_id) as sla_id from im_projects where project_type_id = 2502");
-	my $rv = $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
-	if ($rv >= 0) {
-	    $row = $sth->fetchrow_hashref;
-	    my $ticket_sla_id = $row->{sla_id};
+    my $header_string = $header->as_string;
+    print "import-pop3: head=$header_string\n" if ($debug >= 1);
+    
+    # Check for ticket containers with email selectors
+    $sth = $dbh->prepare("SELECT project_id, project_name, ticket_container_email_selector from im_projects where ticket_container_email_selector is not null and project_type_id = 2502 and project_status_id in (select im_sub_categories(76)) order by project_id");
+    my $rv = $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
+    while (my $row = $sth->fetchrow_hashref) {
+	my $project_id = $row->{project_id};
+	my $project_name = $row->{project_name};
+	my $regex = $row->{ticket_container_email_selector};
+
+	print "import-pop3: regexp in row=", $i++, ": $project_name (#$project_id): regex=$regex\n" if ($debug >= 7);
+	if ($header_string =~ /$regex/im) {
+	    print "import-pop3: process_message: found regex=$regex in header=$header_string\n" if ($debug > 3);
+	    $ticket_sla_id = $project_id;
+	    last;
 	}
     }
 
+    if ($i > 0 && "NULL" eq $ticket_sla_id) {
+	print "import-pop3: process_message: did not find regex=$regex in header=$header_string\n" if ($debug > 3);
+    }
+    
     
     # --------------------------------------------------------
     # Deal with the Customer's contact: 
