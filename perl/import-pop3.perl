@@ -25,7 +25,7 @@ use Data::Dumper;
 
 # --------------------------------------------------------
 # Debug? 0=no output, 10=very verbose
-$debug = 9;
+$debug = 0;
 MIME::Tools->debugging(0);
 
 # --------------------------------------------------------
@@ -338,8 +338,7 @@ sub process_message {
     my $header = $mime_entity->head();
 
     # Remove any internal new lines. That's important when using
-    # RegExp as selectors, as To:.*xxx only works within a single
-    # line.
+    # RegExp as selectors, as To:.*xxx only works within a single line.
     $header->unfold; 
 
     # Delete MS-Project related header fields
@@ -402,6 +401,15 @@ sub process_message {
     $header->delete("x-ms-oob-tlc-oobclassifiers");
     $header->delete("x-ms-publictraffictype");
     $header->delete("x-ms-traffictypediagnostic");
+
+    $header->delete("References");
+    $header->delete("Accept-Language");
+    $header->delete("Content-Language");
+    $header->delete("Content-Type");
+    $header->delete("MIME-Version");
+    $header->delete("Return-Path");
+    $header->delete("");
+    $header->delete("");
 
     my $to = $header->get('To');
     my $from = $header->get('From');
@@ -471,7 +479,7 @@ sub process_message {
 	print "import-pop3: error: Duplicate To: $to\n";
 	print "import-pop3: error: Duplicate Subject: $subject_raw\n";
 	print "import-pop3: error: Duplicate ticket_id: $duplicate_ticket_id\n";
-	return;
+#	return;
     }
 
     # --------------------------------------------------------
@@ -515,11 +523,6 @@ sub process_message {
 	    last;
 	}
     }
-
-    if ($i > 0 && "NULL" eq $ticket_sla_id) {
-	print "import-pop3: process_message: did not find regex=$regex in header=$header_string\n" if ($debug > 3);
-    }
-    
     
     # --------------------------------------------------------
     # Deal with the Customer's contact: 
@@ -562,6 +565,7 @@ sub process_message {
     #  30114 | Permission request
     #  30116 | Feature request
     #  30118 | Training request
+    # ToDo: We could check for keywords in Subject and set a different type
     my $ticket_type_id = 30110;
     
     # Ticket Status:
@@ -583,7 +587,7 @@ sub process_message {
     
     # Ticket Prio
     # 30201 |	 	1 - Highest
-    # 30202	|		2 
+    # 30202 |		2 
     # 30203 |		3 	
     # 30204 |		4 	
     # 30205 |		5 	
@@ -595,9 +599,29 @@ sub process_message {
 
 
     # --------------------------------------------------------
+    # Check if this is a reply to some previous mail
+
+    my $ticket_id = 0;
+    my $thread_parent_id = "NULL";
+    my $forum_sql = "select * from im_forum_topics where topic_id in (select min(topic_id) as topic_id from im_forum_topics where mime_message_id = '$in_reply_to_email_id')";
+    $sth = $dbh->prepare($forum_sql);
+    $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$forum_sql\n";
+    while (my $r = $sth->fetchrow_hashref) {
+	my $topic_id = $r->{topic_id};
+	if (defined($topic_id)) {
+	    $thread_parent_id = $topic_id;
+	    $ticket_id = $r->{object_id};
+	    print "import-pop3: loop: ticket_id=$ticket_id, thread_parent_id=$thread_parent_id\n" if ($debug >= 1);
+	}
+    }
+    print "import-pop3: ticket_id=$ticket_id, thread_parent_id=$thread_parent_id\n" if ($debug >= 1);
+
+    # --------------------------------------------------------
     # Insert the basis ticket into the SQL database
-    print "import-pop3: before im_ticket__new\n" if ($debug >= 1);
-    $sth = $dbh->prepare("
+    # unless we have found a parent to which this is a reply.
+    if ($ticket_id == 0) {
+	print "import-pop3: before im_ticket__new\n" if ($debug >= 1);
+	$sth = $dbh->prepare("
 		SELECT im_ticket__new_with_email_id (
 			nextval('t_acs_object_id_seq')::integer, -- p_ticket_id
 			'im_ticket'::varchar,			-- object_type
@@ -605,56 +629,50 @@ sub process_message {
 			0::integer,				-- creation_user
 			'0.0.0.0'::varchar,			-- creation_ip
 			null::integer,				-- (security) context_id
-	
 			$ticket_name_q,
 			'$ticket_nr'::varchar,
 			'$ticket_customer_id'::integer,
 			'$ticket_type_id'::integer,
 			'$ticket_status_id'::integer,
-
 			'$email_id',
 			'$in_reply_to_email_id'
 		) as ticket_id
-    ");
-    $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
-    $row = $sth->fetchrow_hashref;
-    my $ticket_id = $row->{ticket_id};
+        ");
+	$sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
+	$row = $sth->fetchrow_hashref;
+	$ticket_id = $row->{ticket_id};
     
-    # Update ticket field stored in the im_tickets table
-    print "import-pop3: before im_tickets update\n" if ($debug >= 1);
-    $sql = "
+	# Update ticket field stored in the im_tickets table
+	print "import-pop3: before im_tickets update\n" if ($debug >= 1);
+	$sql = "
 		update im_tickets set
 			ticket_type_id			= '$ticket_type_id',
 			ticket_status_id		= '$ticket_status_id',
 			ticket_customer_contact_id	= '$ticket_customer_contact_id',
 			ticket_prio_id			= '$ticket_prio_id'
-		where
-			ticket_id = $ticket_id
-    ";
-    $sth = $dbh->prepare($sql);
-    $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
+		where	ticket_id = $ticket_id
+        ";
+	$sth = $dbh->prepare($sql);
+	$sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
     
-    # Update ticket field stored in the im_projects table
-    print "import-pop3: before im_projects update\n" if ($debug >= 1);
-    $sth = $dbh->prepare("
+	# Update ticket field stored in the im_projects table
+	print "import-pop3: before im_projects update\n" if ($debug >= 1);
+	$sth = $dbh->prepare("
 		update im_projects set
 			project_name		= $ticket_name_q,
 			project_nr		= '$ticket_nr',
 			parent_id		= $ticket_sla_id
-		where
-			project_id = $ticket_id;
-    ");
-    $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
+		where	project_id = $ticket_id;
+        ");
+	$sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
 
 
-    # --------------------------------------------------------
-    # Add the customer contact to the list of "members" of the ticket
-    if (0 ne $ticket_customer_contact_id) {
-
-
-	# Create a business relationship between the ticket and the user
-	print "import-pop3: before im_biz_object_member__new\n" if ($debug >= 1);
-	$sth = $dbh->prepare("
+	# --------------------------------------------------------
+	# Add the customer contact to the list of "members" of the ticket
+	if (0 ne $ticket_customer_contact_id) {
+	    # Create a business relationship between the ticket and the user
+	    print "import-pop3: before im_biz_object_member__new\n" if ($debug >= 1);
+	    $sth = $dbh->prepare("
 		select im_biz_object_member__new(
 			null,
 			'im_biz_object_member',
@@ -664,15 +682,17 @@ sub process_message {
 			0,
 			'0.0.0.0'
 		);
-        ");
-	$sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
-    }
+            ");
+	    $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
+	}
 
+    }
+    
     # --------------------------------------------------------
     # Add a Forum Topic Item into the ticket
     
     # Get the next topic ID
-    print "import-pop3: before nextval\n" if ($debug >= 1);
+    print "import-pop3: before topic_id nextval\n" if ($debug >= 1);
     $sth = $dbh->prepare("SELECT nextval('im_forum_topics_seq') as topic_id");
     $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
     $row = $sth->fetchrow_hashref;
@@ -687,11 +707,11 @@ sub process_message {
 		insert into im_forum_topics (
 			topic_id, object_id, parent_id,
 			topic_type_id, topic_status_id, owner_id,
-			subject, message
+			subject, message, mime_message_id
 		) values (
-			'$topic_id', '$ticket_id', null,
+			'$topic_id', '$ticket_id', $thread_parent_id,
 			'$topic_type_id', '$topic_status_id', '$ticket_customer_contact_id',
-			$subject_q, $body_q
+			$subject_q, $body_q, '$email_id'
 		)
     ";
 
@@ -708,30 +728,31 @@ sub process_message {
 		insert into im_forum_topics (
 			topic_id, object_id, parent_id,
 			topic_type_id, topic_status_id, owner_id,
-			subject, message
+			subject, message, mime_message_id
 		) values (
-			'$topic_id', '$ticket_id', null,
+			'$topic_id', '$ticket_id', $thread_parent_id,
 			'$topic_type_id', '$topic_status_id', '$ticket_customer_contact_id',
-			$subject_q, $body_q
+			$subject_q, $body_q, '$email_id'
 		)
         ";
 	$sth = $dbh->prepare($sql);
 	$sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";	
     }
 
+
     # --------------------------------------------------------
     # Start a new dynamic workflow around the ticket
-    
-    # Get the next topic ID
-    print "import-pop3: before aux_string1\n" if ($debug >= 1);
-    $sth = $dbh->prepare("SELECT aux_string1 from im_categories where category_id = '$ticket_type_id'");
-    $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
-    $row = $sth->fetchrow_hashref;
-    my $workflow_key = $row->{aux_string1};
-    defined($workflow_key) or $workflow_key = "";
-    if ("" ne $workflow_key) {
-	print "import-pop3: Starting workflow '$workflow_key'\n" if ($debug);
-	$sql = "
+    if ($ticket_id == 0) {
+	# Get the next topic ID
+	print "import-pop3: before aux_string1\n" if ($debug >= 1);
+	$sth = $dbh->prepare("SELECT aux_string1 from im_categories where category_id = '$ticket_type_id'");
+	$sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
+	$row = $sth->fetchrow_hashref;
+	my $workflow_key = $row->{aux_string1};
+	defined($workflow_key) or $workflow_key = "";
+	if ("" ne $workflow_key) {
+	    print "import-pop3: Starting workflow '$workflow_key'\n" if ($debug);
+	    $sql = "
 		select workflow_case__new (
 			null,
 			'$workflow_key',
@@ -741,45 +762,45 @@ sub process_message {
 			0,
 			'0.0.0.0'
 		) as case_id
-	";
-	$sth = $dbh->prepare($sql) || die "import-pop3: Unable to prepare SQL statement: \n$sql\n";
-	$sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
-	$row = $sth->fetchrow_hashref;
-	my $case_id = $row->{case_id};
+	    ";
+	    $sth = $dbh->prepare($sql) || die "import-pop3: Unable to prepare SQL statement: \n$sql\n";
+	    $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
+	    $row = $sth->fetchrow_hashref;
+	    my $case_id = $row->{case_id};
 
-	print "import-pop3: before workflow_case__start_case\n" if ($debug >= 1);
-	$sql = "
+	    print "import-pop3: before workflow_case__start_case\n" if ($debug >= 1);
+	    $sql = "
 		select workflow_case__start_case (
 			'$case_id',
 			'$ticket_customer_contact_id',
 			'0.0.0.0',
 			null
 		)
-	";
-	$sth = $dbh->prepare($sql) || die "import-pop3: Unable to prepare SQL statement: \n$sql\n";
-	$sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
+	    ";
+	    $sth = $dbh->prepare($sql) || die "import-pop3: Unable to prepare SQL statement: \n$sql\n";
+	    $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
 	
-    }
+	}
 
-
-    # --------------------------------------------------------
-    # Save Attachments
-    #
-    $sth = $dbh->prepare("SELECT company_path from im_companies where company_id = $ticket_customer_id");
-    $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
-    $row = $sth->fetchrow_hashref;
-    my $customer_path = $row->{company_path};
-
-    for($i=0; $i <= $#attname; $i++){
-	my $att_name = $attname[$i];
-	if (!defined $att_name) { next; }
-	my $att_content = $attachment[$i];
-	my $path = "$ticket_file_storage/$customer_path/$ticket_nr";
-	print "import-pop3: Writing attachment to file=$path/$att_name\n" if ($debug >= 1);
-	system("mkdir -p $path");
-	open(OUT, ">$path/$att_name");
-	print OUT $att_content;
-	close(OUT);
+	# --------------------------------------------------------
+	# Save Attachments
+	#
+	$sth = $dbh->prepare("SELECT company_path from im_companies where company_id = $ticket_customer_id");
+	$sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
+	$row = $sth->fetchrow_hashref;
+	my $customer_path = $row->{company_path};
+	
+	for($i=0; $i <= $#attname; $i++){
+	    my $att_name = $attname[$i];
+	    if (!defined $att_name) { next; }
+	    my $att_content = $attachment[$i];
+	    my $path = "$ticket_file_storage/$customer_path/$ticket_nr";
+	    print "import-pop3: Writing attachment to file=$path/$att_name\n" if ($debug >= 1);
+	    system("mkdir -p $path");
+	    open(OUT, ">$path/$att_name");
+	    print OUT $att_content;
+	    close(OUT);
+	}
     }
 }
 
