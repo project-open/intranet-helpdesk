@@ -16,9 +16,15 @@ DECLARE
 BEGIN
 	-- Check if colum exists in the database
 	select	count(*) into v_count from user_tab_columns where lower(table_name) = 'im_projects' and lower(column_name) = 'ticket_container_email_selector';
-	IF v_count > 0 THEN return 1;
+	IF v_count = 0 THEN
+		alter table im_projects add column ticket_container_email_selector text;
+	END IF;
 
-	alter table im_projects add column ticket_container_email_selector text;
+	-- New field in forum topics for MIME Message-ID of creating email
+	select	count(*) into v_count from user_tab_columns where lower(table_name) = 'im_forum_topics' and lower(column_name) = 'mime_message_id';
+	IF v_count = 0 THEN
+		alter table im_forum_topics add column mime_message_id text;
+	END IF;
 
 	return 0;
 END;$body$ language 'plpgsql';
