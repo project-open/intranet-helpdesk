@@ -1,6 +1,6 @@
--- upgrade-5.0.4.0.1-5.0.4.0.2.sql
+-- upgrade-5.0.4.0.2-5.1.0.0.0.sql
 
-SELECT acs_log__debug('/packages/intranet-helpdesk/sql/postgresql/upgrade/upgrade-5.0.4.0.1-5.0.4.0.2.sql','');
+SELECT acs_log__debug('/packages/intranet-helpdesk/sql/postgresql/upgrade/upgrade-5.0.4.0.2-5.1.0.0.0.sql','');
 
 
 -- New ticket_container_email_selector
