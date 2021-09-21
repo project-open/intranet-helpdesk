@@ -3,7 +3,7 @@
 <property name="context">#intranet-core.context#</property>
 <property name="main_navbar_label">helpdesk</property>
 
-@usr_mess;noquote@
+@fb_msg;noquote@
 
 <a href="@return_url@"><%=[lang::message::lookup "" acs-subsite.Go_back "Back"]%></a>
 

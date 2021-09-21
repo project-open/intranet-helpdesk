@@ -282,12 +282,12 @@ if {$view_tickets_all_p} {
 	{ticket_queue_id:text(select),optional {label "[lang::message::lookup {} intranet-helpdesk.Queue Queue]"} {options $ticket_queue_options}}
 	{ticket_creator_id:text(select),optional {label "[lang::message::lookup {} intranet-helpdesk.Creator Creator]"} {options $ticket_creator_options}}
     }
-
-    template::element::set_value $form_id ticket_status_id $ticket_status_id
+   
     template::element::set_value $form_id ticket_type_id $ticket_type_id
     template::element::set_value $form_id ticket_queue_id $ticket_queue_id
 }
 
+template::element::set_value $form_id ticket_status_id $ticket_status_id
 template::element::set_value $form_id mine_p $mine_p
 
 im_dynfield::append_attributes_to_form \
