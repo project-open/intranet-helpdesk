@@ -464,8 +464,7 @@ sub process_message {
     my $body_q = $dbh->quote($body);
 
     # --------------------------------------------------------
-    # Check for duplicates
-    
+    # Check for duplicates    
     $sth = $dbh->prepare("SELECT min(ticket_id) as duplicate_ticket_id from im_tickets where ticket_email_id = '$email_id'");
     $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
     my $row = $sth->fetchrow_hashref;
@@ -479,7 +478,7 @@ sub process_message {
 	print "import-pop3: error: Duplicate To: $to\n";
 	print "import-pop3: error: Duplicate Subject: $subject_raw\n";
 	print "import-pop3: error: Duplicate ticket_id: $duplicate_ticket_id\n";
-#	return;
+	return;
     }
 
     # --------------------------------------------------------
