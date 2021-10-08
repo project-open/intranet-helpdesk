@@ -10,7 +10,7 @@
     <inherit-templates-p>t</inherit-templates-p>
     <auto-mount>intranet-helpdesk</auto-mount>
 
-    <version name="5.1.0.0.0" url="https://www.project-open.net/download/apm/intranet-helpdesk-5.1.0.0.0.apm">
+    <version name="5.1.0.0.2" url="https://www.project-open.net/download/apm/intranet-helpdesk-5.1.0.0.2.apm">
         <owner url="mailto:frank.bergmann@project-open.com">Frank Bergmann</owner>
         <summary>Helpdesk Management</summary>
         <release-date>2016-11-15</release-date>
@@ -37,7 +37,8 @@
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="RenderSlaNameSql"  default="company_name || ' (' || project_name || ')'" description="Allows to determine how SLAs are shown in the TicketListPage. Examples are `project_name` or `company_name || ' (' || project_name || ')'`"/>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="NewTypeSelectUrl"  default="/intranet-helpdesk/new-typeselect" description="URL of a page that determines the SLA and the type of a new ticket. Default is an empty string which is equal to '/intranet-helpdesk/new-typeselect' (the ]po[ default page for selecting the type and SLA of a ticket. The parameter allows you to define your own page for selecting ticket type and SLA."/>
             <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="TreatCustomerMembersAsSLAMembersP" default="0" description="Treat members of a customer as members of the SLAs of that customer? This option is convenient for organizations with few SLAs per customer. Default is 0, so customers will only see SLAs where the user has been added explicitely as a member."/>
-	</parameters>
+            <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="InboxPOP3LogDir" default="" description="Should we log POP3 import messages in a separate folder so that they will survive longer? Default is '' (empty string) for no logging. '/tmp' is a good choice for Linux, because messages are deleted periodically. Use '/web/projop/log/' or similar to permanently preserve messages."/>
+	  </parameters>
 
     </version>
 </package>
