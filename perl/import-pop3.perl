@@ -25,7 +25,7 @@ use Data::Dumper;
 
 # --------------------------------------------------------
 # Debug? 0=no output, 10=very verbose
-$debug = 0;
+$debug = 3;
 MIME::Tools->debugging(0);
 
 # --------------------------------------------------------
@@ -52,6 +52,7 @@ $pop3_limit = 0;					# 0=no limit, otherwise limit to N messages
 $pop3_no_create = 0;					# 0=normal operations, 1=don't create tickets
 $pop3_ticket_status_id = "30000";			# 30000 for ticket status "Open"
 $pop3_ssl = 1;						# should we use SSL? That's standard now...
+$pop3_log_dir = "";					# should we write emails to a log dir?
 
 # --------------------------------------------------------
 # Check for command line options
@@ -122,9 +123,19 @@ if (defined $value) {
     $pop3_ticket_status_id = $value; 
 }
 
+$sth = $dbh->prepare("SELECT attr_value FROM apm_parameters ap, apm_parameter_values apv WHERE ap.parameter_id = apv.parameter_id and ap.package_key = 'intranet-helpdesk' and ap.parameter_name = 'InboxPOP3LogDir'");
+$sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
+$row = $sth->fetchrow_hashref;
+$value  = $row->{attr_value};
+if (defined $value) { 
+    print "import-pop3: InboxPOP3LogDir=$value\n";
+    $pop3_log_dir = $value; 
+}
 
 
-print "import-pop3: host='$pop3_host', user='$pop3_user', pwd='$pop3_pwd'\n" if ($debug >= 9);
+
+
+print "import-pop3: host='$pop3_host', user='$pop3_user', pwd='$pop3_pwd', dir='$pop3_log_dir'\n" if ($debug >= 4);
 
 die "import-pop3: Parameter intranet-helpdesk.InboxPOP3Host is undefined or empty.\n"
     if (!defined($pop3_host) || "" eq $pop3_host);
@@ -164,7 +175,7 @@ sub process_parts {
 
     my $mime_type = $part->mime_type;
     my ($main_type, $sub_type) = split('/', $mime_type);
-    my $bodyh = $part->bodyhandle;
+    my $bodyh = $part->bodyhandle; if (!defined $bodyh) { $bodyh = ""; }
     my @parts = $part->parts;
 
     print "import-pop3: process_parts: name=", $name, "\n" if ($debug >= 1);
@@ -259,7 +270,7 @@ sub decode_body_helper {
 
     # Convert body to Perl String
     my $bh = $part->bodyhandle;
-    $bh->is_encoded(1);
+    if (defined $bh) { $bh->is_encoded(1); } # fraber 2021-10-08: Not sure, this should be a NOP
     my $output = '';
     my $fh = IO::File->new( \$output, '>:' ) or croak("Cannot open in-memory file: $!");
     $part->print_bodyhandle($fh);
@@ -451,8 +462,8 @@ sub process_message {
     print "import-pop3: content-type:\t$content_type\n" if ($debug >= 1);
 
     # Save the email in the /tmp directory with Message-ID
-    if ("" eq $message_file && $debug >= 3) {
-	my $dir = dir("/tmp");
+    if ("" eq $message_file && "" ne $pop3_log_dir) {
+	my $dir = dir($pop3_log_dir);
 	my $file = $dir->file("email-".$email_id);
 	my $file_handle = $file->openw();        # Get a file_handle (IO::File object) you can write to
 	$file_handle->print(@$message);
