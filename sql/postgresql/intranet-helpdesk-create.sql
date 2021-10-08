@@ -29,6 +29,8 @@ insert into acs_object_type_tables (object_type,table_name,id_column)
 values ('im_ticket', 'im_tickets', 'ticket_id');
 insert into acs_object_type_tables (object_type,table_name,id_column)
 values ('im_ticket', 'im_projects', 'project_id');
+insert into acs_object_type_tables (object_type,table_name,id_column)
+values ('im_ticket', 'im_timesheet_tasks', 'task_id');
 
 
 insert into im_biz_object_urls (object_type, url_type, url) values (
@@ -239,6 +241,15 @@ BEGIN
 	) values (
 		v_ticket_id, p_ticket_status_id, p_ticket_type_id, now()
 	);
+
+	-- 2021-10-08 fraber: Create an entry in im_timesheet_tasks so that
+	-- the Gantt Editor (and Muraai) can added planned an billable hours
+	select min(material_id) into v_default_material_id from im_materials where material_nr = 'default';
+	IF v_default_material_id is NULL THEN
+		select min(material_id) into v_default_material_id from im_materials;
+	END IF;
+	v_default_uom_id := 320; -- Hour for timesheet
+	insert into im_timesheet_tasks (task_id, material_id, uom_id) values (v_ticket_id, v_default_material_id, v_default_uom_id);
 
 	return v_ticket_id;
 END;$$ language 'plpgsql';
