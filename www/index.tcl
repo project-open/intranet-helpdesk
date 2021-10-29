@@ -416,7 +416,7 @@ if {$ticket_name ne "" && $ticket_name ne "" } {
 	"]
 	ad_script_abort
     }
-    lappend criteria "p.project_name like '%$ticket_name%'"
+    lappend criteria "lower(p.project_name) like lower('%$ticket_name%')"
 }
 
 
