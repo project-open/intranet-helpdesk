@@ -519,17 +519,19 @@ sub process_message {
     print "import-pop3: head=$header_string\n" if ($debug >= 1);
     
     # Check for ticket containers with email selectors
-    $sth = $dbh->prepare("SELECT project_id, project_name, ticket_container_email_selector from im_projects where ticket_container_email_selector is not null and project_type_id = 2502 and project_status_id in (select im_sub_categories(76)) order by project_id");
+    $sth = $dbh->prepare("SELECT project_id, project_name, company_id, ticket_container_email_selector from im_projects where ticket_container_email_selector is not null and project_type_id = 2502 and project_status_id in (select im_sub_categories(76)) order by project_id");
     my $rv = $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
     while (my $row = $sth->fetchrow_hashref) {
 	my $project_id = $row->{project_id};
 	my $project_name = $row->{project_name};
+	my $company_id = $row->{company_id};
 	my $regex = $row->{ticket_container_email_selector};
 
 	print "import-pop3: regexp in row=", $i++, ": $project_name (#$project_id): regex=$regex\n" if ($debug >= 7);
 	if ($header_string =~ /$regex/im) {
 	    print "import-pop3: process_message: found regex=$regex in header=$header_string\n" if ($debug > 3);
 	    $ticket_sla_id = $project_id;
+	    $ticket_customer_id = $company_id;
 	    last;
 	}
     }
