@@ -494,7 +494,7 @@ namespace eval im_ticket {
 #
 #	# Fraber 151215: No audit inside the ticket creation.
 #	# Write Audit Trail
-#	# im_audit -object_id $ticket_id -action after_create
+#	# im_audit -object_id $ticket_id -action after_update
 #
 #	return $ticket_id
 #    }
@@ -573,7 +573,7 @@ namespace eval im_ticket {
 
 	    # Fraber 151215: Audit doesn't work inside a transaction!
 	    # Write Audit Trail
-	    # im_audit -object_id $ticket_id -action after_create
+	    # im_audit -object_id $ticket_id -action after_update
 
 	    # Create a new forum topic of type "Note"
 	    set topic_type_id [im_topic_type_id_discussion]
@@ -755,7 +755,7 @@ namespace eval im_ticket {
         "
 
 	# Write Audit Trail
-	im_audit -object_id $ticket_id -action after_create
+	im_audit -object_id $ticket_id -action after_update
     }
 
     ad_proc -public check_permissions {
