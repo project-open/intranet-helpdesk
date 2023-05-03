@@ -402,11 +402,11 @@ namespace eval im_ticket {
 		select	max(project_nr::integer)
 		from	im_projects
 		where	project_type_id = [im_project_type_ticket]
-			and project_nr ~ '^\[0-9\]+$'
+			and project_nr ~ '^\[0-9\]+\$'
 	        " -default 0]
-
+	
 		# Make sure the counter is not behind the current value
-		while {[db_string lv "select im_ticket_seq.last_value"] < $last_ticket_nr} {
+		while {[db_string lv "select last_value from im_ticket_seq"] < $last_ticket_nr} {
 		    set ttt [db_string update "select nextval('im_ticket_seq')"]
 		}
 		return [expr {$last_ticket_nr + 1}]
