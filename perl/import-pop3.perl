@@ -257,6 +257,8 @@ sub decode_body {
     };
     if (my $err = $@) {
 	print "import-pop3: decode_body: cought error: $err\n";
+	print "import-pop3: decode_body: cought error: result: ", Dumper($result);
+	print "import-pop3: decode_body: cought error: finished\n";
     }
     return $result
 }
@@ -426,6 +428,8 @@ sub process_message {
     my $from = $header->get('From');
     my $email_id = $header->get('Message-ID');
     my $in_reply_to_email_id = $header->get('In-Reply-To');
+    my $exchange_email_id = $header->get('x-ms-exchange-parent-message-id');
+    
     defined($in_reply_to_email_id) or $in_reply_to_email_id = "";
     my $content_type = $header->get('Content-Type');
     defined($content_type) or $content_type = "";
@@ -444,6 +448,7 @@ sub process_message {
     chomp($email_id);
     $email_id =~ s/[^ _a-zA-Z0-9\@\<\>\=\+\-\.]//g;
     chomp($in_reply_to_email_id);
+    chomp($exchange_email_id);
     chomp($content_type);
     chomp($x_mailer);
     chomp($subject_raw);
@@ -456,11 +461,13 @@ sub process_message {
     print "import-pop3: \n" if ($debug >= 1);
     print "import-pop3: id:\t$email_id\n" if ($debug >= 1);
     print "import-pop3: in-reply-to:\t$in_reply_to_email_id\n" if ($debug >= 1);
+    print "import-pop3: x-ms-exchange-parent-message-id:\t$exchange_email_id\n" if ($debug >= 1);
     print "import-pop3: from:\t$from\n" if ($debug >= 1);
     print "import-pop3: to:\t$to\n" if ($debug >= 1);
     print "import-pop3: subject:\t$subject_q\n" if ($debug >= 1);
     print "import-pop3: content-type:\t$content_type\n" if ($debug >= 1);
 
+    # --------------------------------------------------------
     # Save the email in the /tmp directory with Message-ID
     if ("" eq $message_file && "" ne $pop3_log_dir) {
 	my $dir = dir($pop3_log_dir);
@@ -469,6 +476,7 @@ sub process_message {
 	$file_handle->print(@$message);
     }
 
+    # --------------------------------------------------------
     # Parse the email
     my $body = process_parts($mime_entity, "main");
     print "import-pop3: body=$body\n" if ($debug >= 1);
@@ -480,7 +488,6 @@ sub process_message {
     $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
     my $row = $sth->fetchrow_hashref;
     my $duplicate_ticket_id = $row->{duplicate_ticket_id};
-
     if (defined $duplicate_ticket_id) {
 	# We have found a ticket with the same mail-id
 	print "import-pop3: error: Found an email with a duplicate Message-Id\n";
@@ -612,19 +619,42 @@ sub process_message {
 
     # --------------------------------------------------------
     # Check if this is a reply to some previous mail
-
     my $ticket_id = 0;
-    my $thread_parent_id = "NULL";
-    my $forum_sql = "select * from im_forum_topics where topic_id in (select min(topic_id) as topic_id from im_forum_topics where mime_message_id = '$in_reply_to_email_id')";
-    $sth = $dbh->prepare($forum_sql);
-    $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$forum_sql\n";
-    while (my $r = $sth->fetchrow_hashref) {
-	my $topic_id = $r->{topic_id};
-	if (defined($topic_id)) {
-	    $thread_parent_id = $topic_id;
-	    $ticket_id = $r->{object_id};
-	    print "import-pop3: loop: ticket_id=$ticket_id, thread_parent_id=$thread_parent_id\n" if ($debug >= 1);
+    my $thread_parent_id = "";
+
+    # Search for parent with field mime_message_id for in-reply-to:
+    if ($thread_parent_id eq "") {
+	my $forum_sql = "select * from im_forum_topics where topic_id in (select min(topic_id) as topic_id from im_forum_topics where mime_message_id = '$in_reply_to_email_id')";
+	$sth = $dbh->prepare($forum_sql);
+	$sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$forum_sql\n";
+	while (my $r = $sth->fetchrow_hashref) {
+	    my $topic_id = $r->{topic_id};
+	    if (defined($topic_id)) {
+		$thread_parent_id = $topic_id;
+		$ticket_id = $r->{object_id};
+		print "import-pop3: loop: ticket_id=$ticket_id, thread_parent_id=$thread_parent_id\n" if ($debug >= 1);
+	    }
 	}
+    }
+
+    # Search for parent with field exchange_message_id for in-reply-to:
+    if ($thread_parent_id eq "") {
+	my $forum_sql = "select * from im_forum_topics where topic_id in (select min(topic_id) as topic_id from im_forum_topics where exchange_message_id = '$in_reply_to_email_id')";
+	$sth = $dbh->prepare($forum_sql);
+	$sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$forum_sql\n";
+	while (my $r = $sth->fetchrow_hashref) {
+	    my $topic_id = $r->{topic_id};
+	    if (defined($topic_id)) {
+		$thread_parent_id = $topic_id;
+		$ticket_id = $r->{object_id};
+		print "import-pop3: loop: ticket_id=$ticket_id, thread_parent_id=$thread_parent_id\n" if ($debug >= 1);
+	    }
+	}
+    }
+
+    # No parent found
+    if ($thread_parent_id eq "") {
+	$thread_parent_id = "NULL";
     }
     print "import-pop3: ticket_id=$ticket_id, thread_parent_id=$thread_parent_id\n" if ($debug >= 1);
 
@@ -706,7 +736,7 @@ sub process_message {
     # Get the next topic ID
     print "import-pop3: before topic_id nextval\n" if ($debug >= 1);
     $sth = $dbh->prepare("SELECT nextval('im_forum_topics_seq') as topic_id");
-    $sth->execute() || die "import-pop3: Unable to execute SQL statement.\n";
+    $sth->execute() || die "import-pop3: Unable to execute SQL statement: \n$sql\n";
     $row = $sth->fetchrow_hashref;
     my $topic_id = $row->{topic_id};
     
@@ -714,37 +744,43 @@ sub process_message {
     my $topic_status_id = 1200; # open
 
     # Insert a Forum Topic into the ticket container
-    print "import-pop3: before im_forum_topics insert\n" if ($debug >= 1);
     $sql = "
 		insert into im_forum_topics (
 			topic_id, object_id, parent_id,
 			topic_type_id, topic_status_id, owner_id,
-			subject, message, mime_message_id
+			subject, message, 
+			mime_message_id, exchange_message_id
 		) values (
 			'$topic_id', '$ticket_id', $thread_parent_id,
 			'$topic_type_id', '$topic_status_id', '$ticket_customer_contact_id',
-			$subject_q, $body_q, '$email_id'
+			$subject_q, $body_q, 
+			'$email_id', '$exchange_email_id'
 		)
     ";
 
+    print "import-pop3: Before im_forum_topics insert\n" if ($debug >= 1);
     $sth = $dbh->prepare($sql);
     $sth->execute();
+    print "import-pop3: After im_forum_topics insert\n" if ($debug >= 1);
 
     # Check if there was an error inserting. This usually happens
     # because of wrong UTF8-Encoding. In this case just try again
     # after fixing the encoding.
     if ($sth->err) {
+	print "import-pop3: Error during previous insert, retrying\n";
 	$body = Encode::encode("UTF-8", $body);    # Make sure there are no invalid UTF-8 sequences in body
 	$body_q = $dbh->quote($body);
 	$sql = "
 		insert into im_forum_topics (
 			topic_id, object_id, parent_id,
 			topic_type_id, topic_status_id, owner_id,
-			subject, message, mime_message_id
+			subject, message, 
+			mime_message_id, exchange_message_id
 		) values (
 			'$topic_id', '$ticket_id', $thread_parent_id,
 			'$topic_type_id', '$topic_status_id', '$ticket_customer_contact_id',
-			$subject_q, $body_q, '$email_id'
+			$subject_q, $body_q, 
+			'$email_id', '$exchange_email_id'
 		)
         ";
 	$sth = $dbh->prepare($sql);
@@ -754,6 +790,7 @@ sub process_message {
 
     # --------------------------------------------------------
     # Start a new dynamic workflow around the ticket
+    print "import-pop3: Before spawinging workflow: ticket_id=$ticket_id\n" if ($debug >= 1);
     if ($ticket_id == 0) {
 	# Get the next topic ID
 	print "import-pop3: before aux_string1\n" if ($debug >= 1);
