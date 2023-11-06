@@ -1701,6 +1701,7 @@ alter table im_projects add column ticket_container_email_selector text;
 
 -- New field in forum topics for MIME Message-ID of creating email
 alter table im_forum_topics add column mime_message_id text;
+alter table im_forum_topics add column exchange_message_id text;
 
 
 
