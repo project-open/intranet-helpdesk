@@ -570,6 +570,7 @@ namespace eval im_ticket {
 	
 	    # Start a new workflow case
 	    im_workflow_start_wf -object_id $ticket_id -object_type_id $ticket_type_id -skip_first_transition_p 1
+	    im_audit -object_id $ticket_id
 
 	    # Fraber 151215: Audit doesn't work inside a transaction!
 	    # Write Audit Trail

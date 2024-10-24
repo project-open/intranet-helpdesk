@@ -169,10 +169,7 @@ ad_form -extend -name ticket -on_request {
 	
 	# Start a new workflow case
 	im_workflow_start_wf -object_id $ticket_id -object_type_id $ticket_type_id -skip_first_transition_p 1
-	
-	# Write Audit Trail
-	im_audit -object_id $ticket_id
-	
+	im_audit -object_id $ticket_id	
 
 	# Create a new forum topic of type "Note"
 	set topic_type_id [im_topic_type_id_task]
