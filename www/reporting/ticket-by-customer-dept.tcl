@@ -242,7 +242,7 @@ set counters [list ]
 #
 
 # Write out HTTP header, considering CSV/MS-Excel formatting
-im_report_write_http_headers -output_format $report_output_format
+im_report_write_http_headers -output_format $report_output_format -report_name "tickets-by-customer-dept"
 
 # Add the HTML select box to the head of the page
 switch $report_output_format {
